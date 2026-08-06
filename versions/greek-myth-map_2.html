@@ -1,0 +1,1956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mythologia — the connected map of Greek myth</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=GFS+Didot&family=Spectral:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ground:#140f0c; --register:#1c1511; --register-alt:#191310;
+    --clay:#c8703c; --clay-lt:#dd8b52; --ivory:#f0e4cf;
+    --purple:#a2453a; --dilute:#8a5f3f; --muted:#a8825f; --gold:#dda94b;
+    --aegean:#5f8a85; --rule:#4a3020;
+    --overlay-bg:rgba(20,15,12,.94); --overlay-bg-2:rgba(28,21,17,.6);
+    --panel-bg:#1a1310; --hover-bg:rgba(200,112,60,.13); --chip-bg:rgba(0,0,0,.3);
+    --search-bg:rgba(0,0,0,.35); --placeholder:#7a5a42;
+    --meander-img:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='14'%3E%3Cg fill='none' stroke='%23c8703c' stroke-width='1.6'%3E%3Cpath d='M0 12.5H16'/%3E%3Cpath d='M3 12.5V3H13V9H7.5V6.2'/%3E%3C/g%3E%3C/svg%3E");
+    --noise-op:0.035;
+    --curse:#c0392b; --land:#241c14; --generation-line:#2a2018;
+    --serif:'Spectral',Georgia,serif;
+    --didot:'GFS Didot','Spectral',Georgia,serif;
+  }
+  body.light{
+    --ground:#ecdfba; --register:#e4d0a5; --register-alt:#ecdcb7;
+    --clay:#a8502e; --clay-lt:#8a3a20; --ivory:#241a12;
+    --purple:#8a3a30; --dilute:#6b3f22; --muted:#7a5535; --gold:#8a4a1e;
+    --aegean:#3f6b66; --rule:#c2a173;
+    --overlay-bg:rgba(236,223,186,.94); --overlay-bg-2:rgba(228,208,165,.65);
+    --panel-bg:#f5ead0; --hover-bg:rgba(168,80,46,.12); --chip-bg:rgba(0,0,0,.045);
+    --search-bg:rgba(0,0,0,.055); --placeholder:#a3805a;
+    --meander-img:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='14'%3E%3Cg fill='none' stroke='%236b3f22' stroke-width='1.6'%3E%3Cpath d='M0 12.5H16'/%3E%3Cpath d='M3 12.5V3H13V9H7.5V6.2'/%3E%3C/g%3E%3C/svg%3E");
+    --noise-op:0.05;
+    --curse:#8a2015; --land:#d9c39a; --generation-line:#c2a173;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    background:var(--ground);color:var(--ivory);font-family:var(--serif);
+    overflow:hidden;display:flex;flex-direction:column;transition:background .25s,color .25s;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:50;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity:var(--noise-op);
+  }
+  button{font-family:inherit}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:var(--rule);border-radius:0}
+  ::-webkit-scrollbar-track{background:transparent}
+
+  /* ---- the meander (Greek key) rule ---- */
+  .meander{
+    height:14px;flex:0 0 auto;
+    background-repeat:repeat-x;background-position:left bottom;
+    background-image:var(--meander-img);
+  }
+  .meander.dim{opacity:.4}
+  .meander.flip{transform:scaleY(-1)}
+
+  header{padding:14px 22px 10px;display:flex;align-items:flex-end;gap:20px;
+         flex-wrap:wrap;background:var(--overlay-bg);z-index:5;transition:background .25s}
+  .eyebrow{font-family:var(--didot);font-size:11px;letter-spacing:.42em;color:var(--clay);
+           text-transform:uppercase;margin-bottom:5px}
+  .title{font-family:var(--didot);font-size:34px;letter-spacing:.14em;line-height:1;
+         text-transform:uppercase;color:var(--ivory)}
+  .sub{font-family:var(--serif);font-style:italic;font-size:12.5px;color:var(--muted);margin-top:6px}
+  .grow{margin-right:auto}
+
+  .btn{font-family:var(--serif);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;
+       padding:7px 13px;cursor:pointer;border:1px solid var(--rule);border-radius:0;
+       background:transparent;color:var(--muted);transition:.18s}
+  .btn:hover{border-color:var(--clay);color:var(--ivory)}
+  .btn.on{border-color:var(--clay);background:rgba(200,112,60,.14);color:var(--clay-lt)}
+  .btn:focus-visible,input:focus-visible,.chip:focus-visible,a:focus-visible{
+       outline:2px solid var(--gold);outline-offset:2px}
+
+  #search{background:var(--search-bg);border:1px solid var(--rule);border-radius:0;color:var(--ivory);
+          padding:8px 11px;font-size:13.5px;width:210px;outline:none;font-family:var(--serif)}
+  #search::placeholder{color:var(--placeholder);font-style:italic}
+  .searchwrap{position:relative}
+  #results{position:absolute;top:calc(100% + 5px);right:0;width:258px;background:var(--panel-bg);
+           border:1px solid var(--rule);z-index:30;max-height:300px;overflow-y:auto}
+  #results button{display:flex;width:100%;align-items:center;gap:9px;padding:9px 11px;background:none;
+                  border:none;border-bottom:1px solid var(--rule);color:var(--ivory);
+                  font-size:13.5px;text-align:left;cursor:pointer;font-family:var(--serif)}
+  #results button:hover{background:var(--hover-bg)}
+
+  .rail{display:flex;gap:6px;padding:9px 20px;overflow-x:auto;align-items:center;
+        background:var(--overlay-bg-2);z-index:4;transition:background .25s}
+  .rail .btn{white-space:nowrap;letter-spacing:.1em;font-size:11px;padding:6px 11px}
+  .rail .num{font-family:var(--didot);color:var(--gold);font-size:13px;letter-spacing:0}
+
+  #stage{flex:1;position:relative;min-height:0}
+  #svg,#familySvg,#geoSvg{display:block;touch-action:none;cursor:grab;position:absolute;top:0;left:0}
+  #svg.drag,#familySvg.drag,#geoSvg.drag{cursor:grabbing}
+
+  /* ---- vase-panel styling for floating boxes ---- */
+  .vase{background:var(--panel-bg);border:1px solid var(--rule);
+        box-shadow:0 0 0 1px rgba(0,0,0,.5), 0 14px 50px rgba(0,0,0,.65);transition:background .25s}
+
+  #panel{position:absolute;right:18px;top:18px;width:400px;max-height:calc(100% - 36px);
+         overflow-y:auto;z-index:10;padding:0}
+  .pbody{padding:18px 22px 22px}
+  .ptype{font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;margin-bottom:6px}
+  .pname{font-family:var(--didot);font-size:33px;line-height:1.05;letter-spacing:.04em;color:var(--ivory)}
+  .pgreek{font-family:var(--didot);font-size:15px;letter-spacing:.3em;color:var(--clay);margin-top:7px}
+  .drule{height:0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);
+         height:3px;margin:15px 0}
+  .story{font-size:15px;line-height:1.72;color:var(--ivory);margin:0;font-weight:300}
+  .story a{cursor:pointer;border-bottom:1px dotted currentColor;text-decoration:none}
+  .story a:hover{border-bottom-style:solid}
+  .grouplab{font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:7px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{display:flex;align-items:center;gap:7px;background:var(--chip-bg);
+        border:1px solid var(--rule);border-radius:0;padding:6px 10px;cursor:pointer;
+        color:var(--ivory);font-size:12.5px;font-family:var(--serif);transition:.15s}
+  .chip:hover{border-color:var(--clay);background:var(--hover-bg)}
+  .dot{width:8px;height:8px;border-radius:8px;flex:0 0 auto}
+  .dot.sq{border-radius:0}
+  .close{background:none;border:1px solid var(--rule);color:var(--muted);
+         width:29px;height:29px;cursor:pointer;font-size:15px;flex:0 0 auto}
+  .close:hover{border-color:var(--clay);color:var(--ivory)}
+
+  #zoom{position:absolute;left:16px;bottom:18px;display:flex;flex-direction:column;gap:6px;z-index:3}
+  #zoom button{width:35px;height:35px;border:1px solid var(--rule);background:var(--panel-bg);
+               color:var(--ivory);font-size:16px;cursor:pointer;font-family:var(--didot);transition:background .25s}
+  #zoom button:hover{border-color:var(--clay)}
+  #zoom button.small{font-size:9.5px;letter-spacing:.14em;color:var(--muted);font-family:var(--serif);
+                     text-transform:uppercase}
+
+  #legend,#familyLegend,#routeLegend{position:absolute;left:64px;bottom:18px;z-index:6;width:262px}
+  #legend h4,#familyLegend h4,#routeLegend h4{font-size:10px;letter-spacing:.2em;color:var(--muted);
+             text-transform:uppercase;margin:0 0 10px;font-weight:400}
+  .lrow{display:flex;align-items:center;gap:10px;width:100%;background:none;border:none;padding:5px 0;
+        cursor:pointer;color:var(--ivory);font-size:12.5px;text-align:left;font-family:var(--serif)}
+  .lrow.off{opacity:.28}
+  .types{display:flex;flex-wrap:wrap;gap:6px 13px}
+  .types span{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted)}
+
+  #hint,#familyHint,#geoHint{position:absolute;right:18px;top:18px;max-width:274px;padding:16px 18px;
+        font-size:13px;line-height:1.62;color:var(--muted);z-index:2;font-weight:300}
+  #hint b,#familyHint b,#geoHint b{color:var(--ivory);font-weight:500}
+
+  #index{position:absolute;inset:0;overflow-y:auto;padding:26px 32px}
+  .ihead{display:flex;align-items:baseline;gap:13px;padding-bottom:8px;margin:0 0 14px;
+         border-bottom:1px solid var(--rule)}
+  .ihead .num{font-family:var(--didot);color:var(--gold);font-size:19px}
+  .ihead .nm{font-family:var(--didot);font-size:23px;letter-spacing:.1em;text-transform:uppercase}
+  .igroup{margin-bottom:32px}
+
+  .hidden{display:none!important}
+
+  @media (max-width:860px){
+    #panel{right:0;left:0;top:auto;bottom:0;width:100%;max-height:66%;border-left:none;border-right:none}
+    #hint,#familyHint,#geoHint{display:none}
+    .title{font-size:25px}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="meander"></div>
+
+<header>
+  <div class="grow">
+    <div class="eyebrow">Τιτᾶνες · Ἥρωες · Νόστοι</div>
+    <div class="title">Mythologia</div>
+    <div class="sub" id="counts"></div>
+  </div>
+  <div style="display:flex;gap:7px">
+    <button class="btn on" id="modeMap">map</button>
+    <button class="btn" id="modeFamily">family tree</button>
+    <button class="btn" id="modeGeo">geography</button>
+    <button class="btn" id="modeIndex">index</button>
+  </div>
+  <button class="btn" id="themeToggle" title="Switch between red-figure (dark ground) and black-figure (pale ground) styles">black-figure</button>
+  <div class="searchwrap">
+    <input id="search" placeholder="Search a name…" autocomplete="off">
+    <div id="results" class="hidden"></div>
+  </div>
+</header>
+
+<div class="meander dim"></div>
+
+<nav class="rail" id="rail"></nav>
+
+<main id="stage">
+  <svg id="svg"></svg>
+  <svg id="familySvg" class="hidden"></svg>
+  <svg id="geoSvg" class="hidden"></svg>
+
+  <div id="zoom">
+    <button id="zin" title="Zoom in">+</button>
+    <button id="zout" title="Zoom out">−</button>
+    <button id="zfit" class="small" title="Reset view">fit</button>
+  </div>
+
+  <div id="legend" class="vase hidden"></div>
+  <div id="familyLegend" class="vase hidden"></div>
+  <div id="routeLegend" class="vase hidden"></div>
+
+  <div id="hint" class="vase">
+    <b>Click any figure</b> to read its story — the lines that touch it are painted in, the rest fall away.
+    Drag to move, scroll to zoom. The <b id="hintx">red-purple lines</b> are the long reaches, where a story
+    in one register pulls on one three registers away.
+  </div>
+
+  <div id="familyHint" class="vase hidden">
+    <b>Every house on one chart.</b> Solid lines are parent to child, dashed gold lines are marriages,
+    thick dashed crimson lines mark a curse passed down the blood. Drag to move, scroll to zoom, click a
+    name to read it.
+  </div>
+
+  <div id="geoHint" class="vase hidden">
+    <b>Click a place</b> to read what happened there. Use <b>routes</b> below to trace the journeys —
+    Odysseus's ten years home, Aeneas's flight from Troy, and others — across the map.
+  </div>
+
+  <div id="panel" class="vase hidden"></div>
+  <div id="index" class="hidden"></div>
+</main>
+
+<script>
+const C = {
+  void: "#0a0f1e",
+  panel: "#101830",
+  panelSoft: "#161f3c",
+  rule: "#26325c",
+  star: "#e8edff",
+  muted: "#8290bb",
+  faint: "#5a668f",
+  titan: "#a98ae0",
+  god: "#e8c46a",
+  hero: "#e58a58",
+  mortal: "#c9bda4",
+  monster: "#8fbf7a",
+  event: "#63cfc0",
+  place: "#7aa8e8",
+};
+
+const TYPE_LABEL = {
+  titan: "Titan",
+  god: "God",
+  hero: "Hero",
+  mortal: "Mortal",
+  monster: "Creature",
+  event: "Story",
+  place: "Place",
+};
+
+const EDGE_STYLE = {
+  blood: { color: "#5f6d9c", w: 1.1, dash: null, label: "Parent to child" },
+  descent: { color: "#5f6d9c", w: 1.1, dash: "2 5", label: "Generations later" },
+  union: { color: "#e8c46a", w: 1.1, dash: "6 4", label: "Marriage or affair" },
+  part: { color: "#3f7d78", w: 1, dash: null, label: "Appears in story" },
+  cause: { color: "#e58a58", w: 1.6, dash: null, label: "Leads directly to" },
+  crossover: { color: "#e0607a", w: 1.5, dash: "1 5", label: "Crosses the timeline" },
+};
+
+const ERAS = [
+  { n: "I", name: "Before the World", y0: 20, y1: 355 },
+  { n: "II", name: "The First Humans", y0: 385, y1: 725 },
+  { n: "III", name: "Founders & First Heroes", y0: 755, y1: 1160 },
+  { n: "IV", name: "The Heroic Age", y0: 1190, y1: 1700 },
+  { n: "V", name: "The Road to Troy", y0: 1730, y1: 2140 },
+  { n: "VI", name: "The Trojan War", y0: 2170, y1: 2510 },
+  { n: "VII", name: "The Returns", y0: 2540, y1: 2910 },
+];
+
+const W = 1960;
+const H = 2960;
+
+/* ------------------------------------------------------------------ */
+/*  NODES                                                              */
+/*  story text supports [[id|Display]] inline links                    */
+/* ------------------------------------------------------------------ */
+const NODES = [
+  /* ---------- ERA I ---------- */
+  { id: "titans", name: "The Titans", type: "titan", x: 120, y: 110, era: 0,
+    story: "The second generation of divine beings, children of Gaia (Earth) and Uranus (Sky). [[cronus|Cronus]] led them after castrating his father. Most were imprisoned in Tartarus after losing the war with the Olympians — but not all: [[prometheus|Prometheus]] and [[epimetheus|Epimetheus]] backed the winning side, which is why they remain free to shape the human story afterwards." },
+  { id: "cronus", name: "Cronus", type: "titan", x: 120, y: 235, era: 0,
+    story: "Warned that his own child would overthrow him — exactly as he overthrew his father — Cronus swallowed each of his children at birth. His wife Rhea hid the youngest, [[zeus|Zeus]], and fed Cronus a stone instead. Zeus grew up, forced him to disgorge his siblings, and the [[titanomachy|war]] began. Note the pattern: three generations in a row, sons destroy fathers." },
+  { id: "titanomachy", name: "The Titanomachy", type: "event", x: 310, y: 110, era: 0,
+    story: "A ten-year war between the [[titans|Titans]] and the children of [[cronus|Cronus]]. [[zeus|Zeus]] freed the Cyclopes and Hundred-Handers from Tartarus; in gratitude they forged his thunderbolt, Poseidon's trident and Hades' helm of invisibility. The Titans lost and were imprisoned. This is the founding act of Olympian rule — everything after it happens under Zeus's order." },
+  { id: "cosmosdivision", name: "Dividing the Cosmos", type: "event", x: 310, y: 265, era: 0,
+    story: "The three victorious brothers drew lots for the universe. [[zeus|Zeus]] took the sky, [[poseidon|Poseidon]] the sea, [[hades|Hades]] the underworld. Earth was left as shared ground — which is precisely why gods keep meddling in mortal affairs there. Hades' share is the reason he is almost never on Olympus and almost never in other myths." },
+  { id: "zeus", name: "Zeus", type: "god", x: 490, y: 95, era: 0,
+    story: "King of the gods, ruler of the sky, and the single most connected figure on this map. His affairs with mortal women produce a huge share of the heroic bloodlines: [[perseus|Perseus]], [[heracles|Heracles]], [[helen|Helen]], [[polydeuces|Polydeuces]], [[dionysus|Dionysus]]. He also punishes: [[prometheusbound|Prometheus]], [[pandorasjar|humanity]], and [[theflood|the entire human race]] in turn." },
+  { id: "poseidon", name: "Poseidon", type: "god", x: 490, y: 195, era: 0,
+    story: "God of the sea, earthquakes and horses. He loses the [[athenscontest|contest for Athens]] to [[athena|Athena]] and never quite forgives the city. He is a second father to [[theseus|Theseus]] in some versions, and his grudge against [[odysseus|Odysseus]] for blinding his son Polyphemus is the engine of the whole [[odyssey|Odyssey]]." },
+  { id: "hades", name: "Hades", type: "god", x: 490, y: 295, era: 0,
+    story: "Lord of the dead — a role, not a punishment. He rarely leaves his realm, which is why he appears in so few myths. The two big exceptions are his [[persephonemyth|abduction of Persephone]] and the mortals who come down to him: [[heracles|Heracles]] for Cerberus, and [[underworldraid|Theseus and Pirithous]], who came to steal his wife and were caught." },
+  { id: "hera", name: "Hera", type: "god", x: 645, y: 60, era: 0,
+    story: "Wife and sister of [[zeus|Zeus]], goddess of marriage — and therefore permanently enraged by his affairs. Her jealousy is a direct cause of the [[labors|Twelve Labours]], since she drove [[heracles|Heracles]] to the madness he spent the rest of his life atoning for. She also loses the [[judgmentparis|Judgment of Paris]], which turns her against Troy for the entire war." },
+  { id: "demeter", name: "Demeter", type: "god", x: 645, y: 165, era: 0,
+    story: "Goddess of grain and harvest. When [[hades|Hades]] took her daughter [[persephone|Persephone]], she let the whole world go barren until she got her back. Her grief has one strange side effect much later: distracted at [[tantalusfeast|Tantalus's feast]], she is the only god who fails to notice what is on the plate." },
+  { id: "persephone", name: "Persephone", type: "god", x: 795, y: 235, era: 0,
+    story: "Daughter of [[zeus|Zeus]] and [[demeter|Demeter]], queen of the underworld. She is both victim and sovereign — later myths show her ruling with real authority, granting Orpheus his one chance and refusing [[underworldraid|Pirithous]] flatly. Her half-and-half year is the Greek explanation for the seasons." },
+  { id: "persephonemyth", name: "The Abduction of Persephone", type: "event", x: 645, y: 305, era: 0,
+    story: "[[hades|Hades]] carried [[persephone|Persephone]] into the earth with [[zeus|Zeus]]'s quiet consent. [[demeter|Demeter]] searched, refused to let anything grow, and forced a settlement — but Persephone had eaten pomegranate seeds in the underworld, binding her to it for part of every year. This myth sits slightly outside the timeline: it is cyclical, repeating forever, rather than an event that leads to the next thing." },
+  { id: "athena", name: "Athena", type: "god", x: 965, y: 60, era: 0,
+    story: "Goddess of wisdom, craft and strategic war, born from [[zeus|Zeus]]'s head. She wins [[athenscontest|Athens]], helps [[mankindclay|breathe life]] into the first humans, arms [[medusaquest|Perseus]] against Medusa, and backs [[odysseus|Odysseus]] throughout. She loses the [[judgmentparis|Judgment of Paris]] and spends the war against Troy — then turns on the Greeks too during the [[nostoi|voyages home]]." },
+  { id: "aphrodite", name: "Aphrodite", type: "god", x: 965, y: 165, era: 0,
+    story: "Goddess of desire. She wins the [[judgmentparis|Judgment of Paris]] by bribing the judge with [[helen|Helen]] — a promise that starts a ten-year war. She is also the mother of [[aeneas|Aeneas]], which is why the one Trojan who escapes the sack is the one with a goddess protecting him." },
+  { id: "ares", name: "Ares", type: "god", x: 1120, y: 60, era: 0,
+    story: "God of slaughter and battle-frenzy, largely disliked by the other gods. His main structural role is small but load-bearing: the dragon [[thebesfounding|Cadmus kills]] at the spring of Thebes was his, and the marriage that settles that debt is his daughter [[harmonia|Harmonia]]'s." },
+  { id: "hephaestus", name: "Hephaestus", type: "god", x: 1120, y: 165, era: 0,
+    story: "Smith of the gods, lame and cast out of Olympus by [[hera|Hera]]. He makes the things that drive plots: the chains that hold [[prometheusbound|Prometheus]], [[pandora|Pandora]] herself out of clay, and later the shield of [[achilles|Achilles]]." },
+  { id: "eris", name: "Eris", type: "god", x: 1285, y: 95, era: 0,
+    story: "Goddess of strife, and the most consequential party guest in Greek myth. Left off the invitation list for the [[peleusthetiswedding|wedding of Peleus and Thetis]], she threw a [[goldenapple|golden apple]] into the hall inscribed 'to the fairest'. Everything from the [[judgmentparis|Judgment of Paris]] to the fall of Troy unrolls from that one act of spite." },
+
+  /* ---------- ERA II ---------- */
+  { id: "prometheus", name: "Prometheus", type: "titan", x: 145, y: 455, era: 1,
+    story: "A [[titans|Titan]] whose name means 'forethought'. He sided with [[zeus|Zeus]] in the [[titanomachy|war]], then spent the rest of his existence undermining him on humanity's behalf: [[mankindclay|shaping mortals from clay]], [[sacrificetrick|cheating Zeus at the first sacrifice]], and [[theftoffire|stealing fire]]. He also holds the one secret Zeus needs — the prophecy about [[thetis|Thetis]] — and trades it for freedom." },
+  { id: "epimetheus", name: "Epimetheus", type: "titan", x: 145, y: 595, era: 1,
+    story: "Prometheus's brother, whose name means 'afterthought' — the joke is the whole character. Given the job of handing out useful traits to living creatures, he spent them all on animals and left humans naked and defenceless. Warned never to accept a gift from [[zeus|Zeus]], he accepted [[pandora|Pandora]] anyway. Their daughter is [[pyrrha|Pyrrha]]." },
+  { id: "mankindclay", name: "Prometheus Shapes Mankind", type: "event", x: 325, y: 425, era: 1,
+    story: "[[prometheus|Prometheus]] moulds the first men from clay and river water, and [[athena|Athena]] breathes life into them. Because [[epimetheus|Epimetheus]] had already given away every natural advantage, humans arrive with no fur, claws or speed — the deficit that makes [[theftoffire|fire]] necessary and makes Prometheus their permanent advocate." },
+  { id: "sacrificetrick", name: "The Trick at Mecone", type: "event", x: 325, y: 525, era: 1,
+    story: "At the first sacrifice, [[prometheus|Prometheus]] made two piles: bones hidden under glistening fat, and good meat hidden under an unappetising hide. [[zeus|Zeus]] chose the fat and got bones — which is why Greek ritual burns bones and fat for the gods while people eat the meat. It is an origin story for sacrifice, and the insult that makes Zeus withhold [[theftoffire|fire]]." },
+  { id: "theftoffire", name: "The Theft of Fire", type: "event", x: 325, y: 625, era: 1,
+    story: "Denied fire after [[sacrificetrick|the trick at Mecone]], [[prometheus|Prometheus]] smuggled it out of Olympus in a hollow fennel stalk. Fire means cooking, metal, craft — civilisation. [[zeus|Zeus]] answers with two punishments running in parallel: [[prometheusbound|one for Prometheus]] and [[pandorasjar|one for humanity]]." },
+  { id: "prometheusbound", name: "Prometheus Bound", type: "event", x: 495, y: 665, era: 1,
+    story: "[[prometheus|Prometheus]] is chained to a crag in the Caucasus while an eagle eats his liver daily; being immortal, it grows back each night. Generations later [[heracles|Heracles]] passes by on his labours, shoots the eagle and frees him — one of the longest reaches on this whole map, a hero from the Heroic Age closing a wound from before humans existed." },
+  { id: "pandora", name: "Pandora", type: "mortal", x: 495, y: 525, era: 1,
+    story: "The first woman, made by [[hephaestus|Hephaestus]] on [[zeus|Zeus]]'s orders and given a gift by every god — her name means 'all-gifted'. She was sent as a beautiful punishment to [[epimetheus|Epimetheus]], who accepted her against his brother's warning. Her daughter [[pyrrha|Pyrrha]] survives the flood and helps restart the human race." },
+  { id: "pandorasjar", name: "Pandora's Jar", type: "event", x: 665, y: 455, era: 1,
+    story: "[[pandora|Pandora]] opens the great storage jar — a pithos, not a box; 'box' is a Renaissance mistranslation — and every sickness, toil and sorrow escapes into the world. Only Hope is left inside when she gets the lid back on, and scholars still argue whether that means humanity keeps hope or is denied it. This is Zeus's answer to [[theftoffire|the theft of fire]]." },
+  { id: "theflood", name: "Zeus's Flood", type: "event", x: 865, y: 435, era: 1,
+    story: "[[zeus|Zeus]] decides the current race of humans is irredeemably corrupt and drowns the world. Forewarned by his father [[prometheus|Prometheus]], [[deucalion|Deucalion]] builds a chest and rides out the water with his wife [[pyrrha|Pyrrha]], landing on Parnassus. It is a hard reset: the humans of the Heroic Age all descend from these two." },
+  { id: "deucalion", name: "Deucalion", type: "mortal", x: 705, y: 625, era: 1,
+    story: "Son of [[prometheus|Prometheus]], and the Greek Noah. He survives [[theflood|the flood]] with his wife and cousin [[pyrrha|Pyrrha]]. Notice the symmetry: the flood is survived by the son of the fire-thief and the daughter of the first woman — the two halves of Zeus's original punishment, married." },
+  { id: "pyrrha", name: "Pyrrha", type: "mortal", x: 865, y: 625, era: 1,
+    story: "Daughter of [[epimetheus|Epimetheus]] and [[pandora|Pandora]], wife of [[deucalion|Deucalion]]. Together they survive [[theflood|the flood]] and repopulate the earth by [[stonesmen|throwing stones]]. Their son [[hellen|Hellen]] gives the Greeks their name for themselves." },
+  { id: "stonesmen", name: "The Men of Stone", type: "event", x: 1035, y: 545, era: 1,
+    story: "Told by an oracle to throw 'the bones of their mother' over their shoulders, [[deucalion|Deucalion]] and [[pyrrha|Pyrrha]] work out that the mother is Gaia — the earth — and her bones are stones. His stones become men, hers become women. The new race is literally hard, born of rock, which the Greeks read as an explanation for human toughness." },
+  { id: "hellen", name: "Hellen", type: "mortal", x: 1155, y: 625, era: 1,
+    story: "Son of [[deucalion|Deucalion]] and [[pyrrha|Pyrrha]], and the ancestor the Greeks named themselves after — Hellenes, hence Hellenic. Not to be confused with [[helen|Helen of Troy]], a different name entirely in Greek. His sons give their names to the main Greek peoples, turning genealogy into a map of who lives where." },
+  { id: "dorus", name: "Dorus", type: "mortal", x: 1325, y: 535, era: 1,
+    story: "Son of [[hellen|Hellen]] and eponymous ancestor of the Dorians — the Greeks of Sparta, Corinth and Crete. These 'tribal ancestor' figures have no stories of their own; they exist to explain why a Spartan and an Athenian are cousins who cannot stand each other." },
+  { id: "aeolus", name: "Aeolus", type: "mortal", x: 1325, y: 635, era: 1,
+    story: "Son of [[hellen|Hellen]] and ancestor of the Aeolians of Thessaly and Boeotia. Confusingly, a different Aeolus is the keeper of the winds who gives [[odysseus|Odysseus]] a bag of storms — Greek myth reuses names constantly, and this is one of the traps in it." },
+  { id: "xuthus", name: "Xuthus", type: "mortal", x: 1480, y: 585, era: 1,
+    story: "Son of [[hellen|Hellen]] and father of Ion and Achaeus — ancestors of the Ionians (Athens, the islands) and the Achaeans. 'Achaeans' is the word Homer actually uses for the Greeks at [[trojanwar|Troy]], so this obscure figure is the reason the Iliad calls them that." },
+
+  /* ---------- ERA III ---------- */
+  { id: "cecrops", name: "Cecrops", type: "mortal", x: 130, y: 835, era: 2,
+    story: "The first king of Attica, born from the earth with a serpent's tail instead of legs. He judged the [[athenscontest|contest]] between [[athena|Athena]] and [[poseidon|Poseidon]] and is credited with founding marriage, writing and burial — the institutions that make a city a city rather than a settlement." },
+  { id: "athenscontest", name: "The Contest for Athens", type: "event", x: 130, y: 955, era: 2,
+    story: "[[athena|Athena]] and [[poseidon|Poseidon]] competed for the city's patronage. Poseidon struck the rock and produced a salt spring (in some versions, the first horse); Athena planted an olive tree. The olive — food, oil, lamplight, trade — won, and the city took her name. Poseidon's resentment lingers in Athenian myth ever after." },
+  { id: "athens", name: "Athens", type: "place", x: 130, y: 1075, era: 2,
+    story: "Named for [[athena|Athena]] after the [[athenscontest|contest]], and unified into a single state by [[atticaunion|Theseus]]. In the myths it becomes the place where things get resolved rather than avenged — most importantly at the trial that ends the [[orestesrevenge|curse on the House of Atreus]]. That is Athens telling its own story about law replacing vendetta." },
+  { id: "europa", name: "Europa", type: "mortal", x: 330, y: 805, era: 2,
+    story: "A Phoenician princess, sister of [[cadmus|Cadmus]]. [[zeus|Zeus]] took the form of a white bull, carried her across the sea to Crete, and fathered Minos — whose wife later bears the [[minotaur|Minotaur]]. She gives her name to the continent of Europe, and her disappearance is what sends Cadmus westward to [[thebesfounding|found Thebes]]." },
+  { id: "cadmus", name: "Cadmus", type: "mortal", x: 330, y: 905, era: 2,
+    story: "Phoenician prince sent to find his sister [[europa|Europa]] and forbidden to return without her. He never finds her, consults Delphi instead, and [[thebesfounding|founds Thebes]]. Greek tradition also credits him with bringing the alphabet to Greece. His line runs straight down to [[laius|Laius]] and [[oedipus|Oedipus]]." },
+  { id: "thebesfounding", name: "The Sown Men", type: "event", x: 330, y: 1025, era: 2,
+    story: "Told to follow a cow and build where it lay down, [[cadmus|Cadmus]] founded [[thebes|Thebes]] — then killed a dragon sacred to [[ares|Ares]] that guarded the spring. On [[athena|Athena]]'s advice he sowed its teeth; armed men sprang up and fought until five remained, and those five became Thebes's noble houses. A city founded on a killing and on men who came out of the ground fighting: Thebes is doomed from the first day." },
+  { id: "harmonia", name: "Harmonia", type: "mortal", x: 490, y: 905, era: 2,
+    story: "Daughter of [[ares|Ares]] and [[aphrodite|Aphrodite]], given to [[cadmus|Cadmus]] as a bride — compensation for the dragon he killed. Their wedding was attended by all the gods. Her necklace, made by [[hephaestus|Hephaestus]], is cursed and brings ruin to every woman who wears it, resurfacing generations later to help destroy [[seventhebes|Thebes]]." },
+  { id: "thebes", name: "Thebes", type: "place", x: 490, y: 1035, era: 2,
+    story: "Founded by [[cadmus|Cadmus]], and the setting for the darkest cycle in Greek myth: [[oedipusmyth|Oedipus]], the [[seventhebes|Seven]], the [[epigoni|Epigoni]]. If Athens is where things get judged, Thebes is where things get repeated. It is the city Athenian tragedy uses to think about everything that could go wrong with a family and a state." },
+  { id: "semele", name: "Semele", type: "mortal", x: 490, y: 795, era: 2,
+    story: "Daughter of [[cadmus|Cadmus]], loved by [[zeus|Zeus]]. [[hera|Hera]], disguised, goaded her into demanding that Zeus appear in his true form; the sight incinerated her. Zeus saved the unborn [[dionysus|Dionysus]] by sewing him into his own thigh until term — which is why Dionysus is the god who was born twice." },
+  { id: "dionysus", name: "Dionysus", type: "god", x: 650, y: 795, era: 2,
+    story: "God of wine, theatre and ecstatic release, son of [[zeus|Zeus]] and the mortal [[semele|Semele]]. His myths are about what happens to cities that refuse him — his cousin [[pentheus|Pentheus]] most of all. He also turns up on Naxos to marry [[ariadne|Ariadne]] after [[theseus|Theseus]] abandons her, quietly stitching the Theban and Athenian threads together." },
+  { id: "pentheus", name: "Pentheus", type: "mortal", x: 650, y: 905, era: 2,
+    story: "King of [[thebes|Thebes]], grandson of [[cadmus|Cadmus]], and cousin of [[dionysus|Dionysus]]. He banned the new god's worship and spied on his rites; the frenzied women tore him apart, his own mother Agave leading them and carrying his head home believing it was a lion's. Euripides' Bacchae is the version everyone reads." },
+  { id: "acrisius", name: "Acrisius", type: "mortal", x: 800, y: 805, era: 2,
+    story: "King of Argos, told by an oracle that his daughter's son would kill him. He locked [[danae|Danaë]] in a bronze chamber; [[zeus|Zeus]] reached her as a shower of gold anyway. He then set mother and infant [[perseus|Perseus]] adrift in a chest at sea — and was killed by that grandson decades later, by accident, exactly as foretold." },
+  { id: "danae", name: "Danaë", type: "mortal", x: 800, y: 905, era: 2,
+    story: "Daughter of [[acrisius|Acrisius]], mother of [[perseus|Perseus]] by [[zeus|Zeus]]. Cast adrift and washed up on Seriphos, she was pursued by its king Polydectes — who sent her son after [[medusaquest|Medusa's head]] specifically hoping he would not come back." },
+  { id: "perseus", name: "Perseus", type: "hero", x: 950, y: 955, era: 2,
+    story: "Son of [[zeus|Zeus]] and [[danae|Danaë]], and the cleanest hero story in Greek myth — he completes his quest, rescues [[andromeda|Andromeda]], marries her, rules well and dies old. He founds Mycenae, and his line produces [[heracles|Heracles]] a few generations on. Much later the [[atreus|House of Atreus]] takes Mycenae from his descendants." },
+  { id: "medusaquest", name: "Perseus and Medusa", type: "event", x: 1110, y: 875, era: 2,
+    story: "Equipped by the gods — [[athena|Athena]]'s mirrored shield, Hermes' winged sandals, [[hades|Hades]]' cap of invisibility — [[perseus|Perseus]] beheaded [[medusa|Medusa]] by watching her reflection. Flying home with the head he found [[andromeda|Andromeda]] chained to a rock as a sacrifice and saved her. He later used the head as a weapon, then gave it to Athena for her shield." },
+  { id: "medusa", name: "Medusa", type: "monster", x: 1270, y: 805, era: 2,
+    story: "The one mortal Gorgon, whose gaze turned people to stone. Ovid's influential version makes her a beautiful priestess of [[athena|Athena]] assaulted by [[poseidon|Poseidon]] in the goddess's own temple, and transformed as punishment — the victim blamed. From her severed neck sprang the winged horse Pegasus, later tamed by the hero Bellerophon." },
+  { id: "andromeda", name: "Andromeda", type: "mortal", x: 1110, y: 1015, era: 2,
+    story: "Ethiopian princess chained to a rock as a sea-monster's meal, because her mother Cassiopeia boasted of being more beautiful than the sea nymphs. [[perseus|Perseus]] saved and married her. She, Perseus, her mother and the monster all end up as constellations — one of the clearest examples of a myth being written into the sky." },
+  { id: "tantalus", name: "Tantalus", type: "mortal", x: 1500, y: 815, era: 2,
+    story: "A son of [[zeus|Zeus]], favoured enough to eat at the gods' table — and he repaid it by [[tantalusfeast|serving them his own son]]. His punishment gave English the word 'tantalise': standing in water that drains when he stoops, under fruit that lifts away when he reaches. He is the origin point of the [[thyesteanfeast|curse]] that eventually kills [[agamemnonmurder|Agamemnon]]." },
+  { id: "tantalusfeast", name: "The Feast of Tantalus", type: "event", x: 1665, y: 815, era: 2,
+    story: "[[tantalus|Tantalus]] tested the gods' omniscience by killing his son [[pelops|Pelops]], cooking him and serving him at dinner. Every god recognised it instantly and refused — except [[demeter|Demeter]], too deep in grief over [[persephone|Persephone]] to notice, who ate a shoulder. The gods restored Pelops with an ivory replacement. The crime is cannibalism against one's own child, and the family will commit it again." },
+  { id: "pelops", name: "Pelops", type: "mortal", x: 1500, y: 935, era: 2,
+    story: "Killed and resurrected as a child at [[tantalusfeast|his father's feast]], with an ivory shoulder where [[demeter|Demeter]] ate. He grew up to win [[hippodamia|Hippodamia]] by [[pelopsrace|cheating in a chariot race]] and murdering his accomplice. The Peloponnese — 'island of Pelops' — is named for him. His sons are [[atreus|Atreus]] and [[thyestes|Thyestes]]." },
+  { id: "pelopsrace", name: "The Chariot Race", type: "event", x: 1665, y: 935, era: 2,
+    story: "[[hippodamia|Hippodamia]]'s father killed every suitor who lost a chariot race to him. [[pelops|Pelops]] bribed the king's charioteer Myrtilus to replace the linchpins with wax; the king died in the crash. Pelops then threw Myrtilus into the sea to avoid paying — and Myrtilus's dying curse is the one that actually damns the family. Every later horror in this line traces back to this broken promise." },
+  { id: "hippodamia", name: "Hippodamia", type: "mortal", x: 1500, y: 1055, era: 2,
+    story: "Won by [[pelops|Pelops]] through [[pelopsrace|sabotage and murder]]. Mother of [[atreus|Atreus]] and [[thyestes|Thyestes]] — and in some versions she pushes them into killing their half-brother Chrysippus, which gets the whole family exiled to Mycenae and sets the feud in motion." },
+
+  /* ---------- ERA IV ---------- */
+  { id: "ariadne", name: "Ariadne", type: "mortal", x: 140, y: 1365, era: 3,
+    story: "Cretan princess, half-sister of the [[minotaur|Minotaur]]. She gave [[theseus|Theseus]] the thread that let him find his way back out of the labyrinth, then fled with him — and he abandoned her sleeping on Naxos. [[dionysus|Dionysus]] found her there and married her; her wedding crown became a constellation. She is rescued from an Athenian hero by a Theban god." },
+  { id: "minotaur", name: "The Minotaur", type: "monster", x: 140, y: 1485, era: 3,
+    story: "Bull-headed son of Minos's wife Pasiphaë, born after [[poseidon|Poseidon]] cursed her with desire for a bull. Minos hid it in Daedalus's labyrinth and fed it Athenian children as tribute — the tribute [[minotaurmyth|Theseus]] volunteered for. Minos, note, is a son of [[europa|Europa]]: the Cretan and Theban lines are cousins." },
+  { id: "aegeus", name: "Aegeus", type: "mortal", x: 300, y: 1255, era: 3,
+    story: "King of [[athens|Athens]] and mortal father of [[theseus|Theseus]]. He watched daily for his son's ship returning from Crete; when it came back still flying the black sail [[minotaurmyth|Theseus forgot to change]], he threw himself into the sea. The Aegean is named for him — a whole sea named after a signalling error." },
+  { id: "theseus", name: "Theseus", type: "hero", x: 300, y: 1375, era: 3,
+    story: "The Athenian national hero: son of [[aegeus|Aegeus]] and, in some tellings, [[poseidon|Poseidon]] as well. He kills the [[minotaur|Minotaur]], [[atticaunion|unifies Attica]] under Athens, abandons [[ariadne|Ariadne]], abducts a young [[helen|Helen]] before the war and is punished for it by [[dioscuri|her brothers]], and is finally trapped in the underworld on [[underworldraid|a truly stupid errand]] until [[heracles|Heracles]] pulls him out." },
+  { id: "minotaurmyth", name: "Theseus and the Minotaur", type: "event", x: 300, y: 1495, era: 3,
+    story: "[[theseus|Theseus]] volunteered among the Athenian youths sent as tribute to Crete, killed the [[minotaur|Minotaur]] in the labyrinth and escaped using [[ariadne|Ariadne]]'s thread. On the way home he abandoned her on Naxos and forgot to swap the black sail for white — killing [[aegeus|his father]] and inheriting the throne on the same day." },
+  { id: "atticaunion", name: "The Unification of Attica", type: "event", x: 465, y: 1255, era: 3,
+    story: "[[theseus|Theseus]]'s least dramatic and most important act: merging the scattered towns of Attica into a single state governed from [[athens|Athens]]. Athenians told this story to give their democracy a heroic founder. It is the moment a myth stops being an adventure and starts being a constitution." },
+  { id: "underworldraid", name: "The Raid on the Underworld", type: "event", x: 300, y: 1615, era: 3,
+    story: "[[theseus|Theseus]] and his friend Pirithous swore to marry daughters of [[zeus|Zeus]] — so they abducted the child [[helen|Helen]], then went down to take [[persephone|Persephone]] from [[hades|Hades]] himself. Hades offered them seats which fused to their flesh. [[heracles|Heracles]], down for Cerberus, tore Theseus free; Pirithous stayed forever. The Helen abduction is why [[dioscuri|her brothers]] later sack Athens." },
+  { id: "laius", name: "Laius", type: "mortal", x: 620, y: 1255, era: 3,
+    story: "King of [[thebes|Thebes]], descendant of [[cadmus|Cadmus]]. Warned that his own son would kill him, he pierced the infant's ankles and left him to die on a mountain. The child survived and became [[oedipus|Oedipus]]. Laius met him years later at a crossroads, they quarrelled over right of way, and the prophecy completed itself." },
+  { id: "jocasta", name: "Jocasta", type: "mortal", x: 765, y: 1255, era: 3,
+    story: "Queen of [[thebes|Thebes]], wife of [[laius|Laius]] — then wife of [[oedipus|Oedipus]], who was also her son. She works out the truth in Sophocles' play before he does, begs him to stop asking questions, and hangs herself when he will not. Her brother Creon takes the throne after [[seventhebes|her sons destroy each other]]." },
+  { id: "oedipus", name: "Oedipus", type: "mortal", x: 690, y: 1375, era: 3,
+    story: "Exposed as an infant by [[laius|Laius]], raised in Corinth, and told by an oracle he would kill his father and marry his mother. He fled the people he thought were his parents — straight into the prophecy. He killed a stranger at a crossroads, solved the Sphinx's riddle, and was given [[thebes|Thebes]] and its widowed queen [[jocasta|Jocasta]] as his reward." },
+  { id: "oedipusmyth", name: "Oedipus at Thebes", type: "event", x: 690, y: 1495, era: 3,
+    story: "A plague forces [[oedipus|Oedipus]] to hunt [[laius|Laius]]'s killer, and the investigation converges on himself. [[jocasta|Jocasta]] hangs herself; he blinds himself with her brooches and goes into exile. He curses his sons on the way out — and that curse is the direct cause of [[seventhebes|the war between them]]." },
+  { id: "eteocles", name: "Eteocles", type: "mortal", x: 620, y: 1615, era: 3,
+    story: "Son of [[oedipus|Oedipus]]. He and [[polynices|Polynices]] agreed to rule [[thebes|Thebes]] in alternate years; when his year ended he refused to hand over. He defended the city against [[seventhebes|the Seven]] and died at the seventh gate, killing and killed by his brother in the same exchange." },
+  { id: "polynices", name: "Polynices", type: "mortal", x: 765, y: 1615, era: 3,
+    story: "Son of [[oedipus|Oedipus]]. Cheated of his turn on the throne by [[eteocles|Eteocles]], he married into Argos and raised [[seventhebes|an army of seven champions]] to take Thebes by force. He and his brother killed each other; Creon then forbade his burial, which is the crisis [[antigone|Antigone]] dies over. His son joins [[epigoni|the Epigoni]] to finish the job." },
+  { id: "alcmene", name: "Alcmene", type: "mortal", x: 950, y: 1255, era: 3,
+    story: "Granddaughter of [[perseus|Perseus]] and mother of [[heracles|Heracles]]. [[zeus|Zeus]] came to her disguised as her own husband, holding back the dawn to make the night three times as long. Her husband arrived the following night, and she bore twins with different fathers — a mortal one and a divine one, the same pattern as [[leda|Leda]]'s children." },
+  { id: "heracles", name: "Heracles", type: "hero", x: 950, y: 1375, era: 3,
+    story: "Son of [[zeus|Zeus]] and [[alcmene|Alcmene]], descendant of [[perseus|Perseus]], and the hero who touches more stories than any other. Driven mad by [[hera|Hera]] into killing his own children, he performed [[labors|the Twelve Labours]] as penance. Along the way he frees [[prometheusbound|Prometheus]], hauls [[underworldraid|Theseus]] out of the underworld, and sails briefly with [[argonauts|the Argonauts]]." },
+  { id: "labors", name: "The Twelve Labours", type: "event", x: 950, y: 1495, era: 3,
+    story: "Penance imposed on [[heracles|Heracles]] for the children he killed in [[hera|Hera]]-sent madness. The famous twelve run from the Nemean Lion to fetching Cerberus out of [[hades|Hades]]' realm alive — the labour on which he happens to find [[underworldraid|Theseus]] fused to a stone seat and rips him loose. He frees [[prometheusbound|Prometheus]] on another." },
+  { id: "heraclesdeath", name: "The Death of Heracles", type: "event", x: 950, y: 1615, era: 3,
+    story: "The centaur Nessus, dying from [[heracles|Heracles]]'s arrow, told Heracles's wife Deianira that his blood was a love charm. Years later, fearing a rival, she soaked a robe in it — and the poison burned him alive. He built his own pyre. His mortal part burned away, the divine part rose to Olympus, and he married Hebe: the only hero to become a god." },
+  { id: "chiron", name: "Chiron", type: "monster", x: 1085, y: 1620, era: 3,
+    story: "The wise centaur, tutor to a startling number of heroes across generations — he coaches [[peleus|Peleus]] on how to hold [[thetis|Thetis]], then raises their son [[achilles|Achilles]]. Immortal, he was accidentally wounded by one of [[heracles|Heracles]]'s poisoned arrows and, unable to die or heal, traded his immortality to [[prometheusbound|free Prometheus]]." },
+  { id: "jason", name: "Jason", type: "hero", x: 1250, y: 1255, era: 3,
+    story: "Rightful heir of Iolcus, sent after the Golden Fleece by a usurping uncle who expected him to die trying. He succeeded only because [[medea|Medea]] fell in love with him and did the actual impossible parts. He later abandoned her for a better marriage, and she destroyed everything he had. He died alone under the rotting prow of [[argonauts|the Argo]]." },
+  { id: "medea", name: "Medea", type: "mortal", x: 1410, y: 1255, era: 3,
+    story: "Colchian princess, priestess of Hecate, granddaughter of the sun. She betrayed her father to help [[jason|Jason]] take the fleece, murdered her own brother to slow the pursuit, and killed for him repeatedly. When he cast her aside she killed his new bride and their two sons and escaped in a chariot drawn by dragons. Euripides refuses to let anyone punish her." },
+  { id: "argonauts", name: "The Voyage of the Argo", type: "event", x: 1290, y: 1375, era: 3,
+    story: "[[jason|Jason]]'s quest for the Golden Fleece, crewed by nearly every hero alive at once — [[heracles|Heracles]] (who leaves early to search for his lost companion Hylas), [[castor|Castor]] and [[polydeuces|Polydeuces]], [[peleus|Peleus]], [[telamon|Telamon]]. Read the crew list as a cast of fathers: their sons are the men who fight at [[trojanwar|Troy]] a generation later. It is the hinge between the Heroic Age and the war." },
+  { id: "peleus", name: "Peleus", type: "mortal", x: 1215, y: 1495, era: 3,
+    story: "An [[argonauts|Argonaut]], and the mortal the gods married [[thetis|Thetis]] off to when they learned it was too dangerous to father her child themselves. Coached by [[chiron|Chiron]], he held her through her shape-shifting — fire, water, serpent, lioness — until she yielded. Their [[peleusthetiswedding|wedding]] starts the Trojan War. Their son is [[achilles|Achilles]]." },
+  { id: "telamon", name: "Telamon", type: "mortal", x: 1380, y: 1495, era: 3,
+    story: "Brother of [[peleus|Peleus]] and a fellow [[argonauts|Argonaut]]; the two also sacked Troy once already, alongside [[heracles|Heracles]], a generation before the famous war. His son [[ajax|Ajax the Great]] is the strongest Greek at Troy after [[achilles|Achilles]] — making the two greatest Greek warriors first cousins." },
+  { id: "thetis", name: "Thetis", type: "god", x: 1215, y: 1615, era: 3,
+    story: "A sea nymph wanted by both [[zeus|Zeus]] and [[poseidon|Poseidon]] — until [[prometheus|Prometheus]] revealed the prophecy that her son would be greater than his father. Too dangerous for a god, so she was married to the mortal [[peleus|Peleus]] instead. She dipped her son [[achilles|Achilles]] in the Styx, holding the heel, and spends the Iliad trying to protect a child she knows is doomed." },
+  { id: "atreus", name: "Atreus", type: "mortal", x: 1560, y: 1255, era: 3,
+    story: "Son of [[pelops|Pelops]], king of Mycenae — a throne his family took from the descendants of [[perseus|Perseus]]. His brother [[thyestes|Thyestes]] seduced his wife to steal the golden lamb that decided the succession; [[zeus|Zeus]] reversed the sun's course to confirm Atreus as king. His revenge was [[thyesteanfeast|the feast]]. His sons are [[agamemnon|Agamemnon]] and [[menelaus|Menelaus]]." },
+  { id: "thyestes", name: "Thyestes", type: "mortal", x: 1720, y: 1255, era: 3,
+    story: "Brother and rival of [[atreus|Atreus]]. He seduced Atreus's wife and stole the throne of Mycenae, and was repaid with [[thyesteanfeast|a meal made of his own sons]]. An oracle told him that a son fathered on his own daughter would avenge him — so he did exactly that, and produced [[aegisthus|Aegisthus]]." },
+  { id: "thyesteanfeast", name: "The Feast of Thyestes", type: "event", x: 1640, y: 1375, era: 3,
+    story: "[[atreus|Atreus]] invited [[thyestes|Thyestes]] to a reconciliation banquet, killed his sons and served them to him — revealing the hands and heads only once he had eaten. It is [[tantalusfeast|Tantalus's crime]] repeated two generations on, and the point at which the curse stops being a punishment and becomes a family habit. [[aegisthus|Aegisthus]] is conceived specifically to answer it." },
+  { id: "aegisthus", name: "Aegisthus", type: "mortal", x: 1785, y: 1495, era: 3,
+    story: "Son of [[thyestes|Thyestes]] by his own daughter, conceived expressly as an instrument of revenge for [[thyesteanfeast|the feast]]. He kills [[atreus|Atreus]], and decades later becomes [[clytemnestra|Clytemnestra]]'s lover and co-conspirator in [[agamemnonmurder|the murder of Agamemnon]]. He is the reason the Trojan War ends in a family vendetta that started three generations earlier." },
+  { id: "leda", name: "Leda", type: "mortal", x: 1500, y: 1615, era: 3,
+    story: "Queen of Sparta, wife of [[tyndareus|Tyndareus]]. [[zeus|Zeus]] came to her as a swan, and she lay with god and husband the same night — bearing two pairs of twins with two fathers. From her come [[helen|Helen]] and [[polydeuces|Polydeuces]] (divine) and [[clytemnestra|Clytemnestra]] and [[castor|Castor]] (mortal): the cause of the Trojan War and its bloodiest aftermath, born together." },
+  { id: "tyndareus", name: "Tyndareus", type: "mortal", x: 1655, y: 1615, era: 3,
+    story: "King of Sparta and [[leda|Leda]]'s husband, mortal father of [[clytemnestra|Clytemnestra]] and [[castor|Castor]]. Faced with a hall full of armed suitors competing for [[helen|Helen]], he took [[odysseus|Odysseus]]'s advice and made them all [[suitorsoath|swear an oath]] — the single administrative decision that later drags all of Greece to Troy." },
+
+  /* ---------- ERA V ---------- */
+  { id: "antigone", name: "Antigone", type: "mortal", x: 240, y: 1805, era: 4,
+    story: "Daughter of [[oedipus|Oedipus]]. After [[seventhebes|her brothers killed each other]], Creon gave [[eteocles|Eteocles]] a hero's burial and left [[polynices|Polynices]] to rot on pain of death. She buried him anyway and was walled up alive for it. Sophocles' play is the founding text on conscience against the state — divine law against civic law, with no comfortable answer." },
+  { id: "seventhebes", name: "Seven Against Thebes", type: "event", x: 420, y: 1805, era: 4,
+    story: "[[polynices|Polynices]] raised seven champions to storm [[thebes|Thebes]]'s seven gates. The seer Amphiaraus went knowing he would die, betrayed into it by his wife Eriphyle, bribed with [[harmonia|Harmonia]]'s cursed necklace. The assault failed and the brothers killed each other. Six of the Seven died — and their sons come back ten years later as [[epigoni|the Epigoni]]." },
+  { id: "epigoni", name: "The Epigoni", type: "event", x: 420, y: 1925, era: 4,
+    story: "'Those born after' — the sons of [[seventhebes|the fallen Seven]], who mount a second campaign ten years on and this time take [[thebes|Thebes]]. Their commanders include [[diomedes|Diomedes]] and [[alcmaeon|Alcmaeon]]. This is the connective tissue most retellings skip: the Epigoni are the same generation that then sails to [[trojanwar|Troy]], carrying one war straight into the next." },
+  { id: "alcmaeon", name: "Alcmaeon", type: "mortal", x: 580, y: 1925, era: 4,
+    story: "One of the [[epigoni|Epigoni]], son of the seer Amphiaraus. Under his father's dying instruction he killed his own mother Eriphyle for taking [[harmonia|the cursed necklace]] as a bribe, and was driven mad by the Furies for it. It is a dry run for [[orestesrevenge|Orestes]] — same crime, same pursuers, but no trial and no acquittal at the end." },
+  { id: "diomedes", name: "Diomedes", type: "hero", x: 420, y: 2055, era: 4,
+    story: "Son of Tydeus, one of [[epigoni|the Epigoni]] — and then one of the most effective Greek commanders in [[iliad|the Iliad]], where he wounds [[aphrodite|Aphrodite]] and [[ares|Ares]] in a single day with [[athena|Athena]] backing him. He is the living bridge between the Theban wars and the Trojan one. Aphrodite repays him during [[nostoi|the voyage home]]." },
+  { id: "ajax", name: "Ajax the Great", type: "hero", x: 700, y: 2055, era: 4,
+    story: "Son of [[telamon|Telamon]], cousin of [[achilles|Achilles]], and the largest man at Troy — the Greek line's immovable defensive wall. After Achilles dies, Ajax loses the contest for his armour to [[odysseus|Odysseus]], goes mad with humiliation, slaughters livestock believing they are his commanders, and kills himself when he recovers." },
+  { id: "odysseus", name: "Odysseus", type: "hero", x: 860, y: 2055, era: 4,
+    story: "King of Ithaca, the strategist. He devised [[suitorsoath|the oath]] that binds the suitors, tried to dodge the war by feigning madness, then supplied the [[trojanhorse|wooden horse]] that ends it. Blinding [[poseidon|Poseidon]]'s son costs him ten more years at sea in [[odyssey|the Odyssey]]. Even his homecoming is not the end: [[telegony|one last story]] follows." },
+  { id: "achilles", name: "Achilles", type: "hero", x: 860, y: 1925, era: 4,
+    story: "Son of [[peleus|Peleus]] and [[thetis|Thetis]], raised by [[chiron|Chiron]] — the fulfilment of the prophecy that Thetis's son would surpass his father. Dipped in the Styx, invulnerable but for the heel his mother gripped. Given a choice between a long obscure life and a short glorious one, he chooses glory; [[iliad|the Iliad]] is about his rage, and [[achillesdeath|Paris kills him]] before Troy falls." },
+  { id: "peleusthetiswedding", name: "The Wedding of Peleus and Thetis", type: "event", x: 1030, y: 1795, era: 4,
+    story: "Every god attended the marriage of [[peleus|Peleus]] and [[thetis|Thetis]] — the last great celebration where gods and mortals sat together. Every god except [[eris|Eris]], who was not invited. The whole Trojan War exists because of a guest list. It happens only because [[prometheus|Prometheus]] warned Zeus off Thetis in the first place." },
+  { id: "goldenapple", name: "The Golden Apple", type: "event", x: 1030, y: 1905, era: 4,
+    story: "[[eris|Eris]] rolled a golden apple into the wedding hall inscribed 'to the fairest'. [[hera|Hera]], [[athena|Athena]] and [[aphrodite|Aphrodite]] each claimed it. [[zeus|Zeus]], far too sensible to judge between his wife, his daughter and the goddess of desire, handed the decision to a mortal — [[judgmentparis|a shepherd on Mount Ida]]." },
+  { id: "judgmentparis", name: "The Judgment of Paris", type: "event", x: 1030, y: 2015, era: 4,
+    story: "Each goddess bribed the judge: [[hera|Hera]] offered power over Asia, [[athena|Athena]] offered victory in war, [[aphrodite|Aphrodite]] offered the most beautiful woman alive. [[paris|Paris]] chose Aphrodite — and the woman was [[helen|Helen]], already married to [[menelaus|Menelaus]]. Two goddesses spend the next ten years working for Troy's destruction." },
+  { id: "paris", name: "Paris", type: "mortal", x: 1190, y: 2015, era: 4,
+    story: "Prince of Troy, son of [[priam|Priam]], exposed at birth after a prophecy that he would burn the city — and raised as a shepherd, which is why he is on a mountainside to [[judgmentparis|judge three goddesses]]. He takes [[helen|Helen]] from Sparta and triggers the war. He is a poor fighter but a superb archer, and he kills [[achillesdeath|Achilles]]." },
+  { id: "helen", name: "Helen", type: "mortal", x: 1300, y: 1805, era: 4,
+    story: "Daughter of [[zeus|Zeus]] and [[leda|Leda]], the most beautiful woman alive, and the prize [[aphrodite|Aphrodite]] promised away without asking her. Abducted as a child by [[theseus|Theseus]] and recovered by [[dioscuri|her brothers]]; married to [[menelaus|Menelaus]] under [[suitorsoath|the oath]]; taken to Troy by [[paris|Paris]]. Ancient authors could never agree whether she went willingly." },
+  { id: "clytemnestra", name: "Clytemnestra", type: "mortal", x: 1450, y: 1805, era: 4,
+    story: "Daughter of [[leda|Leda]] and [[tyndareus|Tyndareus]], full sister of [[castor|Castor]], half-sister of [[helen|Helen]]. Married to [[agamemnon|Agamemnon]], who [[aulis|sacrificed their daughter]] for a favourable wind. She waited ten years, took [[aegisthus|Aegisthus]] as her lover, and [[agamemnonmurder|killed her husband]] the day he came home. Her son [[orestes|Orestes]] then kills her." },
+  { id: "polydeuces", name: "Polydeuces (Pollux)", type: "mortal", x: 1300, y: 1915, era: 4,
+    story: "Immortal son of [[zeus|Zeus]] and [[leda|Leda]], twin to the mortal [[castor|Castor]] and full brother of [[helen|Helen]]. A champion boxer, an [[argonauts|Argonaut]], and the one who refuses to be a god alone when [[dioscuri|his brother dies]]." },
+  { id: "castor", name: "Castor", type: "mortal", x: 1450, y: 1915, era: 4,
+    story: "Mortal son of [[tyndareus|Tyndareus]] and [[leda|Leda]], twin to [[polydeuces|Polydeuces]] and full brother of [[clytemnestra|Clytemnestra]]. A horseman and an [[argonauts|Argonaut]]. He is killed in a cattle raid — and [[dioscuri|his death]] is the reason the twins end up in the sky." },
+  { id: "dioscuri", name: "The Dioscuri", type: "event", x: 1375, y: 2035, era: 4,
+    story: "When [[castor|Castor]] was killed, [[polydeuces|Polydeuces]] begged [[zeus|Zeus]] to let him share his immortality rather than lose his twin. They now alternate — one day on Olympus, one in the underworld — and appear as the constellation Gemini. Earlier they had sacked Athens to recover their sister [[helen|Helen]] after [[theseus|Theseus]] abducted her." },
+  { id: "agamemnon", name: "Agamemnon", type: "hero", x: 1620, y: 1805, era: 4,
+    story: "Son of [[atreus|Atreus]], king of Mycenae, commander of the Greek coalition — and heir to a house already built on [[thyesteanfeast|child-murder]] before he is born. He [[aulis|sacrifices his daughter]] to sail, quarrels with [[achilles|Achilles]] over a prize in [[iliad|the Iliad]], wins the war, and is [[agamemnonmurder|murdered in his own bath]] within a day of getting home." },
+  { id: "menelaus", name: "Menelaus", type: "hero", x: 1780, y: 1805, era: 4,
+    story: "Son of [[atreus|Atreus]], king of Sparta, and [[helen|Helen]]'s husband — the wronged party the whole war is nominally about. He is the one man in the House of Atreus who gets a soft ending: after eight years blown off course to Egypt in [[nostoi|the returns]], he reaches home with Helen and lives out his life." },
+  { id: "suitorsoath", name: "The Oath of the Suitors", type: "event", x: 1700, y: 1925, era: 4,
+    story: "Every king in Greece came courting [[helen|Helen]], and [[tyndareus|Tyndareus]] feared the losers would go to war. On [[odysseus|Odysseus]]'s advice he made all of them swear to defend whichever man she chose. She chose [[menelaus|Menelaus]] — so when [[paris|Paris]] took her, the oath obliged the entire Greek world to sail. This is the mechanism that turns an elopement into [[trojanwar|a ten-year war]]." },
+
+  /* ---------- ERA VI ---------- */
+  { id: "aeneas", name: "Aeneas", type: "hero", x: 250, y: 2345, era: 5,
+    story: "Trojan prince, son of [[aphrodite|Aphrodite]] and the mortal Anchises. Homer has him fated to survive; Roman tradition makes that survival the point. He escapes [[sackoftroy|the burning city]] carrying his father on his back and leading his son by the hand, and sails west into [[aeneid|the Aeneid]]. Rome's founding myth is built on the losing side of the Trojan War." },
+  { id: "lesserajax", name: "Ajax the Lesser", type: "hero", x: 400, y: 2455, era: 5,
+    story: "A different Ajax — fast, skilled, and infamous for one act: during [[sackoftroy|the sack]] he dragged [[cassandra|Cassandra]] from [[athena|Athena]]'s altar and violated her there. The Greeks failed to punish him, so Athena punished the whole fleet, and he drowned boasting that he had survived the sea against the gods' will. His crime is why [[nostoi|so few of them get home]]." },
+  { id: "cassandra", name: "Cassandra", type: "mortal", x: 545, y: 2345, era: 5,
+    story: "Daughter of [[priam|Priam]], given true prophecy by Apollo and then cursed never to be believed when she refused him. She foresaw everything — the horse, the sack, her own death — and was dismissed as mad every time. Taken as [[agamemnon|Agamemnon]]'s prize, she walks into his house knowing exactly how she and he will [[agamemnonmurder|die there]]." },
+  { id: "priam", name: "Priam", type: "mortal", x: 680, y: 2235, era: 5,
+    story: "Old king of Troy, father of [[hector|Hector]], [[paris|Paris]] and [[cassandra|Cassandra]] among some fifty children. The most moving scene in [[iliad|the Iliad]] is Priam entering the Greek camp alone to kiss [[achilles|Achilles]]'s hands and beg for his son's body. He is cut down at his own altar during [[sackoftroy|the sack]]." },
+  { id: "hector", name: "Hector", type: "mortal", x: 830, y: 2235, era: 5,
+    story: "Eldest son of [[priam|Priam]] and Troy's best fighter — a defender rather than a glory-seeker, with a wife and small son on the walls behind him. He kills [[achilles|Achilles]]'s companion Patroclus, and Achilles kills him for it and drags his body behind a chariot. [[iliad|The Iliad]] ends with his funeral, not with the fall of the city." },
+  { id: "trojanwar", name: "The Trojan War Begins", type: "event", x: 1000, y: 2235, era: 5,
+    story: "[[paris|Paris]] takes [[helen|Helen]] to Troy; [[suitorsoath|the oath]] obliges every Greek king to sail under [[agamemnon|Agamemnon]]. The army that gathers is the sons of the [[argonauts|Argonauts]] and the veterans of [[epigoni|the Theban wars]] — three generations of myth converging on one beach. The siege lasts ten years." },
+  { id: "aulis", name: "The Sacrifice at Aulis", type: "event", x: 1450, y: 2355, era: 5,
+    story: "The fleet sat becalmed at Aulis, and the seer said Artemis required [[agamemnon|Agamemnon]]'s daughter. He lured [[iphigenia|Iphigenia]] there with a false promise of marriage to [[achilles|Achilles]] and cut her throat. The wind came. [[clytemnestra|Clytemnestra]] never forgives it, and it is the reason she is [[agamemnonmurder|waiting for him]] ten years later." },
+  { id: "iphigenia", name: "Iphigenia", type: "mortal", x: 1450, y: 2235, era: 5,
+    story: "Daughter of [[agamemnon|Agamemnon]] and [[clytemnestra|Clytemnestra]], [[aulis|sacrificed for a favourable wind]]. In one strand of the tradition Artemis substitutes a deer at the last moment and carries her to the Black Sea as a priestess, where her brother [[orestes|Orestes]] eventually finds her alive. Greek myth often lets a horror stand and be undone at the same time." },
+  { id: "iliad", name: "The Iliad", type: "event", x: 1000, y: 2345, era: 5,
+    story: "Not the whole war — about seven weeks of it in year ten. [[agamemnon|Agamemnon]] takes a war prize from [[achilles|Achilles]], who withdraws and lets the Greeks be slaughtered until [[hector|Hector]] kills his companion Patroclus. The poem is about rage and its cost, and it ends with [[priam|Priam]] retrieving his son's body — no wooden horse, no fall of the city." },
+  { id: "achillesdeath", name: "The Death of Achilles", type: "event", x: 860, y: 2455, era: 5,
+    story: "[[paris|Paris]], the worst fighter in Troy, kills the best warrior in the world with an arrow guided by Apollo into his heel — the one spot [[thetis|Thetis]] missed. The contest for his armour afterwards destroys [[ajax|Ajax]] too. Neither death is in [[iliad|the Iliad]]; both come from the wider epic cycle." },
+  { id: "trojanhorse", name: "The Wooden Horse", type: "event", x: 1160, y: 2345, era: 5,
+    story: "[[odysseus|Odysseus]]'s scheme: a hollow horse left as an offering, the fleet apparently sailed away, and a planted informer to talk the Trojans into hauling it inside. [[cassandra|Cassandra]] and the priest Laocoön both warned against it and both were ignored. Ten years of siege undone in one night by a trick." },
+  { id: "sackoftroy", name: "The Sack of Troy", type: "event", x: 1160, y: 2455, era: 5,
+    story: "The city burns. [[priam|Priam]] is killed at his altar, [[hector|Hector]]'s infant son is thrown from the walls, and [[lesserajax|Ajax the Lesser]] violates [[cassandra|Cassandra]] in [[athena|Athena]]'s temple — an act so offensive the goddess turns on her own side. [[aeneas|Aeneas]] escapes. Everything after this is consequence: [[nostoi|the returns]], [[odyssey|the Odyssey]], [[aeneid|the Aeneid]]." },
+
+  /* ---------- ERA VII ---------- */
+  { id: "aeneid", name: "The Aeneid", type: "event", x: 250, y: 2625, era: 6,
+    story: "Virgil's epic, written for Rome seven centuries after Homer. [[aeneas|Aeneas]] wanders the Mediterranean much as [[odyssey|Odysseus]] does — storms, monsters, a descent to the underworld — then wages a war in Italy that mirrors the Iliad. Its structural argument is that Rome inherits Troy's destiny, and it is the reason Greek myth has a Roman sequel at all." },
+  { id: "dido", name: "Dido", type: "mortal", x: 250, y: 2745, era: 6,
+    story: "Queen and founder of Carthage, who takes in [[aeneas|Aeneas]] and falls in love with him. He leaves at the gods' command; she builds a pyre, curses his descendants and kills herself. Virgil is explaining the Punic Wars — Rome and Carthage's mutual hatred is written into their founders' love affair. When Aeneas meets her again in the underworld, she will not speak to him." },
+  { id: "rome", name: "Rome", type: "place", x: 250, y: 2865, era: 6,
+    story: "Not founded by [[aeneas|Aeneas]] but descended from him: his son Ascanius founds Alba Longa, and centuries later Romulus and Remus come from that line. The gap is deliberate — it lets Rome claim Trojan ancestry without pretending the [[aeneid|Aeneid]] and the wolf-twins are the same story." },
+  { id: "nostoi", name: "The Nostoi", type: "event", x: 600, y: 2625, era: 6,
+    story: "'The Returns' — a mostly lost epic about how the other Greeks got home after [[sackoftroy|the sack]]. Because of [[lesserajax|Ajax the Lesser]]'s crime, [[athena|Athena]] had [[poseidon|Poseidon]] wreck the fleet: Ajax drowned, [[menelaus|Menelaus]] spent eight years reaching Egypt and back, [[diomedes|Diomedes]] came home to an unfaithful wife and resettled in Italy, and [[agamemnonmurder|Agamemnon]] sailed straight into an ambush. [[odyssey|The Odyssey]] is the one survivor of this genre." },
+  { id: "odyssey", name: "The Odyssey", type: "event", x: 900, y: 2625, era: 6,
+    story: "Ten years of [[odysseus|Odysseus]] trying to get home — the Cyclops, [[circe|Circe]], the Sirens, Calypso, a visit to the dead where he meets [[achilles|Achilles]] and [[agamemnon|Agamemnon]]'s ghost. [[poseidon|Poseidon]] blocks him at every turn for blinding his son. He reaches Ithaca disguised and kills the men besieging [[penelope|Penelope]]." },
+  { id: "penelope", name: "Penelope", type: "mortal", x: 900, y: 2745, era: 6,
+    story: "[[odysseus|Odysseus]]'s wife, who holds Ithaca for twenty years against a house full of suitors by weaving a shroud each day and unpicking it each night. Homer sets her deliberately against [[clytemnestra|Clytemnestra]] — the same situation, the opposite choice — and the [[odyssey|Odyssey]] keeps making the comparison out loud." },
+  { id: "circe", name: "Circe", type: "mortal", x: 1060, y: 2625, era: 6,
+    story: "A sorceress on the island of Aeaea, aunt of [[medea|Medea]], who turns [[odysseus|Odysseus]]'s crew into pigs and then becomes his ally and lover for a year. She tells him how to reach the land of the dead. In [[telegony|the last story of the cycle]] she is the mother of the son who kills him." },
+  { id: "telegonus", name: "Telegonus", type: "mortal", x: 1060, y: 2745, era: 6,
+    story: "Son of [[odysseus|Odysseus]] and [[circe|Circe]], raised without knowing his father. He goes looking for him, lands on Ithaca, raids it for food, and [[telegony|kills the man who comes out to fight him]] with a spear tipped in stingray barb — not recognising him until it is done." },
+  { id: "telegony", name: "The Telegony", type: "event", x: 1060, y: 2865, era: 6,
+    story: "The lost epic that closes the whole cycle. [[telegonus|Telegonus]] kills [[odysseus|Odysseus]] by accident — 'death from the sea', exactly as prophesied in [[odyssey|the Odyssey]]. Then, extraordinarily, he marries [[penelope|Penelope]] and Odysseus's son Telemachus marries [[circe|Circe]]. Ancient audiences liked their endings tidy rather than comfortable." },
+  { id: "agamemnonmurder", name: "The Murder of Agamemnon", type: "event", x: 1500, y: 2625, era: 6,
+    story: "[[agamemnon|Agamemnon]] comes home victorious and [[clytemnestra|Clytemnestra]] receives him warmly, then kills him in his bath with [[aegisthus|Aegisthus]]'s help — for [[aulis|Iphigenia]], for [[cassandra|Cassandra]] on his arm, and because Aegisthus has been owed this since [[thyesteanfeast|the feast]]. Three generations of the curse arriving at once." },
+  { id: "orestes", name: "Orestes", type: "hero", x: 1500, y: 2745, era: 6,
+    story: "Son of [[agamemnon|Agamemnon]] and [[clytemnestra|Clytemnestra]], smuggled out as a child. Apollo commands him to avenge his father, which means killing his mother — an obligation that is also an unforgivable crime. He does it, and [[orestesrevenge|the Furies]] come for him. His story is the curse's last move." },
+  { id: "electra", name: "Electra", type: "mortal", x: 1660, y: 2745, era: 6,
+    story: "Daughter of [[agamemnon|Agamemnon]], kept in the palace by [[clytemnestra|Clytemnestra]] and [[aegisthus|Aegisthus]] and married off beneath her rank to keep her sons harmless. She waits years for [[orestes|Orestes]] and pushes him to go through with it. All three great tragedians wrote her, and they disagree sharply about whether she is right." },
+  { id: "orestesrevenge", name: "The Trial of Orestes", type: "event", x: 1500, y: 2865, era: 6,
+    story: "[[orestes|Orestes]] kills [[clytemnestra|Clytemnestra]] and [[aegisthus|Aegisthus]] and is hunted mad by the Furies, who prosecute mother-murder and do not care what Apollo ordered. [[athena|Athena]] convenes a jury of Athenian citizens; the vote ties; she acquits him. A court replaces the blood feud, and the curse that began with [[tantalusfeast|Tantalus]] finally stops. That is Athens's argument about civilisation, staged as the end of a family's story." },
+
+  /* ---------- LOCATIONS (also mapped on the Geography tab) ---------- */
+  { id: "attica", name: "Attica", type: "place", x: 280, y: 995, era: 2,
+    story: "The peninsula containing Athens and the towns [[theseus|Theseus]] folded into it. Its own foundation myth is the [[athenscontest|contest between Athena and Poseidon]] for the region's patronage, which Athens then inherited as capital. [[cecrops|Cecrops]] ruled it first; Theseus later welded its scattered demes into the single city-state of [[athens|Athens]]." },
+  { id: "crete", name: "Crete", type: "place", x: 950, y: 775, era: 2,
+    story: "The largest island south of the Aegean, ruled by Minos, son of [[europa|Europa]] and [[zeus|Zeus]]. Minos hid the [[minotaur|Minotaur]] here in Daedalus's labyrinth and exacted tribute from Athens until [[theseus|Theseus]] ended it. The bull-cult imagery running through Crete's myths starts with the very animal Zeus wore to carry Europa here." },
+  { id: "seriphos", name: "Seriphos", type: "place", x: 800, y: 1055, era: 2,
+    story: "A small, poor Cycladic island where [[danae|Danaë]] and infant [[perseus|Perseus]] washed ashore after [[acrisius|Acrisius]] set them adrift. Its king Polydectes, wanting Danaë for himself, sent the grown Perseus after [[medusaquest|Medusa's head]] specifically expecting him never to return." },
+  { id: "ethiopia", name: "Ethiopia", type: "place", x: 1270, y: 1105, era: 2,
+    story: "In Greek geography, a vague catch-all for the lands south of Egypt — home to [[andromeda|Andromeda]] and her parents Cepheus and Cassiopeia. It was Cassiopeia's boast of outshining the sea nymphs in beauty that brought the sea-monster [[medusaquest|Perseus killed]] to their coast in the first place." },
+  { id: "argos", name: "Argos", type: "place", x: 650, y: 1055, era: 2,
+    story: "An old kingdom of the eastern Peloponnese, ruled by [[acrisius|Acrisius]] when he imprisoned [[danae|Danaë]]. [[perseus|Perseus]] returns here a grown man and kills his grandfather by accident, exactly as prophesied — then, unable to sit on a throne he took by killing its king, trades it away and founds [[mycenae|Mycenae]] instead. Generations later, Argos supplies [[diomedes|Diomedes]] to the war at Troy." },
+  { id: "peloponnese", name: "The Peloponnese", type: "place", x: 1350, y: 1015, era: 2,
+    story: "The great southern landmass of Greece, joined to the mainland only by the isthmus of [[corinth|Corinth]]. It takes its name — 'island of Pelops' — from [[pelops|Pelops]], whose sons split its two most powerful thrones, [[mycenae|Mycenae]] and [[sparta|Sparta]], between them." },
+  { id: "mycenae", name: "Mycenae", type: "place", x: 1400, y: 1200, era: 3,
+    story: "Founded by [[perseus|Perseus]] after he declined to rule the [[argos|Argos]] he'd inherited by killing its king. Generations later the throne passes to the [[atreus|House of Atreus]], making it the seat from which [[agamemnon|Agamemnon]] commands the whole Greek war effort — and the house he returns to, to be killed in." },
+  { id: "sparta", name: "Sparta", type: "place", x: 1580, y: 1495, era: 3,
+    story: "Kingdom of [[tyndareus|Tyndareus]] and [[leda|Leda]], and later of [[menelaus|Menelaus]] once he marries into it through [[helen|Helen]]. Because the throne comes bundled with Helen's hand, [[suitorsoath|the oath her suitors swore]] is really an oath sworn to Sparta's next king — exactly why all of Greece owes Menelaus an army when [[paris|Paris]] takes her." },
+  { id: "corinth", name: "Corinth", type: "place", x: 540, y: 1495, era: 3,
+    story: "Sits on the isthmus joining Attica to the [[peloponnese|Peloponnese]] — to hold Corinth is to hold all land traffic between them. In myth it's best known as the adoptive home of [[oedipus|Oedipus]], raised here by a childless king and queen after [[laius|Laius]] exposed him — which is exactly why Oedipus doesn't recognise his real father when they meet on the road." },
+  { id: "iolcus", name: "Iolcus", type: "place", x: 1250, y: 1195, era: 3,
+    story: "A city in Thessaly, north of the main run of this map, and the port [[jason|Jason]] sails from at the start of [[argonauts|the Argo's voyage]]. He's the rightful heir here, sent after the Golden Fleece by an uncle who never expected him to come back — and, awkwardly for that uncle, he does." },
+  { id: "naxos", name: "Naxos", type: "place", x: 20, y: 1425, era: 3,
+    story: "A Cycladic island where [[theseus|Theseus]] abandoned [[ariadne|Ariadne]] asleep on the shore after she helped him escape [[minotaurmyth|the labyrinth]]. [[dionysus|Dionysus]] found her here and married her — one god's rescue quietly undoing one hero's betrayal." },
+  { id: "achaea", name: "Achaea", type: "place", x: 1650, y: 585, era: 1,
+    story: "A region of the northern Peloponnese whose name, via the ancestor Achaeus (son of [[xuthus|Xuthus]]), gives Homer his everyday word for the Greeks besieging Troy — 'Achaeans'. A reminder that the army at [[trojanwar|Troy]] isn't a nation in the modern sense, just an alliance of kings who all trace descent back to [[hellen|Hellen]]." },
+  { id: "ithaca", name: "Ithaca", type: "place", x: 1020, y: 2055, era: 4,
+    story: "A rugged island on Greece's western coast, [[odysseus|Odysseus]]'s kingdom and the destination of [[odyssey|the Odyssey]]'s entire ten-year detour. [[penelope|Penelope]] holds it for him against a hall full of suitors, and it's here — not at Troy — that the poem actually ends." },
+  { id: "troy", name: "Troy", type: "place", x: 1000, y: 2140, era: 5,
+    story: "A wealthy city on the northwest coast of Anatolia, across the Aegean from Greece, ruled by [[priam|Priam]]. Its ten-year siege is the [[trojanwar|Trojan War]]; almost none of that decade is dramatised directly — [[iliad|the Iliad]] covers seven weeks of year ten, and the city's actual fall happens off-page, in the wider epic cycle around [[trojanhorse|the wooden horse]], not in Homer." },
+  { id: "carthage", name: "Carthage", type: "place", x: 100, y: 2685, era: 6,
+    story: "A Phoenician city on the North African coast, ruled by [[dido|Dido]] when the storm-blown [[aeneas|Aeneas]] washes up here in [[aeneid|the Aeneid]]. Virgil is writing for a Roman audience who already know Rome and Carthage will fight three catastrophic wars — Dido's dying curse on Aeneas's descendants is the mythic seed of that history." },
+  { id: "albalonga", name: "Alba Longa", type: "place", x: 400, y: 2865, era: 6,
+    story: "The city [[aeneas|Aeneas]]'s son Ascanius founds in Italy — not Rome itself, but the dynasty's holding pattern for the next three centuries. [[rome|Rome]] only gets founded once a much later pair of twins, Romulus and Remus, are born into this line and set out on their own." },
+  { id: "aeaea", name: "Aeaea", type: "place", x: 1220, y: 2625, era: 6,
+    story: "The island of [[circe|Circe]], where [[odysseus|Odysseus]]'s crew are turned to pigs and then restored, and where he stays a year before she tells him how to reach the land of the dead. It's also, unknowingly, the birthplace of the son — [[telegonus|Telegonus]] — who will one day kill him." },
+];
+
+/* ------------------------------------------------------------------ */
+/*  EDGES                                                              */
+/* ------------------------------------------------------------------ */
+const e = (a, b, t) => ({ a, b, t });
+const EDGES = [
+  /* bloodlines */
+  e("titans", "cronus", "blood"), e("titans", "prometheus", "blood"), e("titans", "epimetheus", "blood"),
+  e("cronus", "zeus", "blood"), e("cronus", "poseidon", "blood"), e("cronus", "hades", "blood"),
+  e("cronus", "hera", "blood"), e("cronus", "demeter", "blood"),
+  e("zeus", "athena", "blood"), e("zeus", "ares", "blood"), e("hera", "ares", "blood"),
+  e("hera", "hephaestus", "blood"), e("zeus", "persephone", "blood"), e("demeter", "persephone", "blood"),
+  e("prometheus", "deucalion", "blood"), e("epimetheus", "pyrrha", "blood"), e("pandora", "pyrrha", "blood"),
+  e("deucalion", "hellen", "blood"), e("pyrrha", "hellen", "blood"),
+  e("hellen", "dorus", "blood"), e("hellen", "aeolus", "blood"), e("hellen", "xuthus", "blood"),
+  e("cadmus", "europa", "blood"), e("zeus", "europa", "union"),
+  e("cadmus", "semele", "blood"), e("harmonia", "semele", "blood"),
+  e("zeus", "dionysus", "blood"), e("semele", "dionysus", "blood"),
+  e("cadmus", "pentheus", "descent"), e("cadmus", "laius", "descent"),
+  e("laius", "oedipus", "blood"), e("jocasta", "oedipus", "blood"),
+  e("oedipus", "eteocles", "blood"), e("oedipus", "polynices", "blood"), e("oedipus", "antigone", "blood"),
+  e("acrisius", "danae", "blood"), e("zeus", "perseus", "blood"), e("danae", "perseus", "blood"),
+  e("perseus", "alcmene", "descent"), e("zeus", "heracles", "blood"), e("alcmene", "heracles", "blood"),
+  e("aegeus", "theseus", "blood"), e("poseidon", "theseus", "blood"),
+  e("tantalus", "pelops", "blood"), e("pelops", "atreus", "blood"), e("pelops", "thyestes", "blood"),
+  e("hippodamia", "atreus", "blood"), e("hippodamia", "thyestes", "blood"),
+  e("atreus", "agamemnon", "blood"), e("atreus", "menelaus", "blood"), e("thyestes", "aegisthus", "blood"),
+  e("zeus", "helen", "blood"), e("leda", "helen", "blood"),
+  e("zeus", "polydeuces", "blood"), e("leda", "polydeuces", "blood"),
+  e("tyndareus", "clytemnestra", "blood"), e("leda", "clytemnestra", "blood"),
+  e("tyndareus", "castor", "blood"), e("leda", "castor", "blood"),
+  e("agamemnon", "iphigenia", "blood"), e("clytemnestra", "iphigenia", "blood"),
+  e("agamemnon", "orestes", "blood"), e("clytemnestra", "orestes", "blood"),
+  e("agamemnon", "electra", "blood"), e("clytemnestra", "electra", "blood"),
+  e("peleus", "achilles", "blood"), e("thetis", "achilles", "blood"),
+  e("peleus", "telamon", "blood"), e("telamon", "ajax", "blood"),
+  e("priam", "hector", "blood"), e("priam", "paris", "blood"), e("priam", "cassandra", "blood"),
+  e("aphrodite", "aeneas", "blood"), e("aeneas", "rome", "descent"),
+  e("circe", "telegonus", "blood"), e("odysseus", "telegonus", "blood"),
+  e("europa", "minotaur", "descent"),
+
+  /* unions */
+  e("zeus", "hera", "union"), e("hades", "persephone", "union"), e("epimetheus", "pandora", "union"),
+  e("deucalion", "pyrrha", "union"), e("cadmus", "harmonia", "union"), e("perseus", "andromeda", "union"),
+  e("oedipus", "jocasta", "union"), e("pelops", "hippodamia", "union"), e("peleus", "thetis", "union"),
+  e("leda", "tyndareus", "union"), e("jason", "medea", "union"), e("theseus", "ariadne", "union"),
+  e("dionysus", "ariadne", "union"), e("menelaus", "helen", "union"), e("agamemnon", "clytemnestra", "union"),
+  e("aegisthus", "clytemnestra", "union"), e("odysseus", "penelope", "union"), e("aeneas", "dido", "union"),
+  e("paris", "helen", "union"),
+
+  /* appears in story */
+  e("titans", "titanomachy", "part"), e("cronus", "titanomachy", "part"), e("zeus", "titanomachy", "part"),
+  e("zeus", "cosmosdivision", "part"), e("poseidon", "cosmosdivision", "part"), e("hades", "cosmosdivision", "part"),
+  e("hades", "persephonemyth", "part"), e("persephone", "persephonemyth", "part"), e("demeter", "persephonemyth", "part"),
+  e("prometheus", "mankindclay", "part"), e("athena", "mankindclay", "part"),
+  e("prometheus", "sacrificetrick", "part"), e("zeus", "sacrificetrick", "part"),
+  e("prometheus", "theftoffire", "part"), e("zeus", "theftoffire", "part"),
+  e("prometheus", "prometheusbound", "part"), e("hephaestus", "prometheusbound", "part"),
+  e("pandora", "pandorasjar", "part"), e("epimetheus", "pandorasjar", "part"),
+  e("hephaestus", "pandorasjar", "part"), e("zeus", "pandorasjar", "part"),
+  e("zeus", "theflood", "part"), e("deucalion", "theflood", "part"),
+  e("pyrrha", "theflood", "part"), e("prometheus", "theflood", "part"),
+  e("deucalion", "stonesmen", "part"), e("pyrrha", "stonesmen", "part"), e("hellen", "stonesmen", "part"),
+  e("athena", "athenscontest", "part"), e("poseidon", "athenscontest", "part"),
+  e("cecrops", "athenscontest", "part"), e("athens", "athenscontest", "part"),
+  e("cadmus", "thebesfounding", "part"), e("ares", "thebesfounding", "part"),
+  e("thebes", "thebesfounding", "part"), e("harmonia", "thebesfounding", "part"),
+  e("perseus", "medusaquest", "part"), e("medusa", "medusaquest", "part"),
+  e("athena", "medusaquest", "part"), e("andromeda", "medusaquest", "part"),
+  e("tantalus", "tantalusfeast", "part"), e("pelops", "tantalusfeast", "part"), e("demeter", "tantalusfeast", "part"),
+  e("pelops", "pelopsrace", "part"), e("hippodamia", "pelopsrace", "part"),
+  e("heracles", "labors", "part"), e("hera", "labors", "part"), e("hades", "labors", "part"),
+  e("theseus", "minotaurmyth", "part"), e("minotaur", "minotaurmyth", "part"),
+  e("ariadne", "minotaurmyth", "part"), e("aegeus", "minotaurmyth", "part"),
+  e("theseus", "atticaunion", "part"), e("athens", "atticaunion", "part"),
+  e("theseus", "underworldraid", "part"), e("hades", "underworldraid", "part"), e("persephone", "underworldraid", "part"),
+  e("heracles", "heraclesdeath", "part"),
+  e("jason", "argonauts", "part"), e("medea", "argonauts", "part"), e("peleus", "argonauts", "part"),
+  e("telamon", "argonauts", "part"), e("heracles", "argonauts", "part"),
+  e("castor", "argonauts", "part"), e("polydeuces", "argonauts", "part"),
+  e("oedipus", "oedipusmyth", "part"), e("laius", "oedipusmyth", "part"),
+  e("jocasta", "oedipusmyth", "part"), e("thebes", "oedipusmyth", "part"),
+  e("atreus", "thyesteanfeast", "part"), e("thyestes", "thyesteanfeast", "part"), e("aegisthus", "thyesteanfeast", "part"),
+  e("polynices", "seventhebes", "part"), e("eteocles", "seventhebes", "part"),
+  e("antigone", "seventhebes", "part"), e("thebes", "seventhebes", "part"), e("harmonia", "seventhebes", "part"),
+  e("diomedes", "epigoni", "part"), e("alcmaeon", "epigoni", "part"), e("thebes", "epigoni", "part"),
+  e("peleus", "peleusthetiswedding", "part"), e("thetis", "peleusthetiswedding", "part"),
+  e("eris", "peleusthetiswedding", "part"), e("chiron", "peleusthetiswedding", "part"),
+  e("eris", "goldenapple", "part"), e("hera", "goldenapple", "part"),
+  e("athena", "goldenapple", "part"), e("aphrodite", "goldenapple", "part"),
+  e("paris", "judgmentparis", "part"), e("aphrodite", "judgmentparis", "part"),
+  e("hera", "judgmentparis", "part"), e("athena", "judgmentparis", "part"), e("helen", "judgmentparis", "part"),
+  e("helen", "suitorsoath", "part"), e("menelaus", "suitorsoath", "part"),
+  e("odysseus", "suitorsoath", "part"), e("tyndareus", "suitorsoath", "part"), e("agamemnon", "suitorsoath", "part"),
+  e("castor", "dioscuri", "part"), e("polydeuces", "dioscuri", "part"), e("zeus", "dioscuri", "part"), e("helen", "dioscuri", "part"),
+  e("helen", "trojanwar", "part"), e("paris", "trojanwar", "part"),
+  e("menelaus", "trojanwar", "part"), e("agamemnon", "trojanwar", "part"),
+  e("agamemnon", "aulis", "part"), e("iphigenia", "aulis", "part"), e("clytemnestra", "aulis", "part"),
+  e("achilles", "iliad", "part"), e("hector", "iliad", "part"),
+  e("agamemnon", "iliad", "part"), e("odysseus", "iliad", "part"), e("priam", "iliad", "part"),
+  e("achilles", "achillesdeath", "part"), e("paris", "achillesdeath", "part"), e("ajax", "achillesdeath", "part"),
+  e("odysseus", "trojanhorse", "part"), e("cassandra", "trojanhorse", "part"),
+  e("lesserajax", "sackoftroy", "part"), e("cassandra", "sackoftroy", "part"),
+  e("aeneas", "sackoftroy", "part"), e("priam", "sackoftroy", "part"), e("athena", "sackoftroy", "part"),
+  e("menelaus", "nostoi", "part"), e("lesserajax", "nostoi", "part"), e("diomedes", "nostoi", "part"),
+  e("athena", "nostoi", "part"), e("helen", "nostoi", "part"),
+  e("odysseus", "odyssey", "part"), e("penelope", "odyssey", "part"),
+  e("circe", "odyssey", "part"), e("poseidon", "odyssey", "part"),
+  e("telegonus", "telegony", "part"), e("circe", "telegony", "part"), e("penelope", "telegony", "part"),
+  e("aeneas", "aeneid", "part"), e("dido", "aeneid", "part"), e("rome", "aeneid", "part"),
+  e("agamemnon", "agamemnonmurder", "part"), e("clytemnestra", "agamemnonmurder", "part"),
+  e("aegisthus", "agamemnonmurder", "part"), e("cassandra", "agamemnonmurder", "part"),
+  e("orestes", "orestesrevenge", "part"), e("clytemnestra", "orestesrevenge", "part"),
+  e("electra", "orestesrevenge", "part"), e("athena", "orestesrevenge", "part"), e("athens", "orestesrevenge", "part"),
+
+  /* causal chains */
+  e("titanomachy", "cosmosdivision", "cause"),
+  e("mankindclay", "sacrificetrick", "cause"), e("sacrificetrick", "theftoffire", "cause"),
+  e("theftoffire", "prometheusbound", "cause"), e("theftoffire", "pandorasjar", "cause"),
+  e("pandorasjar", "theflood", "cause"), e("theflood", "stonesmen", "cause"),
+  e("thebesfounding", "oedipusmyth", "cause"), e("oedipusmyth", "seventhebes", "cause"),
+  e("seventhebes", "epigoni", "cause"),
+  e("minotaurmyth", "atticaunion", "cause"), e("labors", "heraclesdeath", "cause"),
+  e("tantalusfeast", "pelopsrace", "cause"), e("pelopsrace", "thyesteanfeast", "cause"),
+  e("thyesteanfeast", "agamemnonmurder", "cause"),
+  e("peleusthetiswedding", "goldenapple", "cause"), e("goldenapple", "judgmentparis", "cause"),
+  e("judgmentparis", "trojanwar", "cause"), e("suitorsoath", "trojanwar", "cause"),
+  e("trojanwar", "aulis", "cause"), e("aulis", "iliad", "cause"),
+  e("iliad", "achillesdeath", "cause"), e("iliad", "trojanhorse", "cause"),
+  e("trojanhorse", "sackoftroy", "cause"),
+  e("sackoftroy", "nostoi", "cause"), e("sackoftroy", "odyssey", "cause"), e("sackoftroy", "aeneid", "cause"),
+  e("nostoi", "agamemnonmurder", "cause"), e("agamemnonmurder", "orestesrevenge", "cause"),
+  e("odyssey", "telegony", "cause"),
+
+  /* long-range crossovers */
+  e("heracles", "prometheusbound", "crossover"),
+  e("heracles", "underworldraid", "crossover"),
+  e("chiron", "achilles", "crossover"),
+  e("theseus", "dioscuri", "crossover"),
+  e("diomedes", "iliad", "crossover"),
+  e("prometheus", "peleusthetiswedding", "crossover"),
+  e("atreus", "perseus", "crossover"),
+  e("argonauts", "trojanwar", "crossover"),
+  e("epigoni", "trojanwar", "crossover"),
+  e("alcmaeon", "orestesrevenge", "crossover"),
+  e("penelope", "clytemnestra", "crossover"),
+  e("telamon", "ajax", "crossover"),
+  e("medea", "circe", "crossover"),
+
+  /* location ties */
+  e("cecrops", "attica", "part"), e("athenscontest", "attica", "part"),
+  e("athens", "attica", "part"), e("theseus", "attica", "part"),
+  e("europa", "crete", "part"), e("minotaur", "crete", "part"),
+  e("theseus", "crete", "part"), e("zeus", "crete", "part"),
+  e("danae", "seriphos", "part"), e("perseus", "seriphos", "part"), e("acrisius", "seriphos", "part"),
+  e("andromeda", "ethiopia", "part"), e("medusaquest", "ethiopia", "part"),
+  e("acrisius", "argos", "part"), e("danae", "argos", "part"),
+  e("perseus", "argos", "part"), e("diomedes", "argos", "part"),
+  e("pelops", "peloponnese", "part"), e("mycenae", "peloponnese", "part"), e("sparta", "peloponnese", "part"),
+  e("perseus", "mycenae", "part"), e("argos", "mycenae", "part"),
+  e("atreus", "mycenae", "part"), e("agamemnon", "mycenae", "part"),
+  e("tyndareus", "sparta", "part"), e("leda", "sparta", "part"),
+  e("menelaus", "sparta", "part"), e("helen", "sparta", "part"), e("suitorsoath", "sparta", "part"),
+  e("oedipus", "corinth", "part"), e("laius", "corinth", "part"), e("peloponnese", "corinth", "part"),
+  e("jason", "iolcus", "part"), e("argonauts", "iolcus", "part"),
+  e("theseus", "naxos", "part"), e("ariadne", "naxos", "part"),
+  e("dionysus", "naxos", "part"), e("minotaurmyth", "naxos", "part"),
+  e("xuthus", "achaea", "part"), e("trojanwar", "achaea", "part"), e("hellen", "achaea", "part"),
+  e("odysseus", "ithaca", "part"), e("penelope", "ithaca", "part"), e("odyssey", "ithaca", "part"),
+  e("priam", "troy", "part"), e("trojanwar", "troy", "part"),
+  e("iliad", "troy", "part"), e("trojanhorse", "troy", "part"),
+  e("dido", "carthage", "part"), e("aeneas", "carthage", "part"), e("aeneid", "carthage", "part"),
+  e("aeneas", "albalonga", "part"), e("albalonga", "rome", "descent"),
+  e("circe", "aeaea", "part"), e("odysseus", "aeaea", "part"), e("telegonus", "aeaea", "part"),
+];
+
+const GREEK = {
+  titans: "ΤΙΤΑΝΕΣ",
+  cronus: "ΚΡΟΝΟΣ",
+  titanomachy: "ΤΙΤΑΝΟΜΑΧΙΑ",
+  zeus: "ΖΕΥΣ",
+  poseidon: "ΠΟΣΕΙΔΩΝ",
+  hades: "ΑΙΔΗΣ",
+  hera: "ΗΡΑ",
+  demeter: "ΔΗΜΗΤΗΡ",
+  persephone: "ΠΕΡΣΕΦΟΝΗ",
+  athena: "ΑΘΗΝΑ",
+  aphrodite: "ΑΦΡΟΔΙΤΗ",
+  ares: "ΑΡΗΣ",
+  hephaestus: "ΗΦΑΙΣΤΟΣ",
+  eris: "ΕΡΙΣ",
+  prometheus: "ΠΡΟΜΗΘΕΥΣ",
+  epimetheus: "ΕΠΙΜΗΘΕΥΣ",
+  pandora: "ΠΑΝΔΩΡΑ",
+  deucalion: "ΔΕΥΚΑΛΙΩΝ",
+  pyrrha: "ΠΥΡΡΑ",
+  hellen: "ΕΛΛΗΝ",
+  dorus: "ΔΩΡΟΣ",
+  aeolus: "ΑΙΟΛΟΣ",
+  xuthus: "ΞΟΥΘΟΣ",
+  cecrops: "ΚΕΚΡΟΨ",
+  athens: "ΑΘΗΝΑΙ",
+  europa: "ΕΥΡΩΠΗ",
+  cadmus: "ΚΑΔΜΟΣ",
+  harmonia: "ΑΡΜΟΝΙΑ",
+  thebes: "ΘΗΒΑΙ",
+  semele: "ΣΕΜΕΛΗ",
+  dionysus: "ΔΙΟΝΥΣΟΣ",
+  pentheus: "ΠΕΝΘΕΥΣ",
+  acrisius: "ΑΚΡΙΣΙΟΣ",
+  danae: "ΔΑΝΑΗ",
+  perseus: "ΠΕΡΣΕΥΣ",
+  medusa: "ΜΕΔΟΥΣΑ",
+  andromeda: "ΑΝΔΡΟΜΕΔΑ",
+  tantalus: "ΤΑΝΤΑΛΟΣ",
+  pelops: "ΠΕΛΟΨ",
+  hippodamia: "ΙΠΠΟΔΑΜΕΙΑ",
+  ariadne: "ΑΡΙΑΔΝΗ",
+  minotaur: "ΜΙΝΩΤΑΥΡΟΣ",
+  aegeus: "ΑΙΓΕΥΣ",
+  theseus: "ΘΗΣΕΥΣ",
+  laius: "ΛΑΙΟΣ",
+  jocasta: "ΙΟΚΑΣΤΗ",
+  oedipus: "ΟΙΔΙΠΟΥΣ",
+  eteocles: "ΕΤΕΟΚΛΗΣ",
+  polynices: "ΠΟΛΥΝΕΙΚΗΣ",
+  alcmene: "ΑΛΚΜΗΝΗ",
+  heracles: "ΗΡΑΚΛΗΣ",
+  chiron: "ΧΕΙΡΩΝ",
+  jason: "ΙΑΣΩΝ",
+  medea: "ΜΗΔΕΙΑ",
+  peleus: "ΠΗΛΕΥΣ",
+  telamon: "ΤΕΛΑΜΩΝ",
+  thetis: "ΘΕΤΙΣ",
+  atreus: "ΑΤΡΕΥΣ",
+  thyestes: "ΘΥΕΣΤΗΣ",
+  aegisthus: "ΑΙΓΙΣΘΟΣ",
+  leda: "ΛΗΔΑ",
+  tyndareus: "ΤΥΝΔΑΡΕΩΣ",
+  antigone: "ΑΝΤΙΓΟΝΗ",
+  seventhebes: "ΕΠΤΑ ΕΠΙ ΘΗΒΑΣ",
+  epigoni: "ΕΠΙΓΟΝΟΙ",
+  alcmaeon: "ΑΛΚΜΑΙΩΝ",
+  diomedes: "ΔΙΟΜΗΔΗΣ",
+  ajax: "ΑΙΑΣ",
+  odysseus: "ΟΔΥΣΣΕΥΣ",
+  achilles: "ΑΧΙΛΛΕΥΣ",
+  judgmentparis: "ΚΡΙΣΙΣ ΠΑΡΙΔΟΣ",
+  paris: "ΠΑΡΙΣ",
+  helen: "ΕΛΕΝΗ",
+  clytemnestra: "ΚΛΥΤΑΙΜΝΗΣΤΡΑ",
+  polydeuces: "ΠΟΛΥΔΕΥΚΗΣ",
+  castor: "ΚΑΣΤΩΡ",
+  dioscuri: "ΔΙΟΣΚΟΥΡΟΙ",
+  agamemnon: "ΑΓΑΜΕΜΝΩΝ",
+  menelaus: "ΜΕΝΕΛΑΟΣ",
+  aeneas: "ΑΙΝΕΙΑΣ",
+  lesserajax: "ΑΙΑΣ Ο ΛΟΚΡΟΣ",
+  cassandra: "ΚΑΣΣΑΝΔΡΑ",
+  priam: "ΠΡΙΑΜΟΣ",
+  hector: "ΕΚΤΩΡ",
+  iphigenia: "ΙΦΙΓΕΝΕΙΑ",
+  iliad: "ΙΛΙΑΣ",
+  aeneid: "AENEIS",
+  dido: "ΔΙΔΩ",
+  rome: "ΡΩΜΗ",
+  nostoi: "ΝΟΣΤΟΙ",
+  odyssey: "ΟΔΥΣΣΕΙΑ",
+  penelope: "ΠΗΝΕΛΟΠΗ",
+  circe: "ΚΙΡΚΗ",
+  telegonus: "ΤΗΛΕΓΟΝΟΣ",
+  telegony: "ΤΗΛΕΓΟΝΕΙΑ",
+  orestes: "ΟΡΕΣΤΗΣ",
+  electra: "ΗΛΕΚΤΡΑ",
+  medusaquest: "ΠΕΡΣΕΥΣ ΚΑΙ ΜΕΔΟΥΣΑ",
+  minotaurmyth: "ΘΗΣΕΥΣ ΚΑΙ ΜΙΝΩΤΑΥΡΟΣ",
+  argonauts: "ΑΡΓΟΝΑΥΤΑΙ",
+  labors: "ΑΘΛΟΙ",
+  goldenapple: "ΜΗΛΟΝ ΤΗΣ ΕΡΙΔΟΣ",
+  trojanwar: "ΤΡΩΙΚΟΣ ΠΟΛΕΜΟΣ",
+  theflood: "ΚΑΤΑΚΛΥΣΜΟΣ",
+  attica: "ΑΤΤΙΚΗ",
+  crete: "ΚΡΗΤΗ",
+  seriphos: "ΣΕΡΙΦΟΣ",
+  ethiopia: "ΑΙΘΙΟΠΙΑ",
+  argos: "ΑΡΓΟΣ",
+  peloponnese: "ΠΕΛΟΠΟΝΝΗΣΟΣ",
+  mycenae: "ΜΥΚΗΝΑΙ",
+  sparta: "ΣΠΑΡΤΗ",
+  corinth: "ΚΟΡΙΝΘΟΣ",
+  iolcus: "ΙΩΛΚΟΣ",
+  naxos: "ΝΑΞΟΣ",
+  achaea: "ΑΧΑΙΑ",
+  ithaca: "ΙΘΑΚΗ",
+  troy: "ΤΡΟΙΑ",
+  carthage: "ΚΑΡΧΗΔΩΝ",
+  albalonga: "ALBA LONGA",
+  aeaea: "ΑΙΑΙΗ"
+};
+
+
+/* ---------------- palette override: Attic red-figure ---------------- */
+Object.assign(C, {
+  void:"#140f0c", panel:"#1a1310", panelSoft:"#221913", rule:"#4a3020", clay:"#c8703c",
+  star:"#f0e4cf", muted:"#a8825f", faint:"#8a5f3f",
+  titan:"#a2453a", god:"#dda94b", hero:"#dd8b52", mortal:"#b98a63",
+  monster:"#8e8a4a", event:"#f0e4cf", place:"#5f8a85"
+});
+Object.assign(EDGE_STYLE, {
+  blood:     { color:"#8a5f3f", w:1.1, dash:null,    label:"Parent to child" },
+  descent:   { color:"#8a5f3f", w:1.1, dash:"2 5",   label:"Generations later" },
+  union:     { color:"#dda94b", w:1.1, dash:"6 4",   label:"Marriage or affair" },
+  part:      { color:"#6f4b32", w:1,   dash:null,    label:"Appears in story" },
+  cause:     { color:"#c8703c", w:1.7, dash:null,    label:"Leads directly to" },
+  crossover: { color:"#a2453a", w:1.5, dash:"1 5",   label:"Crosses the registers" }
+});
+const GREEK_NUM = ["Α΄","Β΄","Γ΄","Δ΄","Ε΄","Ϛ΄","Ζ΄"];
+
+/* ---------------- derived ---------------- */
+const BY_ID = Object.fromEntries(NODES.map(n => [n.id, n]));
+NODES.forEach(n => n.gk = GREEK[n.id] || "");
+const ADJ = {};
+NODES.forEach(n => ADJ[n.id] = new Set());
+EDGES.forEach(ed => { if (ADJ[ed.a] && ADJ[ed.b]) { ADJ[ed.a].add(ed.b); ADJ[ed.b].add(ed.a); } });
+
+const TYPE_PALETTES = {
+  dark:  { titan:"#a2453a", god:"#dda94b", hero:"#dd8b52", mortal:"#b98a63", monster:"#8e8a4a", event:"#f0e4cf", place:"#5f8a85" },
+  light: { titan:"#8a3a30", god:"#8a4a1e", hero:"#95501f", mortal:"#6b3f22", monster:"#5c5926", event:"#241a12", place:"#3f6b66" }
+};
+const typeColor = t => (TYPE_PALETTES[currentTheme] && TYPE_PALETTES[currentTheme][t]) || C.muted;
+
+function wrap(text, max){
+  const words = text.split(" "); const lines = []; let cur = "";
+  for (const w of words){
+    if (!cur) cur = w;
+    else if ((cur + " " + w).length <= max) cur += " " + w;
+    else { lines.push(cur); cur = w; }
+  }
+  if (cur) lines.push(cur);
+  return lines;
+}
+
+const LAYOUT = {};
+NODES.forEach(n => {
+  const isEvent = n.type === "event";
+  const lines = wrap(n.name, isEvent ? 17 : 15);
+  const longest = Math.max(...lines.map(l => l.length));
+  LAYOUT[n.id] = { lines, w: longest * 6.4 + 26, h: lines.length * 13 + 14, isEvent };
+});
+
+/* ---------------- state ---------------- */
+const state = {
+  selected: null, hovered: null, mode: "map",
+  filters: Object.fromEntries(Object.keys(EDGE_STYLE).map(k => [k, true])),
+  view: { k: 0.6, tx: 90, ty: 20 }
+};
+
+const NS = "http://www.w3.org/2000/svg";
+const svg = document.getElementById("svg");
+const stage = document.getElementById("stage");
+const panel = document.getElementById("panel");
+const indexEl = document.getElementById("index");
+const hint = document.getElementById("hint");
+const legend = document.getElementById("legend");
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+document.getElementById("counts").textContent =
+  NODES.length + " figures, " + EDGES.length + " links — from the Titans to the founding of Rome";
+document.getElementById("hintx").style.color = EDGE_STYLE.crossover.color;
+
+/* ---------------- svg helpers ---------------- */
+const el = (tag, attrs) => {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+};
+
+const defs = el("defs");
+defs.innerHTML =
+  '<radialGradient id="glow" cx="50%" cy="50%" r="50%">' +
+    '<stop offset="0%" stop-color="#f0e4cf" stop-opacity="0.24"/>' +
+    '<stop offset="100%" stop-color="#f0e4cf" stop-opacity="0"/>' +
+  '</radialGradient>' +
+  '<radialGradient id="glowLight" cx="50%" cy="50%" r="50%">' +
+    '<stop offset="0%" stop-color="#241a12" stop-opacity="0.18"/>' +
+    '<stop offset="100%" stop-color="#241a12" stop-opacity="0"/>' +
+  '</radialGradient>' +
+  '<pattern id="key" width="16" height="14" patternUnits="userSpaceOnUse">' +
+    '<g fill="none" stroke="#c8703c" stroke-width="1.6" opacity="0.5">' +
+      '<path d="M0 12.5H16"/><path d="M3 12.5V3H13V9H7.5V6.2"/>' +
+    '</g>' +
+  '</pattern>';
+svg.appendChild(defs);
+const meanderPatternStroke = defs.querySelector("#key g");
+
+/* ---------------- theme: red-figure (dark ground) / black-figure (pale ground) ---------------- */
+let currentTheme = "dark";
+const SVG_THEME = {
+  dark: {
+    registerA: "#1c1511", registerB: "#191310", registerStroke: "#3a2517",
+    meander: "#c8703c", eraNum: "#dda94b", eraName: "#8a5f3f",
+    text: "#f0e4cf", greek: "#a2704a", nodeStroke: "#140f0c",
+    eventFill: "#100b08", eventFillOn: "#241a12", eventStroke: "#8a5f3f", eventStrokeOn: "#f0e4cf"
+  },
+  light: {
+    registerA: "#e4d0a5", registerB: "#ecdcb7", registerStroke: "#c2a173",
+    meander: "#6b3f22", eraNum: "#8a4a1e", eraName: "#7a5535",
+    text: "#241a12", greek: "#6b3f22", nodeStroke: "#ecdfba",
+    eventFill: "#f4e8cc", eventFillOn: "#fff5db", eventStroke: "#6b3f22", eventStrokeOn: "#241a12"
+  }
+};
+
+const world = el("g", { id: "world" });
+svg.appendChild(world);
+
+/* ---- palmette ornament (a small fan of lobes, as painted on vase shoulders) ---- */
+function palmette(cx, cy, r, fill, op){
+  const g = el("g", { opacity: op });
+  for (let i = 0; i < 7; i++){
+    const a = -90 + (i - 3) * 24;
+    const lobe = el("ellipse", { cx: cx, cy: cy - r * 0.55, rx: r * 0.15, ry: r * 0.55, fill: fill });
+    lobe.setAttribute("transform", "rotate(" + a + " " + cx + " " + cy + ")");
+    g.appendChild(lobe);
+  }
+  g.appendChild(el("circle", { cx: cx, cy: cy, r: r * 0.16, fill: fill }));
+  return g;
+}
+
+/* ---------------- registers (era bands) ---------------- */
+const registerEls = [];
+const eraTextEls = [];
+ERAS.forEach((era, i) => {
+  const g = el("g");
+  const h = era.y1 - era.y0;
+  const band = el("rect", { x: -70, y: era.y0, width: W + 150, height: h,
+    fill: i % 2 ? "#191310" : "#1c1511", stroke: "#3a2517", "stroke-width": 1 });
+  g.appendChild(band);
+  registerEls.push({ rect: band, i });
+  /* meander strip along the register's upper edge */
+  g.appendChild(el("rect", { x: -70, y: era.y0 + 2, width: W + 150, height: 14, fill: "url(#key)" }));
+  g.appendChild(el("rect", { x: -70, y: era.y1 - 16, width: W + 150, height: 14,
+    fill: "url(#key)", transform: "translate(0," + (2 * (era.y1 - 16) + 14) + ") scale(1,-1)" }));
+
+  const t1 = el("text", { x: -52, y: era.y0 + 60, fill: C.god, "font-size": 30,
+    "font-family": "'GFS Didot',serif", opacity: 0.85 });
+  t1.textContent = GREEK_NUM[i];
+  const t2 = el("text", { x: -52, y: era.y0 + 82, fill: "#8a5f3f", "font-size": 12.5,
+    "font-family": "'Spectral',serif", "letter-spacing": 3 });
+  t2.textContent = era.name.toUpperCase();
+  g.appendChild(t1); g.appendChild(t2);
+  eraTextEls.push({ num: t1, name: t2 });
+  g.appendChild(palmette(-40, era.y0 + 108, 15, "#c8703c", 0.3));
+  world.appendChild(g);
+});
+
+/* ---------------- edges ---------------- */
+const edgeEls = [];
+EDGES.forEach(ed => {
+  const A = BY_ID[ed.a], B = BY_ID[ed.b];
+  if (!A || !B) return;
+  const st = EDGE_STYLE[ed.t];
+  const mx = (A.x + B.x) / 2, my = (A.y + B.y) / 2;
+  const dx = B.x - A.x, dy = B.y - A.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const bow = Math.min(48, len * 0.11);
+  const cx = mx + (-dy / len) * bow, cy = my + (dx / len) * bow;
+  const p = el("path", {
+    d: "M " + A.x + " " + A.y + " Q " + cx + " " + cy + " " + B.x + " " + B.y,
+    fill: "none", stroke: st.color, "stroke-width": st.w, "stroke-linecap": "round"
+  });
+  if (st.dash) p.setAttribute("stroke-dasharray", st.dash);
+  world.appendChild(p);
+  edgeEls.push({ p, ed, st, solid: !st.dash });
+});
+
+/* ---------------- nodes ---------------- */
+const nodeEls = [];
+NODES.forEach(n => {
+  const L = LAYOUT[n.id];
+  const col = typeColor(n.type);
+  const g = el("g", { style: "cursor:pointer" });
+  g.dataset.id = n.id;
+
+  const glow = el("circle", { cx: n.x, cy: n.y, r: 48, fill: "url(#glow)", opacity: 0 });
+  g.appendChild(glow);
+
+  /* Greek inscription above the figure, as the vase painters wrote it */
+  let gk = null;
+  if (n.gk){
+    gk = el("text", { x: n.x, y: n.y - (L.isEvent ? L.h / 2 + 8 : 17), "text-anchor": "middle",
+      "font-size": 9.5, "font-family": "'GFS Didot',serif", fill: "#a2704a",
+      "letter-spacing": 1.4, opacity: 0.75 });
+    gk.textContent = n.gk;
+    g.appendChild(gk);
+  }
+
+  let shape, ring = null, label = null;
+  if (L.isEvent){
+    /* a framed scene: double rule, like a panel on the vase body */
+    shape = el("rect", { x: n.x - L.w / 2, y: n.y - L.h / 2, width: L.w, height: L.h,
+      fill: "#100b08", stroke: "#8a5f3f", "stroke-width": 1 });
+    ring = el("rect", { x: n.x - L.w / 2 + 3, y: n.y - L.h / 2 + 3, width: L.w - 6, height: L.h - 6,
+      fill: "none", stroke: "#c8703c", "stroke-width": 0.7, opacity: 0.45 });
+    g.appendChild(shape); g.appendChild(ring);
+    label = el("text", { "text-anchor": "middle", "font-size": 11.5,
+      "font-family": "'Spectral',serif", fill: C.star, "font-weight": 400 });
+    L.lines.forEach((ln, j) => {
+      const ts = el("tspan", { x: n.x, y: n.y - L.h / 2 + 18 + j * 13 });
+      ts.textContent = ln; label.appendChild(ts);
+    });
+    g.appendChild(label);
+  } else if (n.type === "place"){
+    /* a little pediment — temple front */
+    shape = el("path", {
+      d: "M " + (n.x - 10) + " " + (n.y + 8) + " L " + (n.x - 10) + " " + (n.y - 1) +
+         " L " + n.x + " " + (n.y - 9) + " L " + (n.x + 10) + " " + (n.y - 1) +
+         " L " + (n.x + 10) + " " + (n.y + 8) + " Z",
+      fill: "none", stroke: col, "stroke-width": 1.8, "stroke-linejoin": "round" });
+    g.appendChild(shape);
+  } else {
+    shape = el("circle", { cx: n.x, cy: n.y, r: 8, fill: col, stroke: "#140f0c", "stroke-width": 1.4 });
+    ring = el("circle", { cx: n.x, cy: n.y, r: 12, fill: "none", stroke: C.star,
+      "stroke-width": 1, opacity: 0 });
+    g.appendChild(shape); g.appendChild(ring);
+  }
+
+  if (!L.isEvent){
+    label = el("text", { "text-anchor": "middle", "font-size": 12.5,
+      "font-family": "'Spectral',serif", fill: C.star, "font-weight": 500 });
+    L.lines.forEach((ln, j) => {
+      const ts = el("tspan", { x: n.x, y: n.y + 26 + j * 14 });
+      ts.textContent = ln; label.appendChild(ts);
+    });
+    g.appendChild(label);
+  }
+
+  world.appendChild(g);
+  nodeEls.push({ g, glow, shape, ring, gk, label, n, isEvent: L.isEvent });
+});
+
+/* ---------------- focus / repaint ---------------- */
+function applyFocus(animate){
+  const active = state.hovered || state.selected;
+  const focus = active ? new Set([active, ...ADJ[active]]) : null;
+
+  edgeEls.forEach(({ p, ed, st, solid }) => {
+    if (!state.filters[ed.t]) { p.style.display = "none"; return; }
+    p.style.display = "";
+    const touches = focus && (ed.a === active || ed.b === active);
+    p.setAttribute("opacity", focus ? (touches ? 0.98 : 0.05)
+                                    : (ed.t === "part" ? 0.32 : 0.55));
+    p.setAttribute("stroke-width", touches ? st.w * 2 : st.w);
+
+    /* brush-stroke reveal: the relief line is drawn in, as a painter would lay it */
+    if (touches && animate && solid && !reduceMotion){
+      const len = p.getTotalLength();
+      p.style.transition = "none";
+      p.setAttribute("stroke-dasharray", len);
+      p.setAttribute("stroke-dashoffset", len);
+      requestAnimationFrame(() => {
+        p.style.transition = "stroke-dashoffset .55s cubic-bezier(.4,0,.2,1)";
+        p.setAttribute("stroke-dashoffset", 0);
+      });
+    } else if (solid && !touches){
+      p.style.transition = "none";
+      p.removeAttribute("stroke-dasharray");
+      p.removeAttribute("stroke-dashoffset");
+    }
+  });
+
+  const th = SVG_THEME[currentTheme];
+  nodeEls.forEach(({ g, glow, shape, ring, n, isEvent }) => {
+    const dim = focus && !focus.has(n.id);
+    const on = active === n.id;
+    g.setAttribute("opacity", dim ? 0.11 : 1);
+    glow.setAttribute("opacity", on ? 1 : 0);
+    if (isEvent){
+      shape.setAttribute("fill", on ? th.eventFillOn : th.eventFill);
+      shape.setAttribute("stroke", on ? th.eventStrokeOn : th.eventStroke);
+      if (ring) ring.setAttribute("opacity", on ? 0.9 : 0.45);
+    } else if (n.type === "place"){
+      shape.setAttribute("stroke-width", on ? 2.6 : 1.8);
+    } else {
+      shape.setAttribute("r", on ? 10 : 8);
+      if (ring) ring.setAttribute("opacity", on ? 0.85 : 0);
+    }
+  });
+}
+
+/* ---------------- theme toggle: red-figure <-> black-figure ---------------- */
+function repaintTheme(mode){
+  currentTheme = mode;
+  document.body.classList.toggle("light", mode === "light");
+  themeBtn.textContent = mode === "dark" ? "black-figure" : "red-figure";
+  const th = SVG_THEME[mode];
+
+  registerEls.forEach(({ rect, i }) => {
+    rect.setAttribute("fill", i % 2 ? th.registerB : th.registerA);
+    rect.setAttribute("stroke", th.registerStroke);
+  });
+  if (meanderPatternStroke) meanderPatternStroke.setAttribute("stroke", th.meander);
+  eraTextEls.forEach(({ num, name }) => {
+    num.setAttribute("fill", th.eraNum);
+    name.setAttribute("fill", th.eraName);
+  });
+  nodeEls.forEach(({ glow, gk, label, shape, n, isEvent }) => {
+    glow.setAttribute("fill", mode === "dark" ? "url(#glow)" : "url(#glowLight)");
+    if (gk) gk.setAttribute("fill", th.greek);
+    if (label) label.setAttribute("fill", th.text);
+    if (!isEvent && n.type !== "place") shape.setAttribute("stroke", th.nodeStroke);
+    if (!isEvent){
+      const newCol = typeColor(n.type);
+      if (n.type === "place") shape.setAttribute("stroke", newCol);
+      else shape.setAttribute("fill", newCol);
+    }
+  });
+  applyFocus(false);
+  buildLegend();
+  familyNodeEls.forEach(({ shape, n }) => shape.setAttribute("fill", typeColor(n.type)));
+  buildFamilyLegend();
+  applyFamilyFocus();
+  buildRouteLegend();
+  if (state.selected) renderPanel();
+  if (state.mode === "index") renderIndex();
+}
+
+function applyView(){
+  world.setAttribute("transform",
+    "translate(" + state.view.tx + "," + state.view.ty + ") scale(" + state.view.k + ")");
+}
+function resize(){
+  svg.setAttribute("width", stage.clientWidth);
+  svg.setAttribute("height", stage.clientHeight);
+  document.getElementById("familySvg").setAttribute("width", stage.clientWidth);
+  document.getElementById("familySvg").setAttribute("height", stage.clientHeight);
+  document.getElementById("geoSvg").setAttribute("width", stage.clientWidth);
+  document.getElementById("geoSvg").setAttribute("height", stage.clientHeight);
+}
+new ResizeObserver(resize).observe(stage);
+resize();
+
+/* ---------------- pan & zoom ---------------- */
+let dragging = false, dragged = false, lastXY = null;
+svg.addEventListener("pointerdown", e => {
+  dragging = true; dragged = false; lastXY = { x: e.clientX, y: e.clientY };
+  svg.classList.add("drag"); svg.setPointerCapture(e.pointerId);
+});
+svg.addEventListener("pointermove", e => {
+  if (!dragging) return;
+  const dx = e.clientX - lastXY.x, dy = e.clientY - lastXY.y;
+  lastXY = { x: e.clientX, y: e.clientY };
+  if (Math.abs(dx) + Math.abs(dy) > 3) dragged = true;
+  state.view.tx += dx; state.view.ty += dy;
+  applyView();
+});
+const endDrag = () => { dragging = false; svg.classList.remove("drag"); };
+svg.addEventListener("pointerup", endDrag);
+svg.addEventListener("pointercancel", endDrag);
+
+function zoomAt(sx, sy, factor){
+  const v = state.view;
+  const k = Math.min(2.4, Math.max(0.15, v.k * factor));
+  const wx = (sx - v.tx) / v.k, wy = (sy - v.ty) / v.k;
+  v.k = k; v.tx = sx - wx * k; v.ty = sy - wy * k;
+  applyView();
+}
+svg.addEventListener("wheel", e => {
+  e.preventDefault();
+  const r = stage.getBoundingClientRect();
+  zoomAt(e.clientX - r.left, e.clientY - r.top, e.deltaY < 0 ? 1.12 : 1 / 1.12);
+}, { passive: false });
+
+document.getElementById("zin").onclick  = () => {
+  if (state.mode === "family") famZoom.zoomAt(stage.clientWidth/2, stage.clientHeight/2, 1.25);
+  else if (state.mode === "geo") geoZoom.zoomAt(stage.clientWidth/2, stage.clientHeight/2, 1.25);
+  else zoomAt(stage.clientWidth/2, stage.clientHeight/2, 1.25);
+};
+document.getElementById("zout").onclick = () => {
+  if (state.mode === "family") famZoom.zoomAt(stage.clientWidth/2, stage.clientHeight/2, 0.8);
+  else if (state.mode === "geo") geoZoom.zoomAt(stage.clientWidth/2, stage.clientHeight/2, 0.8);
+  else zoomAt(stage.clientWidth/2, stage.clientHeight/2, 0.8);
+};
+document.getElementById("zfit").onclick = () => {
+  if (state.mode === "family") resetFamilyView();
+  else if (state.mode === "geo") resetGeoView();
+  else { state.view = { k:0.6, tx:90, ty:20 }; applyView(); }
+};
+
+function centerOn(id){
+  const n = BY_ID[id]; if (!n) return;
+  const k = Math.max(state.view.k, 0.75);
+  state.view = { k, tx: stage.clientWidth/2 - n.x*k, ty: stage.clientHeight/2 - n.y*k };
+  applyView();
+}
+
+/* ---------------- selection ---------------- */
+svg.addEventListener("click", e => {
+  if (dragged) return;
+  /* pointer capture (used for panning) retargets click events to the svg
+     root itself, so resolve the real element under the cursor directly */
+  const real = document.elementFromPoint(e.clientX, e.clientY);
+  const g = real && real.closest("g[data-id]");
+  if (!g){ select(null); return; }
+  select(g.dataset.id === state.selected ? null : g.dataset.id);
+});
+svg.addEventListener("mouseover", e => {
+  const g = e.target.closest("g[data-id]");
+  if (g && state.hovered !== g.dataset.id){ state.hovered = g.dataset.id; applyFocus(false); }
+});
+svg.addEventListener("mouseout", e => {
+  if (e.target.closest("g[data-id]")){ state.hovered = null; applyFocus(false); }
+});
+
+function select(id){
+  state.selected = id;
+  applyFocus(true);
+  applyFamilyFocus();
+  applyGeoFocus();
+  renderPanel();
+  if (state.mode === "index") renderIndex();
+}
+function navigate(id){
+  if (state.mode === "map") centerOn(id);
+  else if (state.mode === "family"){
+    if (familyIds.has(id)) familyCenterOn(id);
+    else { setMode("map"); centerOn(id); }
+  } else if (state.mode === "geo"){
+    if (LOCATION_IDS.has(id)) geoCenterOn(id);
+    else { setMode("map"); centerOn(id); }
+  }
+  select(id);
+  panel.scrollTop = 0;
+}
+
+/* ---------------- panel ---------------- */
+const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+
+function richText(text){
+  let out = "", last = 0, m;
+  const re = /\[\[([^\]|]+)\|([^\]]+)\]\]/g;
+  while ((m = re.exec(text)) !== null){
+    out += esc(text.slice(last, m.index));
+    const t = BY_ID[m[1]];
+    out += '<a role="button" tabindex="0" data-nav="' + m[1] + '" style="color:' +
+           (t ? typeColor(t.type) : C.muted) + '">' + esc(m[2]) + "</a>";
+    last = m.index + m[0].length;
+  }
+  return out + esc(text.slice(last));
+}
+
+function renderPanel(){
+  const sel = state.selected ? BY_ID[state.selected] : null;
+  if (!sel){ panel.classList.add("hidden"); hint.classList.toggle("hidden", state.mode !== "map"); return; }
+  hint.classList.add("hidden");
+
+  const groups = {};
+  EDGES.forEach(ed => {
+    let other = null;
+    if (ed.a === sel.id) other = ed.b; else if (ed.b === sel.id) other = ed.a;
+    if (!other || !BY_ID[other]) return;
+    (groups[ed.t] = groups[ed.t] || new Set()).add(other);
+  });
+
+  let html = '<div class="meander" style="margin:0"></div><div class="pbody">' +
+    '<div style="display:flex;align-items:flex-start;gap:12px">' +
+      '<div style="flex:1">' +
+        '<div class="ptype" style="color:' + typeColor(sel.type) + '">' +
+          TYPE_LABEL[sel.type] + " &middot; Register " + GREEK_NUM[sel.era] + "</div>" +
+        '<div class="pname">' + esc(sel.name) + "</div>" +
+        (sel.gk ? '<div class="pgreek">' + esc(sel.gk) + "</div>" : "") +
+      "</div>" +
+      '<button class="close" data-close="1" title="Close">×</button>' +
+    '</div><div class="drule"></div>' +
+    '<p class="story">' + richText(sel.story) + "</p>";
+
+  const keys = Object.keys(groups);
+  if (keys.length){
+    html += '<div class="drule"></div>';
+    keys.forEach(t => {
+      html += '<div style="margin-bottom:13px">' +
+        '<div class="grouplab" style="color:' + EDGE_STYLE[t].color + '">' + EDGE_STYLE[t].label + "</div>" +
+        '<div class="chips">' +
+        [...groups[t]].map(id => {
+          const o = BY_ID[id];
+          return '<button class="chip" data-nav="' + id + '"><span class="dot' +
+                 (o.type === "event" ? " sq" : "") + '" style="background:' + typeColor(o.type) +
+                 '"></span>' + esc(o.name) + "</button>";
+        }).join("") + "</div></div>";
+    });
+  }
+  panel.innerHTML = html + "</div>";
+  panel.classList.remove("hidden");
+}
+
+panel.addEventListener("click", e => {
+  if (e.target.closest("[data-close]")){ select(null); return; }
+  const a = e.target.closest("[data-nav]");
+  if (a) navigate(a.dataset.nav);
+});
+panel.addEventListener("keydown", e => {
+  if (e.key !== "Enter" && e.key !== " ") return;
+  const a = e.target.closest("[data-nav]");
+  if (a){ e.preventDefault(); navigate(a.dataset.nav); }
+});
+
+/* ---------------- rail + legend ---------------- */
+const rail = document.getElementById("rail");
+ERAS.forEach((era, i) => {
+  const b = document.createElement("button");
+  b.className = "btn railMapOnly";
+  b.innerHTML = '<span class="num">' + GREEK_NUM[i] + "</span>&nbsp;&nbsp;" + era.name;
+  b.onclick = () => {
+    const k = 0.62;
+    state.view = { k, tx: stage.clientWidth/2 - (W/2)*k, ty: 70 - era.y0*k };
+    applyView();
+  };
+  rail.appendChild(b);
+});
+const keyBtn = document.createElement("button");
+keyBtn.className = "btn railMapOnly"; keyBtn.textContent = "key";
+keyBtn.style.marginLeft = "auto";
+keyBtn.onclick = () => {
+  legend.classList.toggle("hidden");
+  keyBtn.classList.toggle("on", !legend.classList.contains("hidden"));
+};
+rail.appendChild(keyBtn);
+
+function buildLegend(){
+  legend.innerHTML =
+    '<div class="meander" style="margin:0"></div><div style="padding:14px 16px 16px">' +
+    "<h4>Lines — click to filter</h4>" +
+    Object.entries(EDGE_STYLE).map(([k, st]) =>
+      '<button class="lrow' + (state.filters[k] ? "" : " off") + '" data-line="' + k + '">' +
+        '<svg width="30" height="8" style="flex:0 0 auto"><line x1="0" y1="4" x2="30" y2="4" stroke="' +
+        st.color + '" stroke-width="' + (st.w + 0.6) + '"' +
+        (st.dash ? ' stroke-dasharray="' + st.dash + '"' : "") + "/></svg>" + st.label +
+      "</button>").join("") +
+    '<div class="drule"></div><div class="types">' +
+    Object.entries(TYPE_LABEL).map(([k, lab]) =>
+      '<span><span class="dot' + (k === "event" ? " sq" : "") + '" style="background:' +
+      typeColor(k) + '"></span>' + lab + "</span>").join("") +
+    "</div></div>";
+}
+buildLegend();
+
+legend.addEventListener("click", e => {
+  const b = e.target.closest("[data-line]");
+  if (!b) return;
+  const k = b.dataset.line;
+  state.filters[k] = !state.filters[k];
+  b.classList.toggle("off", !state.filters[k]);
+  applyFocus(false);
+});
+
+/* ---------------- search ---------------- */
+const search = document.getElementById("search");
+const results = document.getElementById("results");
+search.addEventListener("input", () => {
+  const q = search.value.trim().toLowerCase();
+  if (!q){ results.classList.add("hidden"); return; }
+  const hits = NODES.filter(n =>
+    n.name.toLowerCase().includes(q) || (n.gk && n.gk.toLowerCase().includes(q))).slice(0, 9);
+  if (!hits.length){ results.classList.add("hidden"); return; }
+  results.innerHTML = hits.map(n =>
+    '<button data-nav="' + n.id + '"><span class="dot' + (n.type === "event" ? " sq" : "") +
+    '" style="background:' + typeColor(n.type) + '"></span>' + esc(n.name) +
+    (n.gk ? '<span style="margin-left:auto;font-family:\'GFS Didot\',serif;font-size:11px;color:#a2704a">' +
+      esc(n.gk) + "</span>" : "") + "</button>").join("");
+  results.classList.remove("hidden");
+});
+results.addEventListener("click", e => {
+  const b = e.target.closest("[data-nav]");
+  if (!b) return;
+  setMode("map"); navigate(b.dataset.nav);
+  search.value = ""; results.classList.add("hidden");
+});
+document.addEventListener("click", e => {
+  if (!e.target.closest(".searchwrap")) results.classList.add("hidden");
+});
+
+/* ---------------- index ---------------- */
+function renderIndex(){
+  indexEl.innerHTML = ERAS.map((era, i) =>
+    '<div class="igroup"><div class="ihead"><span class="num">' + GREEK_NUM[i] +
+    '</span><span class="nm">' + era.name + "</span></div>" +
+    '<div class="chips">' +
+    NODES.filter(n => n.era === i).map(n =>
+      '<button class="chip" data-nav="' + n.id + '"' +
+      (state.selected === n.id ? ' style="border-color:' + C.clay + ';background:rgba(200,112,60,.14)"' : "") +
+      '><span class="dot' + (n.type === "event" ? " sq" : "") + '" style="background:' +
+      typeColor(n.type) + '"></span>' + esc(n.name) + "</button>").join("") +
+    "</div></div>").join("");
+}
+indexEl.addEventListener("click", e => {
+  const b = e.target.closest("[data-nav]");
+  if (b) navigate(b.dataset.nav);
+});
+
+const mMap = document.getElementById("modeMap");
+const mFamily = document.getElementById("modeFamily");
+const mGeo = document.getElementById("modeGeo");
+const mIdx = document.getElementById("modeIndex");
+function setMode(m){
+  state.mode = m;
+  mMap.classList.toggle("on", m === "map");
+  mFamily.classList.toggle("on", m === "family");
+  mGeo.classList.toggle("on", m === "geo");
+  mIdx.classList.toggle("on", m === "index");
+
+  svg.classList.toggle("hidden", m !== "map");
+  familySvg.classList.toggle("hidden", m !== "family");
+  geoSvg.classList.toggle("hidden", m !== "geo");
+  indexEl.classList.toggle("hidden", m !== "index");
+
+  document.getElementById("zoom").classList.toggle("hidden", m === "index");
+  rail.classList.toggle("hidden", m === "index");
+  document.querySelectorAll(".railMapOnly").forEach(b => b.classList.toggle("hidden", m !== "map"));
+  familyKeyBtn.classList.toggle("hidden", m !== "family");
+  geoKeyBtn.classList.toggle("hidden", m !== "geo");
+
+  legend.classList.add("hidden"); keyBtn.classList.remove("on");
+  familyLegend.classList.add("hidden"); familyKeyBtn.classList.remove("on");
+  routeLegend.classList.add("hidden"); geoKeyBtn.classList.remove("on");
+
+  if (m === "index") renderIndex();
+  hint.classList.toggle("hidden", m !== "map" || !!state.selected);
+  familyHint.classList.toggle("hidden", m !== "family" || !!state.selected);
+  geoHint.classList.toggle("hidden", m !== "geo" || !!state.selected);
+}
+mMap.onclick = () => setMode("map");
+mFamily.onclick = () => setMode("family");
+mGeo.onclick = () => setMode("geo");
+mIdx.onclick = () => setMode("index");
+
+const themeBtn = document.getElementById("themeToggle");
+themeBtn.onclick = () => repaintTheme(currentTheme === "dark" ? "light" : "dark");
+
+document.addEventListener("keydown", e => { if (e.key === "Escape") select(null); });
+
+/* ================================================================== */
+/*  SHARED CANVAS HELPER — pan / zoom / click, reused by the family    */
+/*  tree and geography canvases so their interaction matches the map.  */
+/* ================================================================== */
+function wireCanvas(svgEl, view, opts){
+  opts = opts || {};
+  let dragging = false, dragged = false, lastXY = null;
+  svgEl.addEventListener("pointerdown", e => {
+    dragging = true; dragged = false; lastXY = { x: e.clientX, y: e.clientY };
+    svgEl.classList.add("drag"); svgEl.setPointerCapture(e.pointerId);
+  });
+  svgEl.addEventListener("pointermove", e => {
+    if (!dragging) return;
+    const dx = e.clientX - lastXY.x, dy = e.clientY - lastXY.y;
+    lastXY = { x: e.clientX, y: e.clientY };
+    if (Math.abs(dx) + Math.abs(dy) > 3) dragged = true;
+    view.tx += dx; view.ty += dy;
+    if (opts.onView) opts.onView();
+  });
+  const endDrag = () => { dragging = false; svgEl.classList.remove("drag"); };
+  svgEl.addEventListener("pointerup", endDrag);
+  svgEl.addEventListener("pointercancel", endDrag);
+
+  function zoomAt(sx, sy, factor){
+    const k = Math.min(opts.maxK || 2.4, Math.max(opts.minK || 0.15, view.k * factor));
+    const wx = (sx - view.tx) / view.k, wy = (sy - view.ty) / view.k;
+    view.k = k; view.tx = sx - wx * k; view.ty = sy - wy * k;
+    if (opts.onView) opts.onView();
+  }
+  svgEl.addEventListener("wheel", e => {
+    e.preventDefault();
+    const r = svgEl.getBoundingClientRect();
+    zoomAt(e.clientX - r.left, e.clientY - r.top, e.deltaY < 0 ? 1.12 : 1 / 1.12);
+  }, { passive: false });
+
+  svgEl.addEventListener("click", e => {
+    if (dragged) return;
+    /* same elementFromPoint fix as the main map — pointer capture during
+       drag otherwise retargets click events to the svg root itself */
+    const real = document.elementFromPoint(e.clientX, e.clientY);
+    const g = real && real.closest("g[data-id]");
+    if (opts.onClick) opts.onClick(g ? g.dataset.id : null);
+  });
+  svgEl.addEventListener("mouseover", e => {
+    const g = e.target.closest("g[data-id]");
+    if (g && state.hovered !== g.dataset.id){ state.hovered = g.dataset.id; if (opts.onHover) opts.onHover(); }
+  });
+  svgEl.addEventListener("mouseout", e => {
+    if (e.target.closest("g[data-id]")){ state.hovered = null; if (opts.onHover) opts.onHover(); }
+  });
+
+  return { zoomAt };
+}
+
+/* ================================================================== */
+/*  FAMILY TREE — computed automatically from the same NODES/EDGES     */
+/*  data: generation by longest blood/descent path, houses by          */
+/*  connected component, spouses pulled level.                          */
+/* ================================================================== */
+const FAMILY_TYPES = new Set(["titan", "god", "hero", "mortal", "monster"]);
+const familyNodes = NODES.filter(n => FAMILY_TYPES.has(n.type));
+const familyIds = new Set(familyNodes.map(n => n.id));
+const familyEdges = EDGES.filter(ed =>
+  (ed.t === "blood" || ed.t === "descent" || ed.t === "union") &&
+  familyIds.has(ed.a) && familyIds.has(ed.b));
+
+const CURSE_PAIRS = new Set([
+  "tantalus|pelops", "pelops|atreus", "pelops|thyestes", "atreus|agamemnon", "atreus|menelaus",
+  "agamemnon|orestes", "thyestes|aegisthus", "laius|oedipus", "oedipus|eteocles", "oedipus|polynices"
+].map(p => p.split("|").sort().join("|")));
+const isCurse = (a, b) => CURSE_PAIRS.has([a, b].sort().join("|"));
+
+const famChildrenOf = {}, famParentsOf = {};
+familyNodes.forEach(n => { famChildrenOf[n.id] = []; famParentsOf[n.id] = []; });
+familyEdges.filter(e => e.t === "blood" || e.t === "descent").forEach(e => {
+  famChildrenOf[e.a].push(e.b); famParentsOf[e.b].push(e.a);
+});
+
+const famGen = {};
+function computeGen(id, seen){
+  if (famGen[id] !== undefined) return famGen[id];
+  if (seen.has(id)) return 0;
+  seen.add(id);
+  const ps = famParentsOf[id];
+  const g = ps.length ? 1 + Math.max(...ps.map(p => computeGen(p, seen))) : 0;
+  famGen[id] = g;
+  return g;
+}
+familyNodes.forEach(n => computeGen(n.id, new Set()));
+
+const famUnions = familyEdges.filter(e => e.t === "union");
+for (let pass = 0; pass < 3; pass++){
+  famUnions.forEach(e => {
+    const g = Math.max(famGen[e.a], famGen[e.b]);
+    famGen[e.a] = g; famGen[e.b] = g;
+  });
+}
+
+const famUF = {}; familyNodes.forEach(n => famUF[n.id] = n.id);
+function famFind(x){ while (famUF[x] !== x) x = famUF[x]; return x; }
+function famUnion(a, b){ const ra = famFind(a), rb = famFind(b); if (ra !== rb) famUF[ra] = rb; }
+familyEdges.forEach(e => famUnion(e.a, e.b));
+
+const famHouseOf = {}; familyNodes.forEach(n => famHouseOf[n.id] = famFind(n.id));
+const famHouseEra = {};
+familyNodes.forEach(n => {
+  const h = famHouseOf[n.id];
+  if (!(h in famHouseEra) || n.era < famHouseEra[h]) famHouseEra[h] = n.era;
+});
+const famHouseOrder = [...new Set(Object.values(famHouseOf))]
+  .sort((a, b) => (famHouseEra[a] - famHouseEra[b]) || a.localeCompare(b));
+const famHouseIdx = {}; famHouseOrder.forEach((h, i) => famHouseIdx[h] = i);
+
+const famMaxGen = Math.max(...Object.values(famGen));
+const famRows = []; for (let g = 0; g <= famMaxGen; g++) famRows.push([]);
+familyNodes.forEach(n => famRows[famGen[n.id]].push(n.id));
+famRows.forEach(row => row.sort((a, b) =>
+  (famHouseIdx[famHouseOf[a]] - famHouseIdx[famHouseOf[b]]) || (BY_ID[a].x - BY_ID[b].x)));
+
+const FAM_ROW_H = 190, FAM_COL_W = 128, FAM_PAD = 90;
+const famPos = {};
+famRows.forEach((row, g) => row.forEach((id, i) => {
+  famPos[id] = { x: FAM_PAD + i * FAM_COL_W, y: 70 + g * FAM_ROW_H };
+}));
+const FAM_W = FAM_PAD * 2 + FAM_COL_W * Math.max(1, ...famRows.map(r => r.length));
+const FAM_H = 160 + famMaxGen * FAM_ROW_H;
+
+const familySvg = document.getElementById("familySvg");
+const famWorld = el("g", { id: "famWorld" });
+familySvg.appendChild(famWorld);
+const famView = { k: 0.6, tx: 60, ty: 20 };
+function applyFamView(){
+  famWorld.setAttribute("transform",
+    "translate(" + famView.tx + "," + famView.ty + ") scale(" + famView.k + ")");
+}
+
+/* generation guide-lines, each labelled by rough narrative period */
+famRows.forEach((row, g) => {
+  const y = 70 + g * FAM_ROW_H;
+  famWorld.appendChild(el("line", { x1: -40, y1: y - 46, x2: FAM_W, y2: y - 46,
+    style: "stroke:var(--generation-line)", "stroke-width": 1, "stroke-dasharray": "1 6", opacity: 0.7 }));
+  const lbl = el("text", { x: -30, y: y - 4, "font-size": 11, "font-family": "'Spectral',serif",
+    style: "fill:var(--muted)", "letter-spacing": 1.5 });
+  lbl.textContent = "GEN " + (g + 1);
+  famWorld.appendChild(lbl);
+});
+
+/* edges: blood/descent as tree lines, union as a marriage bar, curses overlaid */
+const famFilters = { lineage: true, marriage: true, curse: true };
+const famEdgeEls = [];
+familyEdges.forEach(ed => {
+  const A = famPos[ed.a], B = famPos[ed.b];
+  if (!A || !B) return;
+  const curse = isCurse(ed.a, ed.b);
+  if (ed.t === "union"){
+    const y = (A.y + B.y) / 2;
+    const grp = el("g");
+    grp.appendChild(el("line", { x1: A.x, y1: A.y, x2: A.x, y2: y,
+      style: "stroke:var(--gold)", "stroke-width": 1.3, "stroke-dasharray": "5 4", opacity: 0.85 }));
+    grp.appendChild(el("line", { x1: B.x, y1: B.y, x2: B.x, y2: y,
+      style: "stroke:var(--gold)", "stroke-width": 1.3, "stroke-dasharray": "5 4", opacity: 0.85 }));
+    grp.appendChild(el("line", { x1: A.x, y1: y, x2: B.x, y2: y,
+      style: "stroke:var(--gold)", "stroke-width": 1.3, "stroke-dasharray": "5 4", opacity: 0.85 }));
+    famWorld.appendChild(grp);
+    famEdgeEls.push({ el: grp, cat: "marriage" });
+  } else {
+    const midY = A.y + (B.y - A.y) * 0.5;
+    const d = "M " + A.x + " " + A.y + " C " + A.x + " " + midY + " " + B.x + " " + midY + " " + B.x + " " + B.y;
+    const p = el("path", { d, fill: "none",
+      style: "stroke:" + (curse ? "var(--curse)" : "var(--dilute)"),
+      "stroke-width": curse ? 2.4 : 1.2, "stroke-dasharray": curse ? "7 4" : "none", opacity: curse ? 0.95 : 0.75 });
+    famWorld.appendChild(p);
+    famEdgeEls.push({ el: p, cat: curse ? "curse" : "lineage" });
+  }
+});
+function applyFamFilters(){
+  famEdgeEls.forEach(({ el: e, cat }) => { e.style.display = famFilters[cat] ? "" : "none"; });
+}
+
+const familyNodeEls = [];
+familyNodes.forEach(n => {
+  const p = famPos[n.id]; if (!p) return;
+  const g = el("g", { style: "cursor:pointer" });
+  g.dataset.id = n.id;
+  const shape = el("circle", { cx: p.x, cy: p.y, r: 9, fill: typeColor(n.type), style: "stroke:var(--ground)", "stroke-width": 1.6 });
+  g.appendChild(shape);
+  let gk = null;
+  if (n.gk){
+    gk = el("text", { x: p.x, y: p.y - 17, "text-anchor": "middle", "font-size": 9,
+      "font-family": "'GFS Didot',serif", style: "fill:var(--dilute)", "letter-spacing": 1.2, opacity: 0.8 });
+    gk.textContent = n.gk;
+    g.appendChild(gk);
+  }
+  const label = el("text", { x: p.x, "text-anchor": "middle", "font-size": 12,
+    "font-family": "'Spectral',serif", style: "fill:var(--ivory)", "font-weight": 500 });
+  wrap(n.name, 13).forEach((ln, j) => {
+    const ts = el("tspan", { x: p.x, y: p.y + 26 + j * 14 });
+    ts.textContent = ln; label.appendChild(ts);
+  });
+  g.appendChild(label);
+  famWorld.appendChild(g);
+  familyNodeEls.push({ g, shape, label, gk, n });
+});
+
+const famZoom = wireCanvas(familySvg, famView, {
+  onView: applyFamView,
+  onHover: applyFamilyFocus,
+  onClick: id => { if (!id){ select(null); return; } select(id === state.selected ? null : id); }
+});
+
+function familyCenterOn(id){
+  const p = famPos[id]; if (!p) return;
+  const k = Math.max(famView.k, 0.85);
+  famView.k = k; famView.tx = stage.clientWidth / 2 - p.x * k; famView.ty = stage.clientHeight / 2 - p.y * k;
+  applyFamView();
+}
+function resetFamilyView(){
+  famView.k = 0.55; famView.tx = 60; famView.ty = 20; applyFamView();
+}
+
+function applyFamilyFocus(){
+  const active = state.hovered || state.selected;
+  const focus = active ? new Set([active, ...(ADJ[active] || [])]) : null;
+  familyNodeEls.forEach(({ g, shape, n }) => {
+    const dim = focus && !focus.has(n.id);
+    const on = active === n.id;
+    g.setAttribute("opacity", dim ? 0.15 : 1);
+    shape.setAttribute("r", on ? 11 : 9);
+  });
+}
+
+/* ================================================================== */
+/*  GEOGRAPHY — a schematic map of the named places, with journeys      */
+/*  drawn as routes between them.                                       */
+/* ================================================================== */
+const GEO_POS = {
+  rome: {x:115,y:335}, albalonga: {x:120,y:380}, aeaea: {x:270,y:440}, carthage: {x:170,y:630},
+  ithaca: {x:500,y:440}, iolcus: {x:770,y:260}, thebes: {x:760,y:410}, attica: {x:790,y:440},
+  athens: {x:850,y:500}, corinth: {x:720,y:510}, achaea: {x:590,y:530}, mycenae: {x:690,y:570},
+  argos: {x:650,y:600}, sparta: {x:740,y:670}, peloponnese: {x:640,y:720}, seriphos: {x:870,y:570},
+  naxos: {x:950,y:560}, crete: {x:860,y:780}, troy: {x:1090,y:370}, ethiopia: {x:1010,y:920}
+};
+const LOCATION_IDS = new Set(Object.keys(GEO_POS));
+const LAND = [
+  { cx: 740, cy: 380, rx: 145, ry: 135 },   /* northern/central Greece */
+  { cx: 690, cy: 630, rx: 145, ry: 155 },   /* the Peloponnese */
+  { cx: 860, cy: 780, rx: 115, ry: 42 },    /* Crete */
+  { cx: 1100, cy: 380, rx: 135, ry: 115 },  /* Anatolia / Troy */
+  { cx: 1010, cy: 930, rx: 165, ry: 92 },   /* "Ethiopia" */
+  { cx: 140, cy: 380, rx: 95, ry: 145 },    /* Italy */
+  { cx: 200, cy: 655, rx: 175, ry: 72 },    /* North Africa / Carthage */
+];
+const ROUTES = [
+  { id: "odysseus", label: "Odysseus's ten years home", color: "#5f8a85", path: ["troy","aeaea","ithaca"] },
+  { id: "aeneas",   label: "Aeneas's flight from Troy",  color: "#c8703c", path: ["troy","carthage","albalonga"] },
+  { id: "theseus",  label: "Theseus to Crete and Naxos", color: "#a2453a", path: ["attica","crete","naxos","attica"] },
+  { id: "perseus",  label: "Perseus and the Gorgon's head", color: "#dda94b", path: ["seriphos","ethiopia","argos","mycenae"] },
+  { id: "helen",    label: "Helen taken to Troy",        color: "#b6543f", path: ["sparta","troy"] },
+  { id: "muster",   label: "The fleet musters for Troy", color: "#8fbf7a", path: ["ithaca","mycenae","sparta","troy"] },
+];
+const routeState = Object.fromEntries(ROUTES.map(r => [r.id, false]));
+
+const geoSvg = document.getElementById("geoSvg");
+const geoWorld = el("g", { id: "geoWorld" });
+geoSvg.appendChild(geoWorld);
+const geoView = { k: 0.85, tx: 60, ty: 40 };
+function applyGeoView(){
+  geoWorld.setAttribute("transform",
+    "translate(" + geoView.tx + "," + geoView.ty + ") scale(" + geoView.k + ")");
+}
+
+LAND.forEach(m => geoWorld.appendChild(el("ellipse", {
+  cx: m.cx, cy: m.cy, rx: m.rx, ry: m.ry,
+  style: "fill:var(--land);stroke:var(--rule)", "stroke-width": 1, opacity: 0.9
+})));
+
+const routeLayer = el("g");
+geoWorld.appendChild(routeLayer);
+function drawRoutes(){
+  routeLayer.innerHTML = "";
+  ROUTES.forEach(r => {
+    if (!routeState[r.id]) return;
+    const pts = r.path.map(id => GEO_POS[id]).filter(Boolean);
+    if (pts.length < 2) return;
+    let d = "M " + pts[0].x + " " + pts[0].y;
+    for (let i = 1; i < pts.length; i++){
+      const p0 = pts[i-1], p1 = pts[i];
+      const mx = (p0.x+p1.x)/2, my = (p0.y+p1.y)/2;
+      const dx = p1.x-p0.x, dy = p1.y-p0.y, len = Math.hypot(dx,dy)||1;
+      const bow = Math.min(30, len*0.15);
+      const cx = mx + (-dy/len)*bow, cy = my + (dx/len)*bow;
+      d += " Q " + cx + " " + cy + " " + p1.x + " " + p1.y;
+    }
+    routeLayer.appendChild(el("path", { d, fill: "none", stroke: r.color, "stroke-width": 3,
+      "stroke-linecap": "round", opacity: 0.85, "marker-end": "url(#routeArrow)" }));
+  });
+}
+
+/* arrowhead marker for routes */
+const geoDefs = el("defs");
+geoDefs.innerHTML = '<marker id="routeArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="context-stroke"/></marker>';
+geoWorld.insertBefore(geoDefs, geoWorld.firstChild);
+
+const geoNodeEls = [];
+Object.entries(GEO_POS).forEach(([id, p]) => {
+  const n = BY_ID[id]; if (!n) return;
+  const g = el("g", { style: "cursor:pointer" });
+  g.dataset.id = id;
+  const shape = el("circle", { cx: p.x, cy: p.y, r: 7, style: "fill:var(--aegean);stroke:var(--ground)", "stroke-width": 1.4 });
+  g.appendChild(shape);
+  const label = el("text", { x: p.x, y: p.y - 12, "text-anchor": "middle", "font-size": 12.5,
+    "font-family": "'Spectral',serif", style: "fill:var(--ivory)", "font-weight": 500 });
+  label.textContent = n.name;
+  g.appendChild(label);
+  if (n.gk){
+    const gk = el("text", { x: p.x, y: p.y + 20, "text-anchor": "middle", "font-size": 9,
+      "font-family": "'GFS Didot',serif", style: "fill:var(--dilute)", "letter-spacing": 1.2, opacity: 0.8 });
+    gk.textContent = n.gk;
+    g.appendChild(gk);
+  }
+  geoWorld.appendChild(g);
+  geoNodeEls.push({ g, shape, n });
+});
+
+const geoZoom = wireCanvas(geoSvg, geoView, {
+  onView: applyGeoView,
+  onHover: applyGeoFocus,
+  onClick: id => { if (!id){ select(null); return; } select(id === state.selected ? null : id); }
+});
+
+function geoCenterOn(id){
+  const p = GEO_POS[id]; if (!p) return;
+  const k = Math.max(geoView.k, 1.1);
+  geoView.k = k; geoView.tx = stage.clientWidth / 2 - p.x * k; geoView.ty = stage.clientHeight / 2 - p.y * k;
+  applyGeoView();
+}
+function resetGeoView(){
+  geoView.k = 0.85; geoView.tx = 60; geoView.ty = 40; applyGeoView();
+}
+
+function applyGeoFocus(){
+  const active = state.hovered || state.selected;
+  geoNodeEls.forEach(({ g, shape, n }) => {
+    const on = active === n.id;
+    g.setAttribute("opacity", 1);
+    shape.setAttribute("r", on ? 9 : 7);
+  });
+  drawRoutes();
+}
+
+const routeLegend = document.getElementById("routeLegend");
+function buildRouteLegend(){
+  routeLegend.innerHTML =
+    '<div class="meander" style="margin:0"></div><div style="padding:14px 16px 16px">' +
+    "<h4>Routes — click to trace</h4>" +
+    ROUTES.map(r =>
+      '<button class="lrow' + (routeState[r.id] ? "" : " off") + '" data-route="' + r.id + '">' +
+        '<svg width="30" height="8" style="flex:0 0 auto"><line x1="0" y1="4" x2="30" y2="4" stroke="' +
+        r.color + '" stroke-width="2.6"/></svg>' + r.label +
+      "</button>").join("") +
+    "</div>";
+}
+buildRouteLegend();
+routeLegend.addEventListener("click", e => {
+  const b = e.target.closest("[data-route]");
+  if (!b) return;
+  const k = b.dataset.route;
+  routeState[k] = !routeState[k];
+  b.classList.toggle("off", !routeState[k]);
+  drawRoutes();
+});
+const geoKeyBtn = document.createElement("button");
+geoKeyBtn.className = "btn"; geoKeyBtn.id = "geoKeyBtn"; geoKeyBtn.textContent = "routes";
+geoKeyBtn.style.marginLeft = "auto";
+geoKeyBtn.onclick = () => {
+  routeLegend.classList.toggle("hidden");
+  geoKeyBtn.classList.toggle("on", !routeLegend.classList.contains("hidden"));
+};
+
+const familyLegend = document.getElementById("familyLegend");
+function buildFamilyLegend(){
+  const rows = [
+    { cat: "lineage", color: "var(--dilute)", dash: null, label: "Parent to child" },
+    { cat: "marriage", color: "var(--gold)", dash: "5 4", label: "Marriage or affair" },
+    { cat: "curse", color: "var(--curse)", dash: "7 4", label: "A curse passed down the blood" },
+  ];
+  familyLegend.innerHTML =
+    '<div class="meander" style="margin:0"></div><div style="padding:14px 16px 16px">' +
+    "<h4>Lines — click to filter</h4>" +
+    rows.map(r =>
+      '<button class="lrow' + (famFilters[r.cat] ? "" : " off") + '" data-famline="' + r.cat + '">' +
+        '<svg width="30" height="8" style="flex:0 0 auto"><line x1="0" y1="4" x2="30" y2="4" style="stroke:' +
+        r.color + '" stroke-width="2.4"' + (r.dash ? ' stroke-dasharray="' + r.dash + '"' : "") +
+        '/></svg>' + r.label + "</button>").join("") +
+    '<div class="drule"></div><div class="types">' +
+    Object.entries(TYPE_LABEL).filter(([k]) => FAMILY_TYPES.has(k)).map(([k, lab]) =>
+      '<span><span class="dot" style="background:' + typeColor(k) + '"></span>' + lab + "</span>").join("") +
+    "</div></div>";
+}
+buildFamilyLegend();
+familyLegend.addEventListener("click", e => {
+  const b = e.target.closest("[data-famline]");
+  if (!b) return;
+  const k = b.dataset.famline;
+  famFilters[k] = !famFilters[k];
+  b.classList.toggle("off", !famFilters[k]);
+  applyFamFilters();
+});
+const familyKeyBtn = document.createElement("button");
+familyKeyBtn.className = "btn"; familyKeyBtn.id = "familyKeyBtn"; familyKeyBtn.textContent = "key";
+familyKeyBtn.style.marginLeft = "auto";
+familyKeyBtn.onclick = () => {
+  familyLegend.classList.toggle("hidden");
+  familyKeyBtn.classList.toggle("on", !familyLegend.classList.contains("hidden"));
+};
+rail.appendChild(familyKeyBtn);
+rail.appendChild(geoKeyBtn);
+
+applyFamView();
+applyGeoView();
+applyFamilyFocus();
+applyGeoFocus();
+applyFamFilters();
+
+applyView();
+repaintTheme("dark");
+</script>
+</body>
+</html>

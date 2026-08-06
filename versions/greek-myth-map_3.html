@@ -1,0 +1,1958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mythologia — the connected map of Greek myth</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=GFS+Didot&family=Spectral:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ground:#140f0c; --register:#1c1511; --register-alt:#191310;
+    --clay:#c8703c; --clay-lt:#dd8b52; --ivory:#f0e4cf;
+    --purple:#a2453a; --dilute:#8a5f3f; --muted:#a8825f; --gold:#dda94b;
+    --aegean:#5f8a85; --rule:#4a3020;
+    --overlay-bg:rgba(20,15,12,.94); --overlay-bg-2:rgba(28,21,17,.6);
+    --panel-bg:#1a1310; --hover-bg:rgba(200,112,60,.13); --chip-bg:rgba(0,0,0,.3);
+    --search-bg:rgba(0,0,0,.35); --placeholder:#7a5a42;
+    --meander-img:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='14'%3E%3Cg fill='none' stroke='%23c8703c' stroke-width='1.6'%3E%3Cpath d='M0 12.5H16'/%3E%3Cpath d='M3 12.5V3H13V9H7.5V6.2'/%3E%3C/g%3E%3C/svg%3E");
+    --noise-op:0.035;
+    --curse:#c0392b; --land:#241c14; --generation-line:#2a2018;
+    --serif:'Spectral',Georgia,serif;
+    --didot:'GFS Didot','Spectral',Georgia,serif;
+  }
+  body.light{
+    --ground:#ecdfba; --register:#e4d0a5; --register-alt:#ecdcb7;
+    --clay:#a8502e; --clay-lt:#8a3a20; --ivory:#241a12;
+    --purple:#8a3a30; --dilute:#6b3f22; --muted:#7a5535; --gold:#8a4a1e;
+    --aegean:#3f6b66; --rule:#c2a173;
+    --overlay-bg:rgba(236,223,186,.94); --overlay-bg-2:rgba(228,208,165,.65);
+    --panel-bg:#f5ead0; --hover-bg:rgba(168,80,46,.12); --chip-bg:rgba(0,0,0,.045);
+    --search-bg:rgba(0,0,0,.055); --placeholder:#a3805a;
+    --meander-img:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='14'%3E%3Cg fill='none' stroke='%236b3f22' stroke-width='1.6'%3E%3Cpath d='M0 12.5H16'/%3E%3Cpath d='M3 12.5V3H13V9H7.5V6.2'/%3E%3C/g%3E%3C/svg%3E");
+    --noise-op:0.05;
+    --curse:#8a2015; --land:#d9c39a; --generation-line:#c2a173;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    background:var(--ground);color:var(--ivory);font-family:var(--serif);
+    overflow:hidden;display:flex;flex-direction:column;transition:background .25s,color .25s;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:50;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity:var(--noise-op);
+  }
+  button{font-family:inherit}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:var(--rule);border-radius:0}
+  ::-webkit-scrollbar-track{background:transparent}
+
+  /* ---- the meander (Greek key) rule ---- */
+  .meander{
+    height:14px;flex:0 0 auto;
+    background-repeat:repeat-x;background-position:left bottom;
+    background-image:var(--meander-img);
+  }
+  .meander.dim{opacity:.4}
+  .meander.flip{transform:scaleY(-1)}
+
+  header{padding:14px 22px 10px;display:flex;align-items:flex-end;gap:20px;
+         flex-wrap:wrap;background:var(--overlay-bg);z-index:5;transition:background .25s}
+  .eyebrow{font-family:var(--didot);font-size:11px;letter-spacing:.42em;color:var(--clay);
+           text-transform:uppercase;margin-bottom:5px}
+  .title{font-family:var(--didot);font-size:34px;letter-spacing:.14em;line-height:1;
+         text-transform:uppercase;color:var(--ivory)}
+  .sub{font-family:var(--serif);font-style:italic;font-size:12.5px;color:var(--muted);margin-top:6px}
+  .grow{margin-right:auto}
+
+  .btn{font-family:var(--serif);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;
+       padding:7px 13px;cursor:pointer;border:1px solid var(--rule);border-radius:0;
+       background:transparent;color:var(--muted);transition:.18s}
+  .btn:hover{border-color:var(--clay);color:var(--ivory)}
+  .btn.on{border-color:var(--clay);background:rgba(200,112,60,.14);color:var(--clay-lt)}
+  .btn:focus-visible,input:focus-visible,.chip:focus-visible,a:focus-visible{
+       outline:2px solid var(--gold);outline-offset:2px}
+
+  #search{background:var(--search-bg);border:1px solid var(--rule);border-radius:0;color:var(--ivory);
+          padding:8px 11px;font-size:13.5px;width:210px;outline:none;font-family:var(--serif)}
+  #search::placeholder{color:var(--placeholder);font-style:italic}
+  .searchwrap{position:relative}
+  #results{position:absolute;top:calc(100% + 5px);right:0;width:258px;background:var(--panel-bg);
+           border:1px solid var(--rule);z-index:30;max-height:300px;overflow-y:auto}
+  #results button{display:flex;width:100%;align-items:center;gap:9px;padding:9px 11px;background:none;
+                  border:none;border-bottom:1px solid var(--rule);color:var(--ivory);
+                  font-size:13.5px;text-align:left;cursor:pointer;font-family:var(--serif)}
+  #results button:hover{background:var(--hover-bg)}
+
+  .rail{display:flex;gap:6px;padding:9px 20px;overflow-x:auto;align-items:center;
+        background:var(--overlay-bg-2);z-index:4;transition:background .25s}
+  .rail .btn{white-space:nowrap;letter-spacing:.1em;font-size:11px;padding:6px 11px}
+  .rail .num{font-family:var(--didot);color:var(--gold);font-size:13px;letter-spacing:0}
+
+  #stage{flex:1;position:relative;min-height:0}
+  #svg,#familySvg,#geoSvg{display:block;touch-action:none;cursor:grab;position:absolute;top:0;left:0}
+  #svg.drag,#familySvg.drag,#geoSvg.drag{cursor:grabbing}
+
+  /* ---- vase-panel styling for floating boxes ---- */
+  .vase{background:var(--panel-bg);border:1px solid var(--rule);
+        box-shadow:0 0 0 1px rgba(0,0,0,.5), 0 14px 50px rgba(0,0,0,.65);transition:background .25s}
+
+  #panel{position:absolute;right:18px;top:18px;width:400px;max-height:calc(100% - 36px);
+         overflow-y:auto;z-index:10;padding:0}
+  .pbody{padding:18px 22px 22px}
+  .ptype{font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;margin-bottom:6px}
+  .pname{font-family:var(--didot);font-size:33px;line-height:1.05;letter-spacing:.04em;color:var(--ivory)}
+  .pgreek{font-family:var(--didot);font-size:15px;letter-spacing:.3em;color:var(--clay);margin-top:7px}
+  .drule{height:0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);
+         height:3px;margin:15px 0}
+  .story{font-size:15px;line-height:1.72;color:var(--ivory);margin:0;font-weight:300}
+  .story a{cursor:pointer;border-bottom:1px dotted currentColor;text-decoration:none}
+  .story a:hover{border-bottom-style:solid}
+  .grouplab{font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:7px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{display:flex;align-items:center;gap:7px;background:var(--chip-bg);
+        border:1px solid var(--rule);border-radius:0;padding:6px 10px;cursor:pointer;
+        color:var(--ivory);font-size:12.5px;font-family:var(--serif);transition:.15s}
+  .chip:hover{border-color:var(--clay);background:var(--hover-bg)}
+  .dot{width:8px;height:8px;border-radius:8px;flex:0 0 auto}
+  .dot.sq{border-radius:0}
+  .close{background:none;border:1px solid var(--rule);color:var(--muted);
+         width:29px;height:29px;cursor:pointer;font-size:15px;flex:0 0 auto}
+  .close:hover{border-color:var(--clay);color:var(--ivory)}
+
+  #zoom{position:absolute;left:16px;bottom:18px;display:flex;flex-direction:column;gap:6px;z-index:3}
+  #zoom button{width:35px;height:35px;border:1px solid var(--rule);background:var(--panel-bg);
+               color:var(--ivory);font-size:16px;cursor:pointer;font-family:var(--didot);transition:background .25s}
+  #zoom button:hover{border-color:var(--clay)}
+  #zoom button.small{font-size:9.5px;letter-spacing:.14em;color:var(--muted);font-family:var(--serif);
+                     text-transform:uppercase}
+
+  #legend,#familyLegend,#routeLegend{position:absolute;left:64px;bottom:18px;z-index:6;width:262px}
+  #legend h4,#familyLegend h4,#routeLegend h4{font-size:10px;letter-spacing:.2em;color:var(--muted);
+             text-transform:uppercase;margin:0 0 10px;font-weight:400}
+  .lrow{display:flex;align-items:center;gap:10px;width:100%;background:none;border:none;padding:5px 0;
+        cursor:pointer;color:var(--ivory);font-size:12.5px;text-align:left;font-family:var(--serif)}
+  .lrow.off{opacity:.28}
+  .types{display:flex;flex-wrap:wrap;gap:6px 13px}
+  .types span{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted)}
+
+  #hint,#familyHint,#geoHint{position:absolute;right:18px;top:18px;max-width:274px;padding:16px 18px;
+        font-size:13px;line-height:1.62;color:var(--muted);z-index:2;font-weight:300}
+  #hint b,#familyHint b,#geoHint b{color:var(--ivory);font-weight:500}
+
+  #index{position:absolute;inset:0;overflow-y:auto;padding:26px 32px}
+  .ihead{display:flex;align-items:baseline;gap:13px;padding-bottom:8px;margin:0 0 14px;
+         border-bottom:1px solid var(--rule)}
+  .ihead .num{font-family:var(--didot);color:var(--gold);font-size:19px}
+  .ihead .nm{font-family:var(--didot);font-size:23px;letter-spacing:.1em;text-transform:uppercase}
+  .igroup{margin-bottom:32px}
+
+  .hidden{display:none!important}
+
+  @media (max-width:860px){
+    #panel{right:0;left:0;top:auto;bottom:0;width:100%;max-height:66%;border-left:none;border-right:none}
+    #hint,#familyHint,#geoHint{display:none}
+    .title{font-size:25px}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="meander"></div>
+
+<header>
+  <div class="grow">
+    <div class="eyebrow">Τιτᾶνες · Ἥρωες · Νόστοι</div>
+    <div class="title">Mythologia</div>
+    <div class="sub" id="counts"></div>
+  </div>
+  <div style="display:flex;gap:7px">
+    <button class="btn on" id="modeMap">map</button>
+    <button class="btn" id="modeFamily">family tree</button>
+    <button class="btn" id="modeGeo">geography</button>
+    <button class="btn" id="modeIndex">index</button>
+  </div>
+  <button class="btn" id="themeToggle" title="Switch between red-figure (dark ground) and black-figure (pale ground) styles">black-figure</button>
+  <div class="searchwrap">
+    <input id="search" placeholder="Search a name…" autocomplete="off">
+    <div id="results" class="hidden"></div>
+  </div>
+</header>
+
+<div class="meander dim"></div>
+
+<nav class="rail" id="rail"></nav>
+
+<main id="stage">
+  <svg id="svg"></svg>
+  <svg id="familySvg" class="hidden"></svg>
+  <svg id="geoSvg" class="hidden"></svg>
+
+  <div id="zoom">
+    <button id="zin" title="Zoom in">+</button>
+    <button id="zout" title="Zoom out">−</button>
+    <button id="zfit" class="small" title="Reset view">fit</button>
+  </div>
+
+  <div id="legend" class="vase hidden"></div>
+  <div id="familyLegend" class="vase hidden"></div>
+  <div id="routeLegend" class="vase hidden"></div>
+
+  <div id="hint" class="vase">
+    <b>Click any figure</b> to read its story — the lines that touch it are painted in, the rest fall away.
+    Drag to move, scroll to zoom. The <b id="hintx">red-purple lines</b> are the long reaches, where a story
+    in one register pulls on one three registers away.
+  </div>
+
+  <div id="familyHint" class="vase hidden">
+    <b>Every house on one chart.</b> Solid lines are parent to child, dashed gold lines are marriages,
+    thick dashed crimson lines mark a curse passed down the blood. Drag to move, scroll to zoom, click a
+    name to read it.
+  </div>
+
+  <div id="geoHint" class="vase hidden">
+    <b>Click a place</b> to read what happened there. Use <b>routes</b> below to trace the journeys —
+    Odysseus's ten years home, Aeneas's flight from Troy, and others — across the map.
+  </div>
+
+  <div id="panel" class="vase hidden"></div>
+  <div id="index" class="hidden"></div>
+</main>
+
+<script>
+const C = {
+  void: "#0a0f1e",
+  panel: "#101830",
+  panelSoft: "#161f3c",
+  rule: "#26325c",
+  star: "#e8edff",
+  muted: "#8290bb",
+  faint: "#5a668f",
+  titan: "#a98ae0",
+  god: "#e8c46a",
+  hero: "#e58a58",
+  mortal: "#c9bda4",
+  monster: "#8fbf7a",
+  event: "#63cfc0",
+  place: "#7aa8e8",
+};
+
+const TYPE_LABEL = {
+  titan: "Titan",
+  god: "God",
+  hero: "Hero",
+  mortal: "Mortal",
+  monster: "Creature",
+  event: "Story",
+  place: "Place",
+};
+
+const EDGE_STYLE = {
+  blood: { color: "#5f6d9c", w: 1.1, dash: null, label: "Parent to child" },
+  descent: { color: "#5f6d9c", w: 1.1, dash: "2 5", label: "Generations later" },
+  union: { color: "#e8c46a", w: 1.1, dash: "6 4", label: "Marriage or affair" },
+  part: { color: "#3f7d78", w: 1, dash: null, label: "Appears in story" },
+  cause: { color: "#e58a58", w: 1.6, dash: null, label: "Leads directly to" },
+  crossover: { color: "#e0607a", w: 1.5, dash: "1 5", label: "Crosses the timeline" },
+};
+
+const ERAS = [
+  { n: "I", name: "Before the World", y0: 20, y1: 355 },
+  { n: "II", name: "The First Humans", y0: 385, y1: 725 },
+  { n: "III", name: "Founders & First Heroes", y0: 755, y1: 1160 },
+  { n: "IV", name: "The Heroic Age", y0: 1190, y1: 1700 },
+  { n: "V", name: "The Road to Troy", y0: 1730, y1: 2140 },
+  { n: "VI", name: "The Trojan War", y0: 2170, y1: 2510 },
+  { n: "VII", name: "The Returns", y0: 2540, y1: 2910 },
+];
+
+const W = 1960;
+const H = 2960;
+
+/* ------------------------------------------------------------------ */
+/*  NODES                                                              */
+/*  story text supports [[id|Display]] inline links                    */
+/* ------------------------------------------------------------------ */
+const NODES = [
+  /* ---------- ERA I ---------- */
+  { id: "titans", name: "The Titans", type: "titan", x: 120, y: 110, era: 0,
+    story: "The second generation of divine beings, children of Gaia (Earth) and Uranus (Sky). [[cronus|Cronus]] led them after castrating his father. Most were imprisoned in Tartarus after losing the war with the Olympians — but not all: [[prometheus|Prometheus]] and [[epimetheus|Epimetheus]] backed the winning side, which is why they remain free to shape the human story afterwards." },
+  { id: "cronus", name: "Cronus", type: "titan", x: 120, y: 235, era: 0,
+    story: "Warned that his own child would overthrow him — exactly as he overthrew his father — Cronus swallowed each of his children at birth. His wife Rhea hid the youngest, [[zeus|Zeus]], and fed Cronus a stone instead. Zeus grew up, forced him to disgorge his siblings, and the [[titanomachy|war]] began. Note the pattern: three generations in a row, sons destroy fathers." },
+  { id: "titanomachy", name: "The Titanomachy", type: "event", x: 310, y: 110, era: 0,
+    story: "A ten-year war between the [[titans|Titans]] and the children of [[cronus|Cronus]]. [[zeus|Zeus]] freed the Cyclopes and Hundred-Handers from Tartarus; in gratitude they forged his thunderbolt, Poseidon's trident and Hades' helm of invisibility. The Titans lost and were imprisoned. This is the founding act of Olympian rule — everything after it happens under Zeus's order." },
+  { id: "cosmosdivision", name: "Dividing the Cosmos", type: "event", x: 310, y: 265, era: 0,
+    story: "The three victorious brothers drew lots for the universe. [[zeus|Zeus]] took the sky, [[poseidon|Poseidon]] the sea, [[hades|Hades]] the underworld. Earth was left as shared ground — which is precisely why gods keep meddling in mortal affairs there. Hades' share is the reason he is almost never on Olympus and almost never in other myths." },
+  { id: "zeus", name: "Zeus", type: "god", x: 490, y: 95, era: 0,
+    story: "King of the gods, ruler of the sky, and the single most connected figure on this map. His affairs with mortal women produce a huge share of the heroic bloodlines: [[perseus|Perseus]], [[heracles|Heracles]], [[helen|Helen]], [[polydeuces|Polydeuces]], [[dionysus|Dionysus]]. He also punishes: [[prometheusbound|Prometheus]], [[pandorasjar|humanity]], and [[theflood|the entire human race]] in turn." },
+  { id: "poseidon", name: "Poseidon", type: "god", x: 490, y: 195, era: 0,
+    story: "God of the sea, earthquakes and horses. He loses the [[athenscontest|contest for Athens]] to [[athena|Athena]] and never quite forgives the city. He is a second father to [[theseus|Theseus]] in some versions, and his grudge against [[odysseus|Odysseus]] for blinding his son Polyphemus is the engine of the whole [[odyssey|Odyssey]]." },
+  { id: "hades", name: "Hades", type: "god", x: 490, y: 295, era: 0,
+    story: "Lord of the dead — a role, not a punishment. He rarely leaves his realm, which is why he appears in so few myths. The two big exceptions are his [[persephonemyth|abduction of Persephone]] and the mortals who come down to him: [[heracles|Heracles]] for Cerberus, and [[underworldraid|Theseus and Pirithous]], who came to steal his wife and were caught." },
+  { id: "hera", name: "Hera", type: "god", x: 645, y: 60, era: 0,
+    story: "Wife and sister of [[zeus|Zeus]], goddess of marriage — and therefore permanently enraged by his affairs. Her jealousy is a direct cause of the [[labors|Twelve Labours]], since she drove [[heracles|Heracles]] to the madness he spent the rest of his life atoning for. She also loses the [[judgmentparis|Judgment of Paris]], which turns her against Troy for the entire war." },
+  { id: "demeter", name: "Demeter", type: "god", x: 645, y: 165, era: 0,
+    story: "Goddess of grain and harvest. When [[hades|Hades]] took her daughter [[persephone|Persephone]], she let the whole world go barren until she got her back. Her grief has one strange side effect much later: distracted at [[tantalusfeast|Tantalus's feast]], she is the only god who fails to notice what is on the plate." },
+  { id: "persephone", name: "Persephone", type: "god", x: 795, y: 235, era: 0,
+    story: "Daughter of [[zeus|Zeus]] and [[demeter|Demeter]], queen of the underworld. She is both victim and sovereign — later myths show her ruling with real authority, granting Orpheus his one chance and refusing [[underworldraid|Pirithous]] flatly. Her half-and-half year is the Greek explanation for the seasons." },
+  { id: "persephonemyth", name: "The Abduction of Persephone", type: "event", x: 645, y: 305, era: 0,
+    story: "[[hades|Hades]] carried [[persephone|Persephone]] into the earth with [[zeus|Zeus]]'s quiet consent. [[demeter|Demeter]] searched, refused to let anything grow, and forced a settlement — but Persephone had eaten pomegranate seeds in the underworld, binding her to it for part of every year. This myth sits slightly outside the timeline: it is cyclical, repeating forever, rather than an event that leads to the next thing." },
+  { id: "athena", name: "Athena", type: "god", x: 965, y: 60, era: 0,
+    story: "Goddess of wisdom, craft and strategic war, born from [[zeus|Zeus]]'s head. She wins [[athenscontest|Athens]], helps [[mankindclay|breathe life]] into the first humans, arms [[medusaquest|Perseus]] against Medusa, and backs [[odysseus|Odysseus]] throughout. She loses the [[judgmentparis|Judgment of Paris]] and spends the war against Troy — then turns on the Greeks too during the [[nostoi|voyages home]]." },
+  { id: "aphrodite", name: "Aphrodite", type: "god", x: 965, y: 165, era: 0,
+    story: "Goddess of desire. She wins the [[judgmentparis|Judgment of Paris]] by bribing the judge with [[helen|Helen]] — a promise that starts a ten-year war. She is also the mother of [[aeneas|Aeneas]], which is why the one Trojan who escapes the sack is the one with a goddess protecting him." },
+  { id: "ares", name: "Ares", type: "god", x: 1120, y: 60, era: 0,
+    story: "God of slaughter and battle-frenzy, largely disliked by the other gods. His main structural role is small but load-bearing: the dragon [[thebesfounding|Cadmus kills]] at the spring of Thebes was his, and the marriage that settles that debt is his daughter [[harmonia|Harmonia]]'s." },
+  { id: "hephaestus", name: "Hephaestus", type: "god", x: 1120, y: 165, era: 0,
+    story: "Smith of the gods, lame and cast out of Olympus by [[hera|Hera]]. He makes the things that drive plots: the chains that hold [[prometheusbound|Prometheus]], [[pandora|Pandora]] herself out of clay, and later the shield of [[achilles|Achilles]]." },
+  { id: "eris", name: "Eris", type: "god", x: 1285, y: 95, era: 0,
+    story: "Goddess of strife, and the most consequential party guest in Greek myth. Left off the invitation list for the [[peleusthetiswedding|wedding of Peleus and Thetis]], she threw a [[goldenapple|golden apple]] into the hall inscribed 'to the fairest'. Everything from the [[judgmentparis|Judgment of Paris]] to the fall of Troy unrolls from that one act of spite." },
+
+  /* ---------- ERA II ---------- */
+  { id: "prometheus", name: "Prometheus", type: "titan", x: 145, y: 455, era: 1,
+    story: "A [[titans|Titan]] whose name means 'forethought'. He sided with [[zeus|Zeus]] in the [[titanomachy|war]], then spent the rest of his existence undermining him on humanity's behalf: [[mankindclay|shaping mortals from clay]], [[sacrificetrick|cheating Zeus at the first sacrifice]], and [[theftoffire|stealing fire]]. He also holds the one secret Zeus needs — the prophecy about [[thetis|Thetis]] — and trades it for freedom." },
+  { id: "epimetheus", name: "Epimetheus", type: "titan", x: 145, y: 595, era: 1,
+    story: "Prometheus's brother, whose name means 'afterthought' — the joke is the whole character. Given the job of handing out useful traits to living creatures, he spent them all on animals and left humans naked and defenceless. Warned never to accept a gift from [[zeus|Zeus]], he accepted [[pandora|Pandora]] anyway. Their daughter is [[pyrrha|Pyrrha]]." },
+  { id: "mankindclay", name: "Prometheus Shapes Mankind", type: "event", x: 325, y: 425, era: 1,
+    story: "[[prometheus|Prometheus]] moulds the first men from clay and river water, and [[athena|Athena]] breathes life into them. Because [[epimetheus|Epimetheus]] had already given away every natural advantage, humans arrive with no fur, claws or speed — the deficit that makes [[theftoffire|fire]] necessary and makes Prometheus their permanent advocate." },
+  { id: "sacrificetrick", name: "The Trick at Mecone", type: "event", x: 325, y: 525, era: 1,
+    story: "At the first sacrifice, [[prometheus|Prometheus]] made two piles: bones hidden under glistening fat, and good meat hidden under an unappetising hide. [[zeus|Zeus]] chose the fat and got bones — which is why Greek ritual burns bones and fat for the gods while people eat the meat. It is an origin story for sacrifice, and the insult that makes Zeus withhold [[theftoffire|fire]]." },
+  { id: "theftoffire", name: "The Theft of Fire", type: "event", x: 325, y: 625, era: 1,
+    story: "Denied fire after [[sacrificetrick|the trick at Mecone]], [[prometheus|Prometheus]] smuggled it out of Olympus in a hollow fennel stalk. Fire means cooking, metal, craft — civilisation. [[zeus|Zeus]] answers with two punishments running in parallel: [[prometheusbound|one for Prometheus]] and [[pandorasjar|one for humanity]]." },
+  { id: "prometheusbound", name: "Prometheus Bound", type: "event", x: 495, y: 665, era: 1,
+    story: "[[prometheus|Prometheus]] is chained to a crag in the Caucasus while an eagle eats his liver daily; being immortal, it grows back each night. Generations later [[heracles|Heracles]] passes by on his labours, shoots the eagle and frees him — one of the longest reaches on this whole map, a hero from the Heroic Age closing a wound from before humans existed." },
+  { id: "pandora", name: "Pandora", type: "mortal", x: 495, y: 525, era: 1,
+    story: "The first woman, made by [[hephaestus|Hephaestus]] on [[zeus|Zeus]]'s orders and given a gift by every god — her name means 'all-gifted'. She was sent as a beautiful punishment to [[epimetheus|Epimetheus]], who accepted her against his brother's warning. Her daughter [[pyrrha|Pyrrha]] survives the flood and helps restart the human race." },
+  { id: "pandorasjar", name: "Pandora's Jar", type: "event", x: 665, y: 455, era: 1,
+    story: "[[pandora|Pandora]] opens the great storage jar — a pithos, not a box; 'box' is a Renaissance mistranslation — and every sickness, toil and sorrow escapes into the world. Only Hope is left inside when she gets the lid back on, and scholars still argue whether that means humanity keeps hope or is denied it. This is Zeus's answer to [[theftoffire|the theft of fire]]." },
+  { id: "theflood", name: "Zeus's Flood", type: "event", x: 865, y: 435, era: 1,
+    story: "[[zeus|Zeus]] decides the current race of humans is irredeemably corrupt and drowns the world. Forewarned by his father [[prometheus|Prometheus]], [[deucalion|Deucalion]] builds a chest and rides out the water with his wife [[pyrrha|Pyrrha]], landing on Parnassus. It is a hard reset: the humans of the Heroic Age all descend from these two." },
+  { id: "deucalion", name: "Deucalion", type: "mortal", x: 705, y: 625, era: 1,
+    story: "Son of [[prometheus|Prometheus]], and the Greek Noah. He survives [[theflood|the flood]] with his wife and cousin [[pyrrha|Pyrrha]]. Notice the symmetry: the flood is survived by the son of the fire-thief and the daughter of the first woman — the two halves of Zeus's original punishment, married." },
+  { id: "pyrrha", name: "Pyrrha", type: "mortal", x: 865, y: 625, era: 1,
+    story: "Daughter of [[epimetheus|Epimetheus]] and [[pandora|Pandora]], wife of [[deucalion|Deucalion]]. Together they survive [[theflood|the flood]] and repopulate the earth by [[stonesmen|throwing stones]]. Their son [[hellen|Hellen]] gives the Greeks their name for themselves." },
+  { id: "stonesmen", name: "The Men of Stone", type: "event", x: 1035, y: 545, era: 1,
+    story: "Told by an oracle to throw 'the bones of their mother' over their shoulders, [[deucalion|Deucalion]] and [[pyrrha|Pyrrha]] work out that the mother is Gaia — the earth — and her bones are stones. His stones become men, hers become women. The new race is literally hard, born of rock, which the Greeks read as an explanation for human toughness." },
+  { id: "hellen", name: "Hellen", type: "mortal", x: 1155, y: 625, era: 1,
+    story: "Son of [[deucalion|Deucalion]] and [[pyrrha|Pyrrha]], and the ancestor the Greeks named themselves after — Hellenes, hence Hellenic. Not to be confused with [[helen|Helen of Troy]], a different name entirely in Greek. His sons give their names to the main Greek peoples, turning genealogy into a map of who lives where." },
+  { id: "dorus", name: "Dorus", type: "mortal", x: 1325, y: 535, era: 1,
+    story: "Son of [[hellen|Hellen]] and eponymous ancestor of the Dorians — the Greeks of Sparta, Corinth and Crete. These 'tribal ancestor' figures have no stories of their own; they exist to explain why a Spartan and an Athenian are cousins who cannot stand each other." },
+  { id: "aeolus", name: "Aeolus", type: "mortal", x: 1325, y: 635, era: 1,
+    story: "Son of [[hellen|Hellen]] and ancestor of the Aeolians of Thessaly and Boeotia. Confusingly, a different Aeolus is the keeper of the winds who gives [[odysseus|Odysseus]] a bag of storms — Greek myth reuses names constantly, and this is one of the traps in it." },
+  { id: "xuthus", name: "Xuthus", type: "mortal", x: 1480, y: 585, era: 1,
+    story: "Son of [[hellen|Hellen]] and father of Ion and Achaeus — ancestors of the Ionians (Athens, the islands) and the Achaeans. 'Achaeans' is the word Homer actually uses for the Greeks at [[trojanwar|Troy]], so this obscure figure is the reason the Iliad calls them that." },
+
+  /* ---------- ERA III ---------- */
+  { id: "cecrops", name: "Cecrops", type: "mortal", x: 130, y: 835, era: 2,
+    story: "The first king of Attica, born from the earth with a serpent's tail instead of legs. He judged the [[athenscontest|contest]] between [[athena|Athena]] and [[poseidon|Poseidon]] and is credited with founding marriage, writing and burial — the institutions that make a city a city rather than a settlement." },
+  { id: "athenscontest", name: "The Contest for Athens", type: "event", x: 130, y: 955, era: 2,
+    story: "[[athena|Athena]] and [[poseidon|Poseidon]] competed for the city's patronage. Poseidon struck the rock and produced a salt spring (in some versions, the first horse); Athena planted an olive tree. The olive — food, oil, lamplight, trade — won, and the city took her name. Poseidon's resentment lingers in Athenian myth ever after." },
+  { id: "athens", name: "Athens", type: "place", x: 130, y: 1075, era: 2,
+    story: "Named for [[athena|Athena]] after the [[athenscontest|contest]], and unified into a single state by [[atticaunion|Theseus]]. In the myths it becomes the place where things get resolved rather than avenged — most importantly at the trial that ends the [[orestesrevenge|curse on the House of Atreus]]. That is Athens telling its own story about law replacing vendetta." },
+  { id: "europa", name: "Europa", type: "mortal", x: 330, y: 805, era: 2,
+    story: "A Phoenician princess, sister of [[cadmus|Cadmus]]. [[zeus|Zeus]] took the form of a white bull, carried her across the sea to Crete, and fathered Minos — whose wife later bears the [[minotaur|Minotaur]]. She gives her name to the continent of Europe, and her disappearance is what sends Cadmus westward to [[thebesfounding|found Thebes]]." },
+  { id: "cadmus", name: "Cadmus", type: "mortal", x: 330, y: 905, era: 2,
+    story: "Phoenician prince sent to find his sister [[europa|Europa]] and forbidden to return without her. He never finds her, consults Delphi instead, and [[thebesfounding|founds Thebes]]. Greek tradition also credits him with bringing the alphabet to Greece. His line runs straight down to [[laius|Laius]] and [[oedipus|Oedipus]]." },
+  { id: "thebesfounding", name: "The Sown Men", type: "event", x: 330, y: 1025, era: 2,
+    story: "Told to follow a cow and build where it lay down, [[cadmus|Cadmus]] founded [[thebes|Thebes]] — then killed a dragon sacred to [[ares|Ares]] that guarded the spring. On [[athena|Athena]]'s advice he sowed its teeth; armed men sprang up and fought until five remained, and those five became Thebes's noble houses. A city founded on a killing and on men who came out of the ground fighting: Thebes is doomed from the first day." },
+  { id: "harmonia", name: "Harmonia", type: "mortal", x: 490, y: 905, era: 2,
+    story: "Daughter of [[ares|Ares]] and [[aphrodite|Aphrodite]], given to [[cadmus|Cadmus]] as a bride — compensation for the dragon he killed. Their wedding was attended by all the gods. Her necklace, made by [[hephaestus|Hephaestus]], is cursed and brings ruin to every woman who wears it, resurfacing generations later to help destroy [[seventhebes|Thebes]]." },
+  { id: "thebes", name: "Thebes", type: "place", x: 490, y: 1035, era: 2,
+    story: "Founded by [[cadmus|Cadmus]], and the setting for the darkest cycle in Greek myth: [[oedipusmyth|Oedipus]], the [[seventhebes|Seven]], the [[epigoni|Epigoni]]. If Athens is where things get judged, Thebes is where things get repeated. It is the city Athenian tragedy uses to think about everything that could go wrong with a family and a state." },
+  { id: "semele", name: "Semele", type: "mortal", x: 490, y: 795, era: 2,
+    story: "Daughter of [[cadmus|Cadmus]], loved by [[zeus|Zeus]]. [[hera|Hera]], disguised, goaded her into demanding that Zeus appear in his true form; the sight incinerated her. Zeus saved the unborn [[dionysus|Dionysus]] by sewing him into his own thigh until term — which is why Dionysus is the god who was born twice." },
+  { id: "dionysus", name: "Dionysus", type: "god", x: 650, y: 795, era: 2,
+    story: "God of wine, theatre and ecstatic release, son of [[zeus|Zeus]] and the mortal [[semele|Semele]]. His myths are about what happens to cities that refuse him — his cousin [[pentheus|Pentheus]] most of all. He also turns up on Naxos to marry [[ariadne|Ariadne]] after [[theseus|Theseus]] abandons her, quietly stitching the Theban and Athenian threads together." },
+  { id: "pentheus", name: "Pentheus", type: "mortal", x: 650, y: 905, era: 2,
+    story: "King of [[thebes|Thebes]], grandson of [[cadmus|Cadmus]], and cousin of [[dionysus|Dionysus]]. He banned the new god's worship and spied on his rites; the frenzied women tore him apart, his own mother Agave leading them and carrying his head home believing it was a lion's. Euripides' Bacchae is the version everyone reads." },
+  { id: "acrisius", name: "Acrisius", type: "mortal", x: 800, y: 805, era: 2,
+    story: "King of Argos, told by an oracle that his daughter's son would kill him. He locked [[danae|Danaë]] in a bronze chamber; [[zeus|Zeus]] reached her as a shower of gold anyway. He then set mother and infant [[perseus|Perseus]] adrift in a chest at sea — and was killed by that grandson decades later, by accident, exactly as foretold." },
+  { id: "danae", name: "Danaë", type: "mortal", x: 800, y: 905, era: 2,
+    story: "Daughter of [[acrisius|Acrisius]], mother of [[perseus|Perseus]] by [[zeus|Zeus]]. Cast adrift and washed up on Seriphos, she was pursued by its king Polydectes — who sent her son after [[medusaquest|Medusa's head]] specifically hoping he would not come back." },
+  { id: "perseus", name: "Perseus", type: "hero", x: 950, y: 955, era: 2,
+    story: "Son of [[zeus|Zeus]] and [[danae|Danaë]], and the cleanest hero story in Greek myth — he completes his quest, rescues [[andromeda|Andromeda]], marries her, rules well and dies old. He founds Mycenae, and his line produces [[heracles|Heracles]] a few generations on. Much later the [[atreus|House of Atreus]] takes Mycenae from his descendants." },
+  { id: "medusaquest", name: "Perseus and Medusa", type: "event", x: 1110, y: 875, era: 2,
+    story: "Equipped by the gods — [[athena|Athena]]'s mirrored shield, Hermes' winged sandals, [[hades|Hades]]' cap of invisibility — [[perseus|Perseus]] beheaded [[medusa|Medusa]] by watching her reflection. Flying home with the head he found [[andromeda|Andromeda]] chained to a rock as a sacrifice and saved her. He later used the head as a weapon, then gave it to Athena for her shield." },
+  { id: "medusa", name: "Medusa", type: "monster", x: 1270, y: 805, era: 2,
+    story: "The one mortal Gorgon, whose gaze turned people to stone. Ovid's influential version makes her a beautiful priestess of [[athena|Athena]] assaulted by [[poseidon|Poseidon]] in the goddess's own temple, and transformed as punishment — the victim blamed. From her severed neck sprang the winged horse Pegasus, later tamed by the hero Bellerophon." },
+  { id: "andromeda", name: "Andromeda", type: "mortal", x: 1110, y: 1015, era: 2,
+    story: "Ethiopian princess chained to a rock as a sea-monster's meal, because her mother Cassiopeia boasted of being more beautiful than the sea nymphs. [[perseus|Perseus]] saved and married her. She, Perseus, her mother and the monster all end up as constellations — one of the clearest examples of a myth being written into the sky." },
+  { id: "tantalus", name: "Tantalus", type: "mortal", x: 1500, y: 815, era: 2,
+    story: "A son of [[zeus|Zeus]], favoured enough to eat at the gods' table — and he repaid it by [[tantalusfeast|serving them his own son]]. His punishment gave English the word 'tantalise': standing in water that drains when he stoops, under fruit that lifts away when he reaches. He is the origin point of the [[thyesteanfeast|curse]] that eventually kills [[agamemnonmurder|Agamemnon]]." },
+  { id: "tantalusfeast", name: "The Feast of Tantalus", type: "event", x: 1665, y: 815, era: 2,
+    story: "[[tantalus|Tantalus]] tested the gods' omniscience by killing his son [[pelops|Pelops]], cooking him and serving him at dinner. Every god recognised it instantly and refused — except [[demeter|Demeter]], too deep in grief over [[persephone|Persephone]] to notice, who ate a shoulder. The gods restored Pelops with an ivory replacement. The crime is cannibalism against one's own child, and the family will commit it again." },
+  { id: "pelops", name: "Pelops", type: "mortal", x: 1500, y: 935, era: 2,
+    story: "Killed and resurrected as a child at [[tantalusfeast|his father's feast]], with an ivory shoulder where [[demeter|Demeter]] ate. He grew up to win [[hippodamia|Hippodamia]] by [[pelopsrace|cheating in a chariot race]] and murdering his accomplice. The Peloponnese — 'island of Pelops' — is named for him. His sons are [[atreus|Atreus]] and [[thyestes|Thyestes]]." },
+  { id: "pelopsrace", name: "The Chariot Race", type: "event", x: 1665, y: 935, era: 2,
+    story: "[[hippodamia|Hippodamia]]'s father killed every suitor who lost a chariot race to him. [[pelops|Pelops]] bribed the king's charioteer Myrtilus to replace the linchpins with wax; the king died in the crash. Pelops then threw Myrtilus into the sea to avoid paying — and Myrtilus's dying curse is the one that actually damns the family. Every later horror in this line traces back to this broken promise." },
+  { id: "hippodamia", name: "Hippodamia", type: "mortal", x: 1500, y: 1055, era: 2,
+    story: "Won by [[pelops|Pelops]] through [[pelopsrace|sabotage and murder]]. Mother of [[atreus|Atreus]] and [[thyestes|Thyestes]] — and in some versions she pushes them into killing their half-brother Chrysippus, which gets the whole family exiled to Mycenae and sets the feud in motion." },
+
+  /* ---------- ERA IV ---------- */
+  { id: "ariadne", name: "Ariadne", type: "mortal", x: 140, y: 1365, era: 3,
+    story: "Cretan princess, half-sister of the [[minotaur|Minotaur]]. She gave [[theseus|Theseus]] the thread that let him find his way back out of the labyrinth, then fled with him — and he abandoned her sleeping on Naxos. [[dionysus|Dionysus]] found her there and married her; her wedding crown became a constellation. She is rescued from an Athenian hero by a Theban god." },
+  { id: "minotaur", name: "The Minotaur", type: "monster", x: 140, y: 1485, era: 3,
+    story: "Bull-headed son of Minos's wife Pasiphaë, born after [[poseidon|Poseidon]] cursed her with desire for a bull. Minos hid it in Daedalus's labyrinth and fed it Athenian children as tribute — the tribute [[minotaurmyth|Theseus]] volunteered for. Minos, note, is a son of [[europa|Europa]]: the Cretan and Theban lines are cousins." },
+  { id: "aegeus", name: "Aegeus", type: "mortal", x: 300, y: 1255, era: 3,
+    story: "King of [[athens|Athens]] and mortal father of [[theseus|Theseus]]. He watched daily for his son's ship returning from Crete; when it came back still flying the black sail [[minotaurmyth|Theseus forgot to change]], he threw himself into the sea. The Aegean is named for him — a whole sea named after a signalling error." },
+  { id: "theseus", name: "Theseus", type: "hero", x: 300, y: 1375, era: 3,
+    story: "The Athenian national hero: son of [[aegeus|Aegeus]] and, in some tellings, [[poseidon|Poseidon]] as well. He kills the [[minotaur|Minotaur]], [[atticaunion|unifies Attica]] under Athens, abandons [[ariadne|Ariadne]], abducts a young [[helen|Helen]] before the war and is punished for it by [[dioscuri|her brothers]], and is finally trapped in the underworld on [[underworldraid|a truly stupid errand]] until [[heracles|Heracles]] pulls him out." },
+  { id: "minotaurmyth", name: "Theseus and the Minotaur", type: "event", x: 300, y: 1495, era: 3,
+    story: "[[theseus|Theseus]] volunteered among the Athenian youths sent as tribute to Crete, killed the [[minotaur|Minotaur]] in the labyrinth and escaped using [[ariadne|Ariadne]]'s thread. On the way home he abandoned her on Naxos and forgot to swap the black sail for white — killing [[aegeus|his father]] and inheriting the throne on the same day." },
+  { id: "atticaunion", name: "The Unification of Attica", type: "event", x: 465, y: 1255, era: 3,
+    story: "[[theseus|Theseus]]'s least dramatic and most important act: merging the scattered towns of Attica into a single state governed from [[athens|Athens]]. Athenians told this story to give their democracy a heroic founder. It is the moment a myth stops being an adventure and starts being a constitution." },
+  { id: "underworldraid", name: "The Raid on the Underworld", type: "event", x: 300, y: 1615, era: 3,
+    story: "[[theseus|Theseus]] and his friend Pirithous swore to marry daughters of [[zeus|Zeus]] — so they abducted the child [[helen|Helen]], then went down to take [[persephone|Persephone]] from [[hades|Hades]] himself. Hades offered them seats which fused to their flesh. [[heracles|Heracles]], down for Cerberus, tore Theseus free; Pirithous stayed forever. The Helen abduction is why [[dioscuri|her brothers]] later sack Athens." },
+  { id: "laius", name: "Laius", type: "mortal", x: 620, y: 1255, era: 3,
+    story: "King of [[thebes|Thebes]], descendant of [[cadmus|Cadmus]]. Warned that his own son would kill him, he pierced the infant's ankles and left him to die on a mountain. The child survived and became [[oedipus|Oedipus]]. Laius met him years later at a crossroads, they quarrelled over right of way, and the prophecy completed itself." },
+  { id: "jocasta", name: "Jocasta", type: "mortal", x: 765, y: 1255, era: 3,
+    story: "Queen of [[thebes|Thebes]], wife of [[laius|Laius]] — then wife of [[oedipus|Oedipus]], who was also her son. She works out the truth in Sophocles' play before he does, begs him to stop asking questions, and hangs herself when he will not. Her brother Creon takes the throne after [[seventhebes|her sons destroy each other]]." },
+  { id: "oedipus", name: "Oedipus", type: "mortal", x: 690, y: 1375, era: 3,
+    story: "Exposed as an infant by [[laius|Laius]], raised in Corinth, and told by an oracle he would kill his father and marry his mother. He fled the people he thought were his parents — straight into the prophecy. He killed a stranger at a crossroads, solved the Sphinx's riddle, and was given [[thebes|Thebes]] and its widowed queen [[jocasta|Jocasta]] as his reward." },
+  { id: "oedipusmyth", name: "Oedipus at Thebes", type: "event", x: 690, y: 1495, era: 3,
+    story: "A plague forces [[oedipus|Oedipus]] to hunt [[laius|Laius]]'s killer, and the investigation converges on himself. [[jocasta|Jocasta]] hangs herself; he blinds himself with her brooches and goes into exile. He curses his sons on the way out — and that curse is the direct cause of [[seventhebes|the war between them]]." },
+  { id: "eteocles", name: "Eteocles", type: "mortal", x: 620, y: 1615, era: 3,
+    story: "Son of [[oedipus|Oedipus]]. He and [[polynices|Polynices]] agreed to rule [[thebes|Thebes]] in alternate years; when his year ended he refused to hand over. He defended the city against [[seventhebes|the Seven]] and died at the seventh gate, killing and killed by his brother in the same exchange." },
+  { id: "polynices", name: "Polynices", type: "mortal", x: 765, y: 1615, era: 3,
+    story: "Son of [[oedipus|Oedipus]]. Cheated of his turn on the throne by [[eteocles|Eteocles]], he married into Argos and raised [[seventhebes|an army of seven champions]] to take Thebes by force. He and his brother killed each other; Creon then forbade his burial, which is the crisis [[antigone|Antigone]] dies over. His son joins [[epigoni|the Epigoni]] to finish the job." },
+  { id: "alcmene", name: "Alcmene", type: "mortal", x: 950, y: 1255, era: 3,
+    story: "Granddaughter of [[perseus|Perseus]] and mother of [[heracles|Heracles]]. [[zeus|Zeus]] came to her disguised as her own husband, holding back the dawn to make the night three times as long. Her husband arrived the following night, and she bore twins with different fathers — a mortal one and a divine one, the same pattern as [[leda|Leda]]'s children." },
+  { id: "heracles", name: "Heracles", type: "hero", x: 950, y: 1375, era: 3,
+    story: "Son of [[zeus|Zeus]] and [[alcmene|Alcmene]], descendant of [[perseus|Perseus]], and the hero who touches more stories than any other. Driven mad by [[hera|Hera]] into killing his own children, he performed [[labors|the Twelve Labours]] as penance. Along the way he frees [[prometheusbound|Prometheus]], hauls [[underworldraid|Theseus]] out of the underworld, and sails briefly with [[argonauts|the Argonauts]]." },
+  { id: "labors", name: "The Twelve Labours", type: "event", x: 950, y: 1495, era: 3,
+    story: "Penance imposed on [[heracles|Heracles]] for the children he killed in [[hera|Hera]]-sent madness. The famous twelve run from the Nemean Lion to fetching Cerberus out of [[hades|Hades]]' realm alive — the labour on which he happens to find [[underworldraid|Theseus]] fused to a stone seat and rips him loose. He frees [[prometheusbound|Prometheus]] on another." },
+  { id: "heraclesdeath", name: "The Death of Heracles", type: "event", x: 950, y: 1615, era: 3,
+    story: "The centaur Nessus, dying from [[heracles|Heracles]]'s arrow, told Heracles's wife Deianira that his blood was a love charm. Years later, fearing a rival, she soaked a robe in it — and the poison burned him alive. He built his own pyre. His mortal part burned away, the divine part rose to Olympus, and he married Hebe: the only hero to become a god." },
+  { id: "chiron", name: "Chiron", type: "monster", x: 1085, y: 1620, era: 3,
+    story: "The wise centaur, tutor to a startling number of heroes across generations — he coaches [[peleus|Peleus]] on how to hold [[thetis|Thetis]], then raises their son [[achilles|Achilles]]. Immortal, he was accidentally wounded by one of [[heracles|Heracles]]'s poisoned arrows and, unable to die or heal, traded his immortality to [[prometheusbound|free Prometheus]]." },
+  { id: "jason", name: "Jason", type: "hero", x: 1250, y: 1255, era: 3,
+    story: "Rightful heir of Iolcus, sent after the Golden Fleece by a usurping uncle who expected him to die trying. He succeeded only because [[medea|Medea]] fell in love with him and did the actual impossible parts. He later abandoned her for a better marriage, and she destroyed everything he had. He died alone under the rotting prow of [[argonauts|the Argo]]." },
+  { id: "medea", name: "Medea", type: "mortal", x: 1410, y: 1255, era: 3,
+    story: "Colchian princess, priestess of Hecate, granddaughter of the sun. She betrayed her father to help [[jason|Jason]] take the fleece, murdered her own brother to slow the pursuit, and killed for him repeatedly. When he cast her aside she killed his new bride and their two sons and escaped in a chariot drawn by dragons. Euripides refuses to let anyone punish her." },
+  { id: "argonauts", name: "The Voyage of the Argo", type: "event", x: 1290, y: 1375, era: 3,
+    story: "[[jason|Jason]]'s quest for the Golden Fleece, crewed by nearly every hero alive at once — [[heracles|Heracles]] (who leaves early to search for his lost companion Hylas), [[castor|Castor]] and [[polydeuces|Polydeuces]], [[peleus|Peleus]], [[telamon|Telamon]]. Read the crew list as a cast of fathers: their sons are the men who fight at [[trojanwar|Troy]] a generation later. It is the hinge between the Heroic Age and the war." },
+  { id: "peleus", name: "Peleus", type: "mortal", x: 1215, y: 1495, era: 3,
+    story: "An [[argonauts|Argonaut]], and the mortal the gods married [[thetis|Thetis]] off to when they learned it was too dangerous to father her child themselves. Coached by [[chiron|Chiron]], he held her through her shape-shifting — fire, water, serpent, lioness — until she yielded. Their [[peleusthetiswedding|wedding]] starts the Trojan War. Their son is [[achilles|Achilles]]." },
+  { id: "telamon", name: "Telamon", type: "mortal", x: 1380, y: 1495, era: 3,
+    story: "Brother of [[peleus|Peleus]] and a fellow [[argonauts|Argonaut]]; the two also sacked Troy once already, alongside [[heracles|Heracles]], a generation before the famous war. His son [[ajax|Ajax the Great]] is the strongest Greek at Troy after [[achilles|Achilles]] — making the two greatest Greek warriors first cousins." },
+  { id: "thetis", name: "Thetis", type: "god", x: 1215, y: 1615, era: 3,
+    story: "A sea nymph wanted by both [[zeus|Zeus]] and [[poseidon|Poseidon]] — until [[prometheus|Prometheus]] revealed the prophecy that her son would be greater than his father. Too dangerous for a god, so she was married to the mortal [[peleus|Peleus]] instead. She dipped her son [[achilles|Achilles]] in the Styx, holding the heel, and spends the Iliad trying to protect a child she knows is doomed." },
+  { id: "atreus", name: "Atreus", type: "mortal", x: 1560, y: 1255, era: 3,
+    story: "Son of [[pelops|Pelops]], king of Mycenae — a throne his family took from the descendants of [[perseus|Perseus]]. His brother [[thyestes|Thyestes]] seduced his wife to steal the golden lamb that decided the succession; [[zeus|Zeus]] reversed the sun's course to confirm Atreus as king. His revenge was [[thyesteanfeast|the feast]]. His sons are [[agamemnon|Agamemnon]] and [[menelaus|Menelaus]]." },
+  { id: "thyestes", name: "Thyestes", type: "mortal", x: 1720, y: 1255, era: 3,
+    story: "Brother and rival of [[atreus|Atreus]]. He seduced Atreus's wife and stole the throne of Mycenae, and was repaid with [[thyesteanfeast|a meal made of his own sons]]. An oracle told him that a son fathered on his own daughter would avenge him — so he did exactly that, and produced [[aegisthus|Aegisthus]]." },
+  { id: "thyesteanfeast", name: "The Feast of Thyestes", type: "event", x: 1640, y: 1375, era: 3,
+    story: "[[atreus|Atreus]] invited [[thyestes|Thyestes]] to a reconciliation banquet, killed his sons and served them to him — revealing the hands and heads only once he had eaten. It is [[tantalusfeast|Tantalus's crime]] repeated two generations on, and the point at which the curse stops being a punishment and becomes a family habit. [[aegisthus|Aegisthus]] is conceived specifically to answer it." },
+  { id: "aegisthus", name: "Aegisthus", type: "mortal", x: 1785, y: 1495, era: 3,
+    story: "Son of [[thyestes|Thyestes]] by his own daughter, conceived expressly as an instrument of revenge for [[thyesteanfeast|the feast]]. He kills [[atreus|Atreus]], and decades later becomes [[clytemnestra|Clytemnestra]]'s lover and co-conspirator in [[agamemnonmurder|the murder of Agamemnon]]. He is the reason the Trojan War ends in a family vendetta that started three generations earlier." },
+  { id: "leda", name: "Leda", type: "mortal", x: 1500, y: 1615, era: 3,
+    story: "Queen of Sparta, wife of [[tyndareus|Tyndareus]]. [[zeus|Zeus]] came to her as a swan, and she lay with god and husband the same night — bearing two pairs of twins with two fathers. From her come [[helen|Helen]] and [[polydeuces|Polydeuces]] (divine) and [[clytemnestra|Clytemnestra]] and [[castor|Castor]] (mortal): the cause of the Trojan War and its bloodiest aftermath, born together." },
+  { id: "tyndareus", name: "Tyndareus", type: "mortal", x: 1655, y: 1615, era: 3,
+    story: "King of Sparta and [[leda|Leda]]'s husband, mortal father of [[clytemnestra|Clytemnestra]] and [[castor|Castor]]. Faced with a hall full of armed suitors competing for [[helen|Helen]], he took [[odysseus|Odysseus]]'s advice and made them all [[suitorsoath|swear an oath]] — the single administrative decision that later drags all of Greece to Troy." },
+
+  /* ---------- ERA V ---------- */
+  { id: "antigone", name: "Antigone", type: "mortal", x: 240, y: 1805, era: 4,
+    story: "Daughter of [[oedipus|Oedipus]]. After [[seventhebes|her brothers killed each other]], Creon gave [[eteocles|Eteocles]] a hero's burial and left [[polynices|Polynices]] to rot on pain of death. She buried him anyway and was walled up alive for it. Sophocles' play is the founding text on conscience against the state — divine law against civic law, with no comfortable answer." },
+  { id: "seventhebes", name: "Seven Against Thebes", type: "event", x: 420, y: 1805, era: 4,
+    story: "[[polynices|Polynices]] raised seven champions to storm [[thebes|Thebes]]'s seven gates. The seer Amphiaraus went knowing he would die, betrayed into it by his wife Eriphyle, bribed with [[harmonia|Harmonia]]'s cursed necklace. The assault failed and the brothers killed each other. Six of the Seven died — and their sons come back ten years later as [[epigoni|the Epigoni]]." },
+  { id: "epigoni", name: "The Epigoni", type: "event", x: 420, y: 1925, era: 4,
+    story: "'Those born after' — the sons of [[seventhebes|the fallen Seven]], who mount a second campaign ten years on and this time take [[thebes|Thebes]]. Their commanders include [[diomedes|Diomedes]] and [[alcmaeon|Alcmaeon]]. This is the connective tissue most retellings skip: the Epigoni are the same generation that then sails to [[trojanwar|Troy]], carrying one war straight into the next." },
+  { id: "alcmaeon", name: "Alcmaeon", type: "mortal", x: 580, y: 1925, era: 4,
+    story: "One of the [[epigoni|Epigoni]], son of the seer Amphiaraus. Under his father's dying instruction he killed his own mother Eriphyle for taking [[harmonia|the cursed necklace]] as a bribe, and was driven mad by the Furies for it. It is a dry run for [[orestesrevenge|Orestes]] — same crime, same pursuers, but no trial and no acquittal at the end." },
+  { id: "diomedes", name: "Diomedes", type: "hero", x: 420, y: 2055, era: 4,
+    story: "Son of Tydeus, one of [[epigoni|the Epigoni]] — and then one of the most effective Greek commanders in [[iliad|the Iliad]], where he wounds [[aphrodite|Aphrodite]] and [[ares|Ares]] in a single day with [[athena|Athena]] backing him. He is the living bridge between the Theban wars and the Trojan one. Aphrodite repays him during [[nostoi|the voyage home]]." },
+  { id: "ajax", name: "Ajax the Great", type: "hero", x: 700, y: 2055, era: 4,
+    story: "Son of [[telamon|Telamon]], cousin of [[achilles|Achilles]], and the largest man at Troy — the Greek line's immovable defensive wall. After Achilles dies, Ajax loses the contest for his armour to [[odysseus|Odysseus]], goes mad with humiliation, slaughters livestock believing they are his commanders, and kills himself when he recovers." },
+  { id: "odysseus", name: "Odysseus", type: "hero", x: 860, y: 2055, era: 4,
+    story: "King of Ithaca, the strategist. He devised [[suitorsoath|the oath]] that binds the suitors, tried to dodge the war by feigning madness, then supplied the [[trojanhorse|wooden horse]] that ends it. Blinding [[poseidon|Poseidon]]'s son costs him ten more years at sea in [[odyssey|the Odyssey]]. Even his homecoming is not the end: [[telegony|one last story]] follows." },
+  { id: "achilles", name: "Achilles", type: "hero", x: 860, y: 1925, era: 4,
+    story: "Son of [[peleus|Peleus]] and [[thetis|Thetis]], raised by [[chiron|Chiron]] — the fulfilment of the prophecy that Thetis's son would surpass his father. Dipped in the Styx, invulnerable but for the heel his mother gripped. Given a choice between a long obscure life and a short glorious one, he chooses glory; [[iliad|the Iliad]] is about his rage, and [[achillesdeath|Paris kills him]] before Troy falls." },
+  { id: "peleusthetiswedding", name: "The Wedding of Peleus and Thetis", type: "event", x: 1030, y: 1795, era: 4,
+    story: "Every god attended the marriage of [[peleus|Peleus]] and [[thetis|Thetis]] — the last great celebration where gods and mortals sat together. Every god except [[eris|Eris]], who was not invited. The whole Trojan War exists because of a guest list. It happens only because [[prometheus|Prometheus]] warned Zeus off Thetis in the first place." },
+  { id: "goldenapple", name: "The Golden Apple", type: "event", x: 1030, y: 1905, era: 4,
+    story: "[[eris|Eris]] rolled a golden apple into the wedding hall inscribed 'to the fairest'. [[hera|Hera]], [[athena|Athena]] and [[aphrodite|Aphrodite]] each claimed it. [[zeus|Zeus]], far too sensible to judge between his wife, his daughter and the goddess of desire, handed the decision to a mortal — [[judgmentparis|a shepherd on Mount Ida]]." },
+  { id: "judgmentparis", name: "The Judgment of Paris", type: "event", x: 1030, y: 2015, era: 4,
+    story: "Each goddess bribed the judge: [[hera|Hera]] offered power over Asia, [[athena|Athena]] offered victory in war, [[aphrodite|Aphrodite]] offered the most beautiful woman alive. [[paris|Paris]] chose Aphrodite — and the woman was [[helen|Helen]], already married to [[menelaus|Menelaus]]. Two goddesses spend the next ten years working for Troy's destruction." },
+  { id: "paris", name: "Paris", type: "mortal", x: 1190, y: 2015, era: 4,
+    story: "Prince of Troy, son of [[priam|Priam]], exposed at birth after a prophecy that he would burn the city — and raised as a shepherd, which is why he is on a mountainside to [[judgmentparis|judge three goddesses]]. He takes [[helen|Helen]] from Sparta and triggers the war. He is a poor fighter but a superb archer, and he kills [[achillesdeath|Achilles]]." },
+  { id: "helen", name: "Helen", type: "mortal", x: 1300, y: 1805, era: 4,
+    story: "Daughter of [[zeus|Zeus]] and [[leda|Leda]], the most beautiful woman alive, and the prize [[aphrodite|Aphrodite]] promised away without asking her. Abducted as a child by [[theseus|Theseus]] and recovered by [[dioscuri|her brothers]]; married to [[menelaus|Menelaus]] under [[suitorsoath|the oath]]; taken to Troy by [[paris|Paris]]. Ancient authors could never agree whether she went willingly." },
+  { id: "clytemnestra", name: "Clytemnestra", type: "mortal", x: 1450, y: 1805, era: 4,
+    story: "Daughter of [[leda|Leda]] and [[tyndareus|Tyndareus]], full sister of [[castor|Castor]], half-sister of [[helen|Helen]]. Married to [[agamemnon|Agamemnon]], who [[aulis|sacrificed their daughter]] for a favourable wind. She waited ten years, took [[aegisthus|Aegisthus]] as her lover, and [[agamemnonmurder|killed her husband]] the day he came home. Her son [[orestes|Orestes]] then kills her." },
+  { id: "polydeuces", name: "Polydeuces (Pollux)", type: "mortal", x: 1300, y: 1915, era: 4,
+    story: "Immortal son of [[zeus|Zeus]] and [[leda|Leda]], twin to the mortal [[castor|Castor]] and full brother of [[helen|Helen]]. A champion boxer, an [[argonauts|Argonaut]], and the one who refuses to be a god alone when [[dioscuri|his brother dies]]." },
+  { id: "castor", name: "Castor", type: "mortal", x: 1450, y: 1915, era: 4,
+    story: "Mortal son of [[tyndareus|Tyndareus]] and [[leda|Leda]], twin to [[polydeuces|Polydeuces]] and full brother of [[clytemnestra|Clytemnestra]]. A horseman and an [[argonauts|Argonaut]]. He is killed in a cattle raid — and [[dioscuri|his death]] is the reason the twins end up in the sky." },
+  { id: "dioscuri", name: "The Dioscuri", type: "event", x: 1375, y: 2035, era: 4,
+    story: "When [[castor|Castor]] was killed, [[polydeuces|Polydeuces]] begged [[zeus|Zeus]] to let him share his immortality rather than lose his twin. They now alternate — one day on Olympus, one in the underworld — and appear as the constellation Gemini. Earlier they had sacked Athens to recover their sister [[helen|Helen]] after [[theseus|Theseus]] abducted her." },
+  { id: "agamemnon", name: "Agamemnon", type: "hero", x: 1620, y: 1805, era: 4,
+    story: "Son of [[atreus|Atreus]], king of Mycenae, commander of the Greek coalition — and heir to a house already built on [[thyesteanfeast|child-murder]] before he is born. He [[aulis|sacrifices his daughter]] to sail, quarrels with [[achilles|Achilles]] over a prize in [[iliad|the Iliad]], wins the war, and is [[agamemnonmurder|murdered in his own bath]] within a day of getting home." },
+  { id: "menelaus", name: "Menelaus", type: "hero", x: 1780, y: 1805, era: 4,
+    story: "Son of [[atreus|Atreus]], king of Sparta, and [[helen|Helen]]'s husband — the wronged party the whole war is nominally about. He is the one man in the House of Atreus who gets a soft ending: after eight years blown off course to Egypt in [[nostoi|the returns]], he reaches home with Helen and lives out his life." },
+  { id: "suitorsoath", name: "The Oath of the Suitors", type: "event", x: 1700, y: 1925, era: 4,
+    story: "Every king in Greece came courting [[helen|Helen]], and [[tyndareus|Tyndareus]] feared the losers would go to war. On [[odysseus|Odysseus]]'s advice he made all of them swear to defend whichever man she chose. She chose [[menelaus|Menelaus]] — so when [[paris|Paris]] took her, the oath obliged the entire Greek world to sail. This is the mechanism that turns an elopement into [[trojanwar|a ten-year war]]." },
+
+  /* ---------- ERA VI ---------- */
+  { id: "aeneas", name: "Aeneas", type: "hero", x: 250, y: 2345, era: 5,
+    story: "Trojan prince, son of [[aphrodite|Aphrodite]] and the mortal Anchises. Homer has him fated to survive; Roman tradition makes that survival the point. He escapes [[sackoftroy|the burning city]] carrying his father on his back and leading his son by the hand, and sails west into [[aeneid|the Aeneid]]. Rome's founding myth is built on the losing side of the Trojan War." },
+  { id: "lesserajax", name: "Ajax the Lesser", type: "hero", x: 400, y: 2455, era: 5,
+    story: "A different Ajax — fast, skilled, and infamous for one act: during [[sackoftroy|the sack]] he dragged [[cassandra|Cassandra]] from [[athena|Athena]]'s altar and violated her there. The Greeks failed to punish him, so Athena punished the whole fleet, and he drowned boasting that he had survived the sea against the gods' will. His crime is why [[nostoi|so few of them get home]]." },
+  { id: "cassandra", name: "Cassandra", type: "mortal", x: 545, y: 2345, era: 5,
+    story: "Daughter of [[priam|Priam]], given true prophecy by Apollo and then cursed never to be believed when she refused him. She foresaw everything — the horse, the sack, her own death — and was dismissed as mad every time. Taken as [[agamemnon|Agamemnon]]'s prize, she walks into his house knowing exactly how she and he will [[agamemnonmurder|die there]]." },
+  { id: "priam", name: "Priam", type: "mortal", x: 680, y: 2235, era: 5,
+    story: "Old king of Troy, father of [[hector|Hector]], [[paris|Paris]] and [[cassandra|Cassandra]] among some fifty children. The most moving scene in [[iliad|the Iliad]] is Priam entering the Greek camp alone to kiss [[achilles|Achilles]]'s hands and beg for his son's body. He is cut down at his own altar during [[sackoftroy|the sack]]." },
+  { id: "hector", name: "Hector", type: "mortal", x: 830, y: 2235, era: 5,
+    story: "Eldest son of [[priam|Priam]] and Troy's best fighter — a defender rather than a glory-seeker, with a wife and small son on the walls behind him. He kills [[achilles|Achilles]]'s companion Patroclus, and Achilles kills him for it and drags his body behind a chariot. [[iliad|The Iliad]] ends with his funeral, not with the fall of the city." },
+  { id: "trojanwar", name: "The Trojan War Begins", type: "event", x: 1000, y: 2235, era: 5,
+    story: "[[paris|Paris]] takes [[helen|Helen]] to Troy; [[suitorsoath|the oath]] obliges every Greek king to sail under [[agamemnon|Agamemnon]]. The army that gathers is the sons of the [[argonauts|Argonauts]] and the veterans of [[epigoni|the Theban wars]] — three generations of myth converging on one beach. The siege lasts ten years." },
+  { id: "aulis", name: "The Sacrifice at Aulis", type: "event", x: 1450, y: 2355, era: 5,
+    story: "The fleet sat becalmed at Aulis, and the seer said Artemis required [[agamemnon|Agamemnon]]'s daughter. He lured [[iphigenia|Iphigenia]] there with a false promise of marriage to [[achilles|Achilles]] and cut her throat. The wind came. [[clytemnestra|Clytemnestra]] never forgives it, and it is the reason she is [[agamemnonmurder|waiting for him]] ten years later." },
+  { id: "iphigenia", name: "Iphigenia", type: "mortal", x: 1450, y: 2235, era: 5,
+    story: "Daughter of [[agamemnon|Agamemnon]] and [[clytemnestra|Clytemnestra]], [[aulis|sacrificed for a favourable wind]]. In one strand of the tradition Artemis substitutes a deer at the last moment and carries her to the Black Sea as a priestess, where her brother [[orestes|Orestes]] eventually finds her alive. Greek myth often lets a horror stand and be undone at the same time." },
+  { id: "iliad", name: "The Iliad", type: "event", x: 1000, y: 2345, era: 5,
+    story: "Not the whole war — about seven weeks of it in year ten. [[agamemnon|Agamemnon]] takes a war prize from [[achilles|Achilles]], who withdraws and lets the Greeks be slaughtered until [[hector|Hector]] kills his companion Patroclus. The poem is about rage and its cost, and it ends with [[priam|Priam]] retrieving his son's body — no wooden horse, no fall of the city." },
+  { id: "achillesdeath", name: "The Death of Achilles", type: "event", x: 860, y: 2455, era: 5,
+    story: "[[paris|Paris]], the worst fighter in Troy, kills the best warrior in the world with an arrow guided by Apollo into his heel — the one spot [[thetis|Thetis]] missed. The contest for his armour afterwards destroys [[ajax|Ajax]] too. Neither death is in [[iliad|the Iliad]]; both come from the wider epic cycle." },
+  { id: "trojanhorse", name: "The Wooden Horse", type: "event", x: 1160, y: 2345, era: 5,
+    story: "[[odysseus|Odysseus]]'s scheme: a hollow horse left as an offering, the fleet apparently sailed away, and a planted informer to talk the Trojans into hauling it inside. [[cassandra|Cassandra]] and the priest Laocoön both warned against it and both were ignored. Ten years of siege undone in one night by a trick." },
+  { id: "sackoftroy", name: "The Sack of Troy", type: "event", x: 1160, y: 2455, era: 5,
+    story: "The city burns. [[priam|Priam]] is killed at his altar, [[hector|Hector]]'s infant son is thrown from the walls, and [[lesserajax|Ajax the Lesser]] violates [[cassandra|Cassandra]] in [[athena|Athena]]'s temple — an act so offensive the goddess turns on her own side. [[aeneas|Aeneas]] escapes. Everything after this is consequence: [[nostoi|the returns]], [[odyssey|the Odyssey]], [[aeneid|the Aeneid]]." },
+
+  /* ---------- ERA VII ---------- */
+  { id: "aeneid", name: "The Aeneid", type: "event", x: 250, y: 2625, era: 6,
+    story: "Virgil's epic, written for Rome seven centuries after Homer. [[aeneas|Aeneas]] wanders the Mediterranean much as [[odyssey|Odysseus]] does — storms, monsters, a descent to the underworld — then wages a war in Italy that mirrors the Iliad. Its structural argument is that Rome inherits Troy's destiny, and it is the reason Greek myth has a Roman sequel at all." },
+  { id: "dido", name: "Dido", type: "mortal", x: 250, y: 2745, era: 6,
+    story: "Queen and founder of Carthage, who takes in [[aeneas|Aeneas]] and falls in love with him. He leaves at the gods' command; she builds a pyre, curses his descendants and kills herself. Virgil is explaining the Punic Wars — Rome and Carthage's mutual hatred is written into their founders' love affair. When Aeneas meets her again in the underworld, she will not speak to him." },
+  { id: "rome", name: "Rome", type: "place", x: 250, y: 2865, era: 6,
+    story: "Not founded by [[aeneas|Aeneas]] but descended from him: his son Ascanius founds Alba Longa, and centuries later Romulus and Remus come from that line. The gap is deliberate — it lets Rome claim Trojan ancestry without pretending the [[aeneid|Aeneid]] and the wolf-twins are the same story." },
+  { id: "nostoi", name: "The Nostoi", type: "event", x: 600, y: 2625, era: 6,
+    story: "'The Returns' — a mostly lost epic about how the other Greeks got home after [[sackoftroy|the sack]]. Because of [[lesserajax|Ajax the Lesser]]'s crime, [[athena|Athena]] had [[poseidon|Poseidon]] wreck the fleet: Ajax drowned, [[menelaus|Menelaus]] spent eight years reaching Egypt and back, [[diomedes|Diomedes]] came home to an unfaithful wife and resettled in Italy, and [[agamemnonmurder|Agamemnon]] sailed straight into an ambush. [[odyssey|The Odyssey]] is the one survivor of this genre." },
+  { id: "odyssey", name: "The Odyssey", type: "event", x: 900, y: 2625, era: 6,
+    story: "Ten years of [[odysseus|Odysseus]] trying to get home — the Cyclops, [[circe|Circe]], the Sirens, Calypso, a visit to the dead where he meets [[achilles|Achilles]] and [[agamemnon|Agamemnon]]'s ghost. [[poseidon|Poseidon]] blocks him at every turn for blinding his son. He reaches Ithaca disguised and kills the men besieging [[penelope|Penelope]]." },
+  { id: "penelope", name: "Penelope", type: "mortal", x: 900, y: 2745, era: 6,
+    story: "[[odysseus|Odysseus]]'s wife, who holds Ithaca for twenty years against a house full of suitors by weaving a shroud each day and unpicking it each night. Homer sets her deliberately against [[clytemnestra|Clytemnestra]] — the same situation, the opposite choice — and the [[odyssey|Odyssey]] keeps making the comparison out loud." },
+  { id: "circe", name: "Circe", type: "mortal", x: 1060, y: 2625, era: 6,
+    story: "A sorceress on the island of Aeaea, aunt of [[medea|Medea]], who turns [[odysseus|Odysseus]]'s crew into pigs and then becomes his ally and lover for a year. She tells him how to reach the land of the dead. In [[telegony|the last story of the cycle]] she is the mother of the son who kills him." },
+  { id: "telegonus", name: "Telegonus", type: "mortal", x: 1060, y: 2745, era: 6,
+    story: "Son of [[odysseus|Odysseus]] and [[circe|Circe]], raised without knowing his father. He goes looking for him, lands on Ithaca, raids it for food, and [[telegony|kills the man who comes out to fight him]] with a spear tipped in stingray barb — not recognising him until it is done." },
+  { id: "telegony", name: "The Telegony", type: "event", x: 1060, y: 2865, era: 6,
+    story: "The lost epic that closes the whole cycle. [[telegonus|Telegonus]] kills [[odysseus|Odysseus]] by accident — 'death from the sea', exactly as prophesied in [[odyssey|the Odyssey]]. Then, extraordinarily, he marries [[penelope|Penelope]] and Odysseus's son Telemachus marries [[circe|Circe]]. Ancient audiences liked their endings tidy rather than comfortable." },
+  { id: "agamemnonmurder", name: "The Murder of Agamemnon", type: "event", x: 1500, y: 2625, era: 6,
+    story: "[[agamemnon|Agamemnon]] comes home victorious and [[clytemnestra|Clytemnestra]] receives him warmly, then kills him in his bath with [[aegisthus|Aegisthus]]'s help — for [[aulis|Iphigenia]], for [[cassandra|Cassandra]] on his arm, and because Aegisthus has been owed this since [[thyesteanfeast|the feast]]. Three generations of the curse arriving at once." },
+  { id: "orestes", name: "Orestes", type: "hero", x: 1500, y: 2745, era: 6,
+    story: "Son of [[agamemnon|Agamemnon]] and [[clytemnestra|Clytemnestra]], smuggled out as a child. Apollo commands him to avenge his father, which means killing his mother — an obligation that is also an unforgivable crime. He does it, and [[orestesrevenge|the Furies]] come for him. His story is the curse's last move." },
+  { id: "electra", name: "Electra", type: "mortal", x: 1660, y: 2745, era: 6,
+    story: "Daughter of [[agamemnon|Agamemnon]], kept in the palace by [[clytemnestra|Clytemnestra]] and [[aegisthus|Aegisthus]] and married off beneath her rank to keep her sons harmless. She waits years for [[orestes|Orestes]] and pushes him to go through with it. All three great tragedians wrote her, and they disagree sharply about whether she is right." },
+  { id: "orestesrevenge", name: "The Trial of Orestes", type: "event", x: 1500, y: 2865, era: 6,
+    story: "[[orestes|Orestes]] kills [[clytemnestra|Clytemnestra]] and [[aegisthus|Aegisthus]] and is hunted mad by the Furies, who prosecute mother-murder and do not care what Apollo ordered. [[athena|Athena]] convenes a jury of Athenian citizens; the vote ties; she acquits him. A court replaces the blood feud, and the curse that began with [[tantalusfeast|Tantalus]] finally stops. That is Athens's argument about civilisation, staged as the end of a family's story." },
+
+  /* ---------- LOCATIONS (also mapped on the Geography tab) ---------- */
+  { id: "attica", name: "Attica", type: "place", x: 280, y: 995, era: 2,
+    story: "The peninsula containing Athens and the towns [[theseus|Theseus]] folded into it. Its own foundation myth is the [[athenscontest|contest between Athena and Poseidon]] for the region's patronage, which Athens then inherited as capital. [[cecrops|Cecrops]] ruled it first; Theseus later welded its scattered demes into the single city-state of [[athens|Athens]]." },
+  { id: "crete", name: "Crete", type: "place", x: 950, y: 775, era: 2,
+    story: "The largest island south of the Aegean, ruled by Minos, son of [[europa|Europa]] and [[zeus|Zeus]]. Minos hid the [[minotaur|Minotaur]] here in Daedalus's labyrinth and exacted tribute from Athens until [[theseus|Theseus]] ended it. The bull-cult imagery running through Crete's myths starts with the very animal Zeus wore to carry Europa here." },
+  { id: "seriphos", name: "Seriphos", type: "place", x: 800, y: 1055, era: 2,
+    story: "A small, poor Cycladic island where [[danae|Danaë]] and infant [[perseus|Perseus]] washed ashore after [[acrisius|Acrisius]] set them adrift. Its king Polydectes, wanting Danaë for himself, sent the grown Perseus after [[medusaquest|Medusa's head]] specifically expecting him never to return." },
+  { id: "ethiopia", name: "Ethiopia", type: "place", x: 1270, y: 1105, era: 2,
+    story: "In Greek geography, a vague catch-all for the lands south of Egypt — home to [[andromeda|Andromeda]] and her parents Cepheus and Cassiopeia. It was Cassiopeia's boast of outshining the sea nymphs in beauty that brought the sea-monster [[medusaquest|Perseus killed]] to their coast in the first place." },
+  { id: "argos", name: "Argos", type: "place", x: 650, y: 1055, era: 2,
+    story: "An old kingdom of the eastern Peloponnese, ruled by [[acrisius|Acrisius]] when he imprisoned [[danae|Danaë]]. [[perseus|Perseus]] returns here a grown man and kills his grandfather by accident, exactly as prophesied — then, unable to sit on a throne he took by killing its king, trades it away and founds [[mycenae|Mycenae]] instead. Generations later, Argos supplies [[diomedes|Diomedes]] to the war at Troy." },
+  { id: "peloponnese", name: "The Peloponnese", type: "place", x: 1350, y: 1015, era: 2,
+    story: "The great southern landmass of Greece, joined to the mainland only by the isthmus of [[corinth|Corinth]]. It takes its name — 'island of Pelops' — from [[pelops|Pelops]], whose sons split its two most powerful thrones, [[mycenae|Mycenae]] and [[sparta|Sparta]], between them." },
+  { id: "mycenae", name: "Mycenae", type: "place", x: 1400, y: 1200, era: 3,
+    story: "Founded by [[perseus|Perseus]] after he declined to rule the [[argos|Argos]] he'd inherited by killing its king. Generations later the throne passes to the [[atreus|House of Atreus]], making it the seat from which [[agamemnon|Agamemnon]] commands the whole Greek war effort — and the house he returns to, to be killed in." },
+  { id: "sparta", name: "Sparta", type: "place", x: 1580, y: 1495, era: 3,
+    story: "Kingdom of [[tyndareus|Tyndareus]] and [[leda|Leda]], and later of [[menelaus|Menelaus]] once he marries into it through [[helen|Helen]]. Because the throne comes bundled with Helen's hand, [[suitorsoath|the oath her suitors swore]] is really an oath sworn to Sparta's next king — exactly why all of Greece owes Menelaus an army when [[paris|Paris]] takes her." },
+  { id: "corinth", name: "Corinth", type: "place", x: 540, y: 1495, era: 3,
+    story: "Sits on the isthmus joining Attica to the [[peloponnese|Peloponnese]] — to hold Corinth is to hold all land traffic between them. In myth it's best known as the adoptive home of [[oedipus|Oedipus]], raised here by a childless king and queen after [[laius|Laius]] exposed him — which is exactly why Oedipus doesn't recognise his real father when they meet on the road." },
+  { id: "iolcus", name: "Iolcus", type: "place", x: 1250, y: 1195, era: 3,
+    story: "A city in Thessaly, north of the main run of this map, and the port [[jason|Jason]] sails from at the start of [[argonauts|the Argo's voyage]]. He's the rightful heir here, sent after the Golden Fleece by an uncle who never expected him to come back — and, awkwardly for that uncle, he does." },
+  { id: "naxos", name: "Naxos", type: "place", x: 20, y: 1425, era: 3,
+    story: "A Cycladic island where [[theseus|Theseus]] abandoned [[ariadne|Ariadne]] asleep on the shore after she helped him escape [[minotaurmyth|the labyrinth]]. [[dionysus|Dionysus]] found her here and married her — one god's rescue quietly undoing one hero's betrayal." },
+  { id: "achaea", name: "Achaea", type: "place", x: 1650, y: 585, era: 1,
+    story: "A region of the northern Peloponnese whose name, via the ancestor Achaeus (son of [[xuthus|Xuthus]]), gives Homer his everyday word for the Greeks besieging Troy — 'Achaeans'. A reminder that the army at [[trojanwar|Troy]] isn't a nation in the modern sense, just an alliance of kings who all trace descent back to [[hellen|Hellen]]." },
+  { id: "ithaca", name: "Ithaca", type: "place", x: 1020, y: 2055, era: 4,
+    story: "A rugged island on Greece's western coast, [[odysseus|Odysseus]]'s kingdom and the destination of [[odyssey|the Odyssey]]'s entire ten-year detour. [[penelope|Penelope]] holds it for him against a hall full of suitors, and it's here — not at Troy — that the poem actually ends." },
+  { id: "troy", name: "Troy", type: "place", x: 1000, y: 2140, era: 5,
+    story: "A wealthy city on the northwest coast of Anatolia, across the Aegean from Greece, ruled by [[priam|Priam]]. Its ten-year siege is the [[trojanwar|Trojan War]]; almost none of that decade is dramatised directly — [[iliad|the Iliad]] covers seven weeks of year ten, and the city's actual fall happens off-page, in the wider epic cycle around [[trojanhorse|the wooden horse]], not in Homer." },
+  { id: "carthage", name: "Carthage", type: "place", x: 100, y: 2685, era: 6,
+    story: "A Phoenician city on the North African coast, ruled by [[dido|Dido]] when the storm-blown [[aeneas|Aeneas]] washes up here in [[aeneid|the Aeneid]]. Virgil is writing for a Roman audience who already know Rome and Carthage will fight three catastrophic wars — Dido's dying curse on Aeneas's descendants is the mythic seed of that history." },
+  { id: "albalonga", name: "Alba Longa", type: "place", x: 400, y: 2865, era: 6,
+    story: "The city [[aeneas|Aeneas]]'s son Ascanius founds in Italy — not Rome itself, but the dynasty's holding pattern for the next three centuries. [[rome|Rome]] only gets founded once a much later pair of twins, Romulus and Remus, are born into this line and set out on their own." },
+  { id: "aeaea", name: "Aeaea", type: "place", x: 1220, y: 2625, era: 6,
+    story: "The island of [[circe|Circe]], where [[odysseus|Odysseus]]'s crew are turned to pigs and then restored, and where he stays a year before she tells him how to reach the land of the dead. It's also, unknowingly, the birthplace of the son — [[telegonus|Telegonus]] — who will one day kill him." },
+];
+
+/* ------------------------------------------------------------------ */
+/*  EDGES                                                              */
+/* ------------------------------------------------------------------ */
+const e = (a, b, t) => ({ a, b, t });
+const EDGES = [
+  /* bloodlines */
+  e("titans", "cronus", "blood"), e("titans", "prometheus", "blood"), e("titans", "epimetheus", "blood"),
+  e("cronus", "zeus", "blood"), e("cronus", "poseidon", "blood"), e("cronus", "hades", "blood"),
+  e("cronus", "hera", "blood"), e("cronus", "demeter", "blood"),
+  e("zeus", "athena", "blood"), e("zeus", "ares", "blood"), e("hera", "ares", "blood"),
+  e("hera", "hephaestus", "blood"), e("zeus", "persephone", "blood"), e("demeter", "persephone", "blood"),
+  e("prometheus", "deucalion", "blood"), e("epimetheus", "pyrrha", "blood"), e("pandora", "pyrrha", "blood"),
+  e("deucalion", "hellen", "blood"), e("pyrrha", "hellen", "blood"),
+  e("hellen", "dorus", "blood"), e("hellen", "aeolus", "blood"), e("hellen", "xuthus", "blood"),
+  e("cadmus", "europa", "blood"), e("zeus", "europa", "union"),
+  e("cadmus", "semele", "blood"), e("harmonia", "semele", "blood"),
+  e("zeus", "dionysus", "blood"), e("semele", "dionysus", "blood"),
+  e("cadmus", "pentheus", "descent"), e("cadmus", "laius", "descent"),
+  e("laius", "oedipus", "blood"), e("jocasta", "oedipus", "blood"),
+  e("oedipus", "eteocles", "blood"), e("oedipus", "polynices", "blood"), e("oedipus", "antigone", "blood"),
+  e("acrisius", "danae", "blood"), e("zeus", "perseus", "blood"), e("danae", "perseus", "blood"),
+  e("perseus", "alcmene", "descent"), e("zeus", "heracles", "blood"), e("alcmene", "heracles", "blood"),
+  e("aegeus", "theseus", "blood"), e("poseidon", "theseus", "blood"),
+  e("tantalus", "pelops", "blood"), e("pelops", "atreus", "blood"), e("pelops", "thyestes", "blood"),
+  e("hippodamia", "atreus", "blood"), e("hippodamia", "thyestes", "blood"),
+  e("atreus", "agamemnon", "blood"), e("atreus", "menelaus", "blood"), e("thyestes", "aegisthus", "blood"),
+  e("zeus", "helen", "blood"), e("leda", "helen", "blood"),
+  e("zeus", "polydeuces", "blood"), e("leda", "polydeuces", "blood"),
+  e("tyndareus", "clytemnestra", "blood"), e("leda", "clytemnestra", "blood"),
+  e("tyndareus", "castor", "blood"), e("leda", "castor", "blood"),
+  e("agamemnon", "iphigenia", "blood"), e("clytemnestra", "iphigenia", "blood"),
+  e("agamemnon", "orestes", "blood"), e("clytemnestra", "orestes", "blood"),
+  e("agamemnon", "electra", "blood"), e("clytemnestra", "electra", "blood"),
+  e("peleus", "achilles", "blood"), e("thetis", "achilles", "blood"),
+  e("peleus", "telamon", "blood"), e("telamon", "ajax", "blood"),
+  e("priam", "hector", "blood"), e("priam", "paris", "blood"), e("priam", "cassandra", "blood"),
+  e("aphrodite", "aeneas", "blood"), e("aeneas", "rome", "descent"),
+  e("circe", "telegonus", "blood"), e("odysseus", "telegonus", "blood"),
+  e("europa", "minotaur", "descent"),
+
+  /* unions */
+  e("zeus", "hera", "union"), e("hades", "persephone", "union"), e("epimetheus", "pandora", "union"),
+  e("deucalion", "pyrrha", "union"), e("cadmus", "harmonia", "union"), e("perseus", "andromeda", "union"),
+  e("oedipus", "jocasta", "union"), e("pelops", "hippodamia", "union"), e("peleus", "thetis", "union"),
+  e("leda", "tyndareus", "union"), e("jason", "medea", "union"), e("theseus", "ariadne", "union"),
+  e("dionysus", "ariadne", "union"), e("menelaus", "helen", "union"), e("agamemnon", "clytemnestra", "union"),
+  e("aegisthus", "clytemnestra", "union"), e("odysseus", "penelope", "union"), e("aeneas", "dido", "union"),
+  e("paris", "helen", "union"),
+
+  /* appears in story */
+  e("titans", "titanomachy", "part"), e("cronus", "titanomachy", "part"), e("zeus", "titanomachy", "part"),
+  e("zeus", "cosmosdivision", "part"), e("poseidon", "cosmosdivision", "part"), e("hades", "cosmosdivision", "part"),
+  e("hades", "persephonemyth", "part"), e("persephone", "persephonemyth", "part"), e("demeter", "persephonemyth", "part"),
+  e("prometheus", "mankindclay", "part"), e("athena", "mankindclay", "part"),
+  e("prometheus", "sacrificetrick", "part"), e("zeus", "sacrificetrick", "part"),
+  e("prometheus", "theftoffire", "part"), e("zeus", "theftoffire", "part"),
+  e("prometheus", "prometheusbound", "part"), e("hephaestus", "prometheusbound", "part"),
+  e("pandora", "pandorasjar", "part"), e("epimetheus", "pandorasjar", "part"),
+  e("hephaestus", "pandorasjar", "part"), e("zeus", "pandorasjar", "part"),
+  e("zeus", "theflood", "part"), e("deucalion", "theflood", "part"),
+  e("pyrrha", "theflood", "part"), e("prometheus", "theflood", "part"),
+  e("deucalion", "stonesmen", "part"), e("pyrrha", "stonesmen", "part"), e("hellen", "stonesmen", "part"),
+  e("athena", "athenscontest", "part"), e("poseidon", "athenscontest", "part"),
+  e("cecrops", "athenscontest", "part"), e("athens", "athenscontest", "part"),
+  e("cadmus", "thebesfounding", "part"), e("ares", "thebesfounding", "part"),
+  e("thebes", "thebesfounding", "part"), e("harmonia", "thebesfounding", "part"),
+  e("perseus", "medusaquest", "part"), e("medusa", "medusaquest", "part"),
+  e("athena", "medusaquest", "part"), e("andromeda", "medusaquest", "part"),
+  e("tantalus", "tantalusfeast", "part"), e("pelops", "tantalusfeast", "part"), e("demeter", "tantalusfeast", "part"),
+  e("pelops", "pelopsrace", "part"), e("hippodamia", "pelopsrace", "part"),
+  e("heracles", "labors", "part"), e("hera", "labors", "part"), e("hades", "labors", "part"),
+  e("theseus", "minotaurmyth", "part"), e("minotaur", "minotaurmyth", "part"),
+  e("ariadne", "minotaurmyth", "part"), e("aegeus", "minotaurmyth", "part"),
+  e("theseus", "atticaunion", "part"), e("athens", "atticaunion", "part"),
+  e("theseus", "underworldraid", "part"), e("hades", "underworldraid", "part"), e("persephone", "underworldraid", "part"),
+  e("heracles", "heraclesdeath", "part"),
+  e("jason", "argonauts", "part"), e("medea", "argonauts", "part"), e("peleus", "argonauts", "part"),
+  e("telamon", "argonauts", "part"), e("heracles", "argonauts", "part"),
+  e("castor", "argonauts", "part"), e("polydeuces", "argonauts", "part"),
+  e("oedipus", "oedipusmyth", "part"), e("laius", "oedipusmyth", "part"),
+  e("jocasta", "oedipusmyth", "part"), e("thebes", "oedipusmyth", "part"),
+  e("atreus", "thyesteanfeast", "part"), e("thyestes", "thyesteanfeast", "part"), e("aegisthus", "thyesteanfeast", "part"),
+  e("polynices", "seventhebes", "part"), e("eteocles", "seventhebes", "part"),
+  e("antigone", "seventhebes", "part"), e("thebes", "seventhebes", "part"), e("harmonia", "seventhebes", "part"),
+  e("diomedes", "epigoni", "part"), e("alcmaeon", "epigoni", "part"), e("thebes", "epigoni", "part"),
+  e("peleus", "peleusthetiswedding", "part"), e("thetis", "peleusthetiswedding", "part"),
+  e("eris", "peleusthetiswedding", "part"), e("chiron", "peleusthetiswedding", "part"),
+  e("eris", "goldenapple", "part"), e("hera", "goldenapple", "part"),
+  e("athena", "goldenapple", "part"), e("aphrodite", "goldenapple", "part"),
+  e("paris", "judgmentparis", "part"), e("aphrodite", "judgmentparis", "part"),
+  e("hera", "judgmentparis", "part"), e("athena", "judgmentparis", "part"), e("helen", "judgmentparis", "part"),
+  e("helen", "suitorsoath", "part"), e("menelaus", "suitorsoath", "part"),
+  e("odysseus", "suitorsoath", "part"), e("tyndareus", "suitorsoath", "part"), e("agamemnon", "suitorsoath", "part"),
+  e("castor", "dioscuri", "part"), e("polydeuces", "dioscuri", "part"), e("zeus", "dioscuri", "part"), e("helen", "dioscuri", "part"),
+  e("helen", "trojanwar", "part"), e("paris", "trojanwar", "part"),
+  e("menelaus", "trojanwar", "part"), e("agamemnon", "trojanwar", "part"),
+  e("agamemnon", "aulis", "part"), e("iphigenia", "aulis", "part"), e("clytemnestra", "aulis", "part"),
+  e("achilles", "iliad", "part"), e("hector", "iliad", "part"),
+  e("agamemnon", "iliad", "part"), e("odysseus", "iliad", "part"), e("priam", "iliad", "part"),
+  e("achilles", "achillesdeath", "part"), e("paris", "achillesdeath", "part"), e("ajax", "achillesdeath", "part"),
+  e("odysseus", "trojanhorse", "part"), e("cassandra", "trojanhorse", "part"),
+  e("lesserajax", "sackoftroy", "part"), e("cassandra", "sackoftroy", "part"),
+  e("aeneas", "sackoftroy", "part"), e("priam", "sackoftroy", "part"), e("athena", "sackoftroy", "part"),
+  e("menelaus", "nostoi", "part"), e("lesserajax", "nostoi", "part"), e("diomedes", "nostoi", "part"),
+  e("athena", "nostoi", "part"), e("helen", "nostoi", "part"),
+  e("odysseus", "odyssey", "part"), e("penelope", "odyssey", "part"),
+  e("circe", "odyssey", "part"), e("poseidon", "odyssey", "part"),
+  e("telegonus", "telegony", "part"), e("circe", "telegony", "part"), e("penelope", "telegony", "part"),
+  e("aeneas", "aeneid", "part"), e("dido", "aeneid", "part"), e("rome", "aeneid", "part"),
+  e("agamemnon", "agamemnonmurder", "part"), e("clytemnestra", "agamemnonmurder", "part"),
+  e("aegisthus", "agamemnonmurder", "part"), e("cassandra", "agamemnonmurder", "part"),
+  e("orestes", "orestesrevenge", "part"), e("clytemnestra", "orestesrevenge", "part"),
+  e("electra", "orestesrevenge", "part"), e("athena", "orestesrevenge", "part"), e("athens", "orestesrevenge", "part"),
+
+  /* causal chains */
+  e("titanomachy", "cosmosdivision", "cause"),
+  e("mankindclay", "sacrificetrick", "cause"), e("sacrificetrick", "theftoffire", "cause"),
+  e("theftoffire", "prometheusbound", "cause"), e("theftoffire", "pandorasjar", "cause"),
+  e("pandorasjar", "theflood", "cause"), e("theflood", "stonesmen", "cause"),
+  e("thebesfounding", "oedipusmyth", "cause"), e("oedipusmyth", "seventhebes", "cause"),
+  e("seventhebes", "epigoni", "cause"),
+  e("minotaurmyth", "atticaunion", "cause"), e("labors", "heraclesdeath", "cause"),
+  e("tantalusfeast", "pelopsrace", "cause"), e("pelopsrace", "thyesteanfeast", "cause"),
+  e("thyesteanfeast", "agamemnonmurder", "cause"),
+  e("peleusthetiswedding", "goldenapple", "cause"), e("goldenapple", "judgmentparis", "cause"),
+  e("judgmentparis", "trojanwar", "cause"), e("suitorsoath", "trojanwar", "cause"),
+  e("trojanwar", "aulis", "cause"), e("aulis", "iliad", "cause"),
+  e("iliad", "achillesdeath", "cause"), e("iliad", "trojanhorse", "cause"),
+  e("trojanhorse", "sackoftroy", "cause"),
+  e("sackoftroy", "nostoi", "cause"), e("sackoftroy", "odyssey", "cause"), e("sackoftroy", "aeneid", "cause"),
+  e("nostoi", "agamemnonmurder", "cause"), e("agamemnonmurder", "orestesrevenge", "cause"),
+  e("odyssey", "telegony", "cause"),
+
+  /* long-range crossovers */
+  e("heracles", "prometheusbound", "crossover"),
+  e("heracles", "underworldraid", "crossover"),
+  e("chiron", "achilles", "crossover"),
+  e("theseus", "dioscuri", "crossover"),
+  e("diomedes", "iliad", "crossover"),
+  e("prometheus", "peleusthetiswedding", "crossover"),
+  e("atreus", "perseus", "crossover"),
+  e("argonauts", "trojanwar", "crossover"),
+  e("epigoni", "trojanwar", "crossover"),
+  e("alcmaeon", "orestesrevenge", "crossover"),
+  e("penelope", "clytemnestra", "crossover"),
+  e("telamon", "ajax", "crossover"),
+  e("medea", "circe", "crossover"),
+
+  /* location ties */
+  e("cecrops", "attica", "part"), e("athenscontest", "attica", "part"),
+  e("athens", "attica", "part"), e("theseus", "attica", "part"),
+  e("europa", "crete", "part"), e("minotaur", "crete", "part"),
+  e("theseus", "crete", "part"), e("zeus", "crete", "part"),
+  e("danae", "seriphos", "part"), e("perseus", "seriphos", "part"), e("acrisius", "seriphos", "part"),
+  e("andromeda", "ethiopia", "part"), e("medusaquest", "ethiopia", "part"),
+  e("acrisius", "argos", "part"), e("danae", "argos", "part"),
+  e("perseus", "argos", "part"), e("diomedes", "argos", "part"),
+  e("pelops", "peloponnese", "part"), e("mycenae", "peloponnese", "part"), e("sparta", "peloponnese", "part"),
+  e("perseus", "mycenae", "part"), e("argos", "mycenae", "part"),
+  e("atreus", "mycenae", "part"), e("agamemnon", "mycenae", "part"),
+  e("tyndareus", "sparta", "part"), e("leda", "sparta", "part"),
+  e("menelaus", "sparta", "part"), e("helen", "sparta", "part"), e("suitorsoath", "sparta", "part"),
+  e("oedipus", "corinth", "part"), e("laius", "corinth", "part"), e("peloponnese", "corinth", "part"),
+  e("jason", "iolcus", "part"), e("argonauts", "iolcus", "part"),
+  e("theseus", "naxos", "part"), e("ariadne", "naxos", "part"),
+  e("dionysus", "naxos", "part"), e("minotaurmyth", "naxos", "part"),
+  e("xuthus", "achaea", "part"), e("trojanwar", "achaea", "part"), e("hellen", "achaea", "part"),
+  e("odysseus", "ithaca", "part"), e("penelope", "ithaca", "part"), e("odyssey", "ithaca", "part"),
+  e("priam", "troy", "part"), e("trojanwar", "troy", "part"),
+  e("iliad", "troy", "part"), e("trojanhorse", "troy", "part"),
+  e("dido", "carthage", "part"), e("aeneas", "carthage", "part"), e("aeneid", "carthage", "part"),
+  e("aeneas", "albalonga", "part"), e("albalonga", "rome", "descent"),
+  e("circe", "aeaea", "part"), e("odysseus", "aeaea", "part"), e("telegonus", "aeaea", "part"),
+];
+
+const GREEK = {
+  titans: "ΤΙΤΑΝΕΣ",
+  cronus: "ΚΡΟΝΟΣ",
+  titanomachy: "ΤΙΤΑΝΟΜΑΧΙΑ",
+  zeus: "ΖΕΥΣ",
+  poseidon: "ΠΟΣΕΙΔΩΝ",
+  hades: "ΑΙΔΗΣ",
+  hera: "ΗΡΑ",
+  demeter: "ΔΗΜΗΤΗΡ",
+  persephone: "ΠΕΡΣΕΦΟΝΗ",
+  athena: "ΑΘΗΝΑ",
+  aphrodite: "ΑΦΡΟΔΙΤΗ",
+  ares: "ΑΡΗΣ",
+  hephaestus: "ΗΦΑΙΣΤΟΣ",
+  eris: "ΕΡΙΣ",
+  prometheus: "ΠΡΟΜΗΘΕΥΣ",
+  epimetheus: "ΕΠΙΜΗΘΕΥΣ",
+  pandora: "ΠΑΝΔΩΡΑ",
+  deucalion: "ΔΕΥΚΑΛΙΩΝ",
+  pyrrha: "ΠΥΡΡΑ",
+  hellen: "ΕΛΛΗΝ",
+  dorus: "ΔΩΡΟΣ",
+  aeolus: "ΑΙΟΛΟΣ",
+  xuthus: "ΞΟΥΘΟΣ",
+  cecrops: "ΚΕΚΡΟΨ",
+  athens: "ΑΘΗΝΑΙ",
+  europa: "ΕΥΡΩΠΗ",
+  cadmus: "ΚΑΔΜΟΣ",
+  harmonia: "ΑΡΜΟΝΙΑ",
+  thebes: "ΘΗΒΑΙ",
+  semele: "ΣΕΜΕΛΗ",
+  dionysus: "ΔΙΟΝΥΣΟΣ",
+  pentheus: "ΠΕΝΘΕΥΣ",
+  acrisius: "ΑΚΡΙΣΙΟΣ",
+  danae: "ΔΑΝΑΗ",
+  perseus: "ΠΕΡΣΕΥΣ",
+  medusa: "ΜΕΔΟΥΣΑ",
+  andromeda: "ΑΝΔΡΟΜΕΔΑ",
+  tantalus: "ΤΑΝΤΑΛΟΣ",
+  pelops: "ΠΕΛΟΨ",
+  hippodamia: "ΙΠΠΟΔΑΜΕΙΑ",
+  ariadne: "ΑΡΙΑΔΝΗ",
+  minotaur: "ΜΙΝΩΤΑΥΡΟΣ",
+  aegeus: "ΑΙΓΕΥΣ",
+  theseus: "ΘΗΣΕΥΣ",
+  laius: "ΛΑΙΟΣ",
+  jocasta: "ΙΟΚΑΣΤΗ",
+  oedipus: "ΟΙΔΙΠΟΥΣ",
+  eteocles: "ΕΤΕΟΚΛΗΣ",
+  polynices: "ΠΟΛΥΝΕΙΚΗΣ",
+  alcmene: "ΑΛΚΜΗΝΗ",
+  heracles: "ΗΡΑΚΛΗΣ",
+  chiron: "ΧΕΙΡΩΝ",
+  jason: "ΙΑΣΩΝ",
+  medea: "ΜΗΔΕΙΑ",
+  peleus: "ΠΗΛΕΥΣ",
+  telamon: "ΤΕΛΑΜΩΝ",
+  thetis: "ΘΕΤΙΣ",
+  atreus: "ΑΤΡΕΥΣ",
+  thyestes: "ΘΥΕΣΤΗΣ",
+  aegisthus: "ΑΙΓΙΣΘΟΣ",
+  leda: "ΛΗΔΑ",
+  tyndareus: "ΤΥΝΔΑΡΕΩΣ",
+  antigone: "ΑΝΤΙΓΟΝΗ",
+  seventhebes: "ΕΠΤΑ ΕΠΙ ΘΗΒΑΣ",
+  epigoni: "ΕΠΙΓΟΝΟΙ",
+  alcmaeon: "ΑΛΚΜΑΙΩΝ",
+  diomedes: "ΔΙΟΜΗΔΗΣ",
+  ajax: "ΑΙΑΣ",
+  odysseus: "ΟΔΥΣΣΕΥΣ",
+  achilles: "ΑΧΙΛΛΕΥΣ",
+  judgmentparis: "ΚΡΙΣΙΣ ΠΑΡΙΔΟΣ",
+  paris: "ΠΑΡΙΣ",
+  helen: "ΕΛΕΝΗ",
+  clytemnestra: "ΚΛΥΤΑΙΜΝΗΣΤΡΑ",
+  polydeuces: "ΠΟΛΥΔΕΥΚΗΣ",
+  castor: "ΚΑΣΤΩΡ",
+  dioscuri: "ΔΙΟΣΚΟΥΡΟΙ",
+  agamemnon: "ΑΓΑΜΕΜΝΩΝ",
+  menelaus: "ΜΕΝΕΛΑΟΣ",
+  aeneas: "ΑΙΝΕΙΑΣ",
+  lesserajax: "ΑΙΑΣ Ο ΛΟΚΡΟΣ",
+  cassandra: "ΚΑΣΣΑΝΔΡΑ",
+  priam: "ΠΡΙΑΜΟΣ",
+  hector: "ΕΚΤΩΡ",
+  iphigenia: "ΙΦΙΓΕΝΕΙΑ",
+  iliad: "ΙΛΙΑΣ",
+  aeneid: "AENEIS",
+  dido: "ΔΙΔΩ",
+  rome: "ΡΩΜΗ",
+  nostoi: "ΝΟΣΤΟΙ",
+  odyssey: "ΟΔΥΣΣΕΙΑ",
+  penelope: "ΠΗΝΕΛΟΠΗ",
+  circe: "ΚΙΡΚΗ",
+  telegonus: "ΤΗΛΕΓΟΝΟΣ",
+  telegony: "ΤΗΛΕΓΟΝΕΙΑ",
+  orestes: "ΟΡΕΣΤΗΣ",
+  electra: "ΗΛΕΚΤΡΑ",
+  medusaquest: "ΠΕΡΣΕΥΣ ΚΑΙ ΜΕΔΟΥΣΑ",
+  minotaurmyth: "ΘΗΣΕΥΣ ΚΑΙ ΜΙΝΩΤΑΥΡΟΣ",
+  argonauts: "ΑΡΓΟΝΑΥΤΑΙ",
+  labors: "ΑΘΛΟΙ",
+  goldenapple: "ΜΗΛΟΝ ΤΗΣ ΕΡΙΔΟΣ",
+  trojanwar: "ΤΡΩΙΚΟΣ ΠΟΛΕΜΟΣ",
+  theflood: "ΚΑΤΑΚΛΥΣΜΟΣ",
+  attica: "ΑΤΤΙΚΗ",
+  crete: "ΚΡΗΤΗ",
+  seriphos: "ΣΕΡΙΦΟΣ",
+  ethiopia: "ΑΙΘΙΟΠΙΑ",
+  argos: "ΑΡΓΟΣ",
+  peloponnese: "ΠΕΛΟΠΟΝΝΗΣΟΣ",
+  mycenae: "ΜΥΚΗΝΑΙ",
+  sparta: "ΣΠΑΡΤΗ",
+  corinth: "ΚΟΡΙΝΘΟΣ",
+  iolcus: "ΙΩΛΚΟΣ",
+  naxos: "ΝΑΞΟΣ",
+  achaea: "ΑΧΑΙΑ",
+  ithaca: "ΙΘΑΚΗ",
+  troy: "ΤΡΟΙΑ",
+  carthage: "ΚΑΡΧΗΔΩΝ",
+  albalonga: "ALBA LONGA",
+  aeaea: "ΑΙΑΙΗ"
+};
+
+
+/* ---------------- palette override: Attic red-figure ---------------- */
+Object.assign(C, {
+  void:"#140f0c", panel:"#1a1310", panelSoft:"#221913", rule:"#4a3020", clay:"#c8703c",
+  star:"#f0e4cf", muted:"#a8825f", faint:"#8a5f3f",
+  titan:"#a2453a", god:"#dda94b", hero:"#dd8b52", mortal:"#b98a63",
+  monster:"#8e8a4a", event:"#f0e4cf", place:"#5f8a85"
+});
+Object.assign(EDGE_STYLE, {
+  blood:     { color:"#8a5f3f", w:1.1, dash:null,    label:"Parent to child" },
+  descent:   { color:"#8a5f3f", w:1.1, dash:"2 5",   label:"Generations later" },
+  union:     { color:"#dda94b", w:1.1, dash:"6 4",   label:"Marriage or affair" },
+  part:      { color:"#6f4b32", w:1,   dash:null,    label:"Appears in story" },
+  cause:     { color:"#c8703c", w:1.7, dash:null,    label:"Leads directly to" },
+  crossover: { color:"#a2453a", w:1.5, dash:"1 5",   label:"Crosses the registers" }
+});
+const GREEK_NUM = ["Α΄","Β΄","Γ΄","Δ΄","Ε΄","Ϛ΄","Ζ΄"];
+
+/* ---------------- derived ---------------- */
+const BY_ID = Object.fromEntries(NODES.map(n => [n.id, n]));
+NODES.forEach(n => n.gk = GREEK[n.id] || "");
+const ADJ = {};
+NODES.forEach(n => ADJ[n.id] = new Set());
+EDGES.forEach(ed => { if (ADJ[ed.a] && ADJ[ed.b]) { ADJ[ed.a].add(ed.b); ADJ[ed.b].add(ed.a); } });
+
+const TYPE_PALETTES = {
+  dark:  { titan:"#a2453a", god:"#dda94b", hero:"#dd8b52", mortal:"#b98a63", monster:"#8e8a4a", event:"#f0e4cf", place:"#5f8a85" },
+  light: { titan:"#8a3a30", god:"#8a4a1e", hero:"#95501f", mortal:"#6b3f22", monster:"#5c5926", event:"#241a12", place:"#3f6b66" }
+};
+const typeColor = t => (TYPE_PALETTES[currentTheme] && TYPE_PALETTES[currentTheme][t]) || C.muted;
+
+function wrap(text, max){
+  const words = text.split(" "); const lines = []; let cur = "";
+  for (const w of words){
+    if (!cur) cur = w;
+    else if ((cur + " " + w).length <= max) cur += " " + w;
+    else { lines.push(cur); cur = w; }
+  }
+  if (cur) lines.push(cur);
+  return lines;
+}
+
+const LAYOUT = {};
+NODES.forEach(n => {
+  const isEvent = n.type === "event";
+  const lines = wrap(n.name, isEvent ? 17 : 15);
+  const longest = Math.max(...lines.map(l => l.length));
+  LAYOUT[n.id] = { lines, w: longest * 6.4 + 26, h: lines.length * 13 + 14, isEvent };
+});
+
+/* ---------------- state ---------------- */
+const state = {
+  selected: null, hovered: null, mode: "map",
+  filters: Object.fromEntries(Object.keys(EDGE_STYLE).map(k => [k, true])),
+  view: { k: 0.6, tx: 90, ty: 20 }
+};
+
+const NS = "http://www.w3.org/2000/svg";
+const svg = document.getElementById("svg");
+const stage = document.getElementById("stage");
+const panel = document.getElementById("panel");
+const indexEl = document.getElementById("index");
+const hint = document.getElementById("hint");
+const legend = document.getElementById("legend");
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+document.getElementById("counts").textContent =
+  NODES.length + " figures, " + EDGES.length + " links — from the Titans to the founding of Rome";
+document.getElementById("hintx").style.color = EDGE_STYLE.crossover.color;
+
+/* ---------------- svg helpers ---------------- */
+const el = (tag, attrs) => {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+};
+
+const defs = el("defs");
+defs.innerHTML =
+  '<radialGradient id="glow" cx="50%" cy="50%" r="50%">' +
+    '<stop offset="0%" stop-color="#f0e4cf" stop-opacity="0.24"/>' +
+    '<stop offset="100%" stop-color="#f0e4cf" stop-opacity="0"/>' +
+  '</radialGradient>' +
+  '<radialGradient id="glowLight" cx="50%" cy="50%" r="50%">' +
+    '<stop offset="0%" stop-color="#241a12" stop-opacity="0.18"/>' +
+    '<stop offset="100%" stop-color="#241a12" stop-opacity="0"/>' +
+  '</radialGradient>' +
+  '<pattern id="key" width="16" height="14" patternUnits="userSpaceOnUse">' +
+    '<g fill="none" stroke="#c8703c" stroke-width="1.6" opacity="0.5">' +
+      '<path d="M0 12.5H16"/><path d="M3 12.5V3H13V9H7.5V6.2"/>' +
+    '</g>' +
+  '</pattern>';
+svg.appendChild(defs);
+const meanderPatternStroke = defs.querySelector("#key g");
+
+/* ---------------- theme: red-figure (dark ground) / black-figure (pale ground) ---------------- */
+let currentTheme = "dark";
+const SVG_THEME = {
+  dark: {
+    registerA: "#1c1511", registerB: "#191310", registerStroke: "#3a2517",
+    meander: "#c8703c", eraNum: "#dda94b", eraName: "#8a5f3f",
+    text: "#f0e4cf", greek: "#a2704a", nodeStroke: "#140f0c",
+    eventFill: "#100b08", eventFillOn: "#241a12", eventStroke: "#8a5f3f", eventStrokeOn: "#f0e4cf"
+  },
+  light: {
+    registerA: "#e4d0a5", registerB: "#ecdcb7", registerStroke: "#c2a173",
+    meander: "#6b3f22", eraNum: "#8a4a1e", eraName: "#7a5535",
+    text: "#241a12", greek: "#6b3f22", nodeStroke: "#ecdfba",
+    eventFill: "#f4e8cc", eventFillOn: "#fff5db", eventStroke: "#6b3f22", eventStrokeOn: "#241a12"
+  }
+};
+
+const world = el("g", { id: "world" });
+svg.appendChild(world);
+
+/* ---- palmette ornament (a small fan of lobes, as painted on vase shoulders) ---- */
+function palmette(cx, cy, r, fill, op){
+  const g = el("g", { opacity: op });
+  for (let i = 0; i < 7; i++){
+    const a = -90 + (i - 3) * 24;
+    const lobe = el("ellipse", { cx: cx, cy: cy - r * 0.55, rx: r * 0.15, ry: r * 0.55, fill: fill });
+    lobe.setAttribute("transform", "rotate(" + a + " " + cx + " " + cy + ")");
+    g.appendChild(lobe);
+  }
+  g.appendChild(el("circle", { cx: cx, cy: cy, r: r * 0.16, fill: fill }));
+  return g;
+}
+
+/* ---------------- registers (era bands) ---------------- */
+const registerEls = [];
+const eraTextEls = [];
+ERAS.forEach((era, i) => {
+  const g = el("g");
+  const h = era.y1 - era.y0;
+  const band = el("rect", { x: -70, y: era.y0, width: W + 150, height: h,
+    fill: i % 2 ? "#191310" : "#1c1511", stroke: "#3a2517", "stroke-width": 1 });
+  g.appendChild(band);
+  registerEls.push({ rect: band, i });
+  /* meander strip along the register's upper edge */
+  g.appendChild(el("rect", { x: -70, y: era.y0 + 2, width: W + 150, height: 14, fill: "url(#key)" }));
+  g.appendChild(el("rect", { x: -70, y: era.y1 - 16, width: W + 150, height: 14,
+    fill: "url(#key)", transform: "translate(0," + (2 * (era.y1 - 16) + 14) + ") scale(1,-1)" }));
+
+  const t1 = el("text", { x: -52, y: era.y0 + 60, fill: C.god, "font-size": 30,
+    "font-family": "'GFS Didot',serif", opacity: 0.85 });
+  t1.textContent = GREEK_NUM[i];
+  const t2 = el("text", { x: -52, y: era.y0 + 82, fill: "#8a5f3f", "font-size": 12.5,
+    "font-family": "'Spectral',serif", "letter-spacing": 3 });
+  t2.textContent = era.name.toUpperCase();
+  g.appendChild(t1); g.appendChild(t2);
+  eraTextEls.push({ num: t1, name: t2 });
+  g.appendChild(palmette(-40, era.y0 + 108, 15, "#c8703c", 0.3));
+  world.appendChild(g);
+});
+
+/* ---------------- edges ---------------- */
+const edgeEls = [];
+EDGES.forEach(ed => {
+  const A = BY_ID[ed.a], B = BY_ID[ed.b];
+  if (!A || !B) return;
+  const st = EDGE_STYLE[ed.t];
+  const mx = (A.x + B.x) / 2, my = (A.y + B.y) / 2;
+  const dx = B.x - A.x, dy = B.y - A.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const bow = Math.min(48, len * 0.11);
+  const cx = mx + (-dy / len) * bow, cy = my + (dx / len) * bow;
+  const p = el("path", {
+    d: "M " + A.x + " " + A.y + " Q " + cx + " " + cy + " " + B.x + " " + B.y,
+    fill: "none", stroke: st.color, "stroke-width": st.w, "stroke-linecap": "round"
+  });
+  if (st.dash) p.setAttribute("stroke-dasharray", st.dash);
+  world.appendChild(p);
+  edgeEls.push({ p, ed, st, solid: !st.dash });
+});
+
+/* ---------------- nodes ---------------- */
+const nodeEls = [];
+NODES.forEach(n => {
+  const L = LAYOUT[n.id];
+  const col = typeColor(n.type);
+  const g = el("g", { style: "cursor:pointer" });
+  g.dataset.id = n.id;
+
+  const glow = el("circle", { cx: n.x, cy: n.y, r: 48, fill: "url(#glow)", opacity: 0 });
+  g.appendChild(glow);
+
+  /* Greek inscription above the figure, as the vase painters wrote it */
+  let gk = null;
+  if (n.gk){
+    gk = el("text", { x: n.x, y: n.y - (L.isEvent ? L.h / 2 + 8 : 17), "text-anchor": "middle",
+      "font-size": 9.5, "font-family": "'GFS Didot',serif", fill: "#a2704a",
+      "letter-spacing": 1.4, opacity: 0.75 });
+    gk.textContent = n.gk;
+    g.appendChild(gk);
+  }
+
+  let shape, ring = null, label = null;
+  if (L.isEvent){
+    /* a framed scene: double rule, like a panel on the vase body */
+    shape = el("rect", { x: n.x - L.w / 2, y: n.y - L.h / 2, width: L.w, height: L.h,
+      fill: "#100b08", stroke: "#8a5f3f", "stroke-width": 1 });
+    ring = el("rect", { x: n.x - L.w / 2 + 3, y: n.y - L.h / 2 + 3, width: L.w - 6, height: L.h - 6,
+      fill: "none", stroke: "#c8703c", "stroke-width": 0.7, opacity: 0.45 });
+    g.appendChild(shape); g.appendChild(ring);
+    label = el("text", { "text-anchor": "middle", "font-size": 11.5,
+      "font-family": "'Spectral',serif", fill: C.star, "font-weight": 400 });
+    L.lines.forEach((ln, j) => {
+      const ts = el("tspan", { x: n.x, y: n.y - L.h / 2 + 18 + j * 13 });
+      ts.textContent = ln; label.appendChild(ts);
+    });
+    g.appendChild(label);
+  } else if (n.type === "place"){
+    /* a little pediment — temple front */
+    shape = el("path", {
+      d: "M " + (n.x - 10) + " " + (n.y + 8) + " L " + (n.x - 10) + " " + (n.y - 1) +
+         " L " + n.x + " " + (n.y - 9) + " L " + (n.x + 10) + " " + (n.y - 1) +
+         " L " + (n.x + 10) + " " + (n.y + 8) + " Z",
+      fill: "none", stroke: col, "stroke-width": 1.8, "stroke-linejoin": "round" });
+    g.appendChild(shape);
+  } else {
+    shape = el("circle", { cx: n.x, cy: n.y, r: 8, fill: col, stroke: "#140f0c", "stroke-width": 1.4 });
+    ring = el("circle", { cx: n.x, cy: n.y, r: 12, fill: "none", stroke: C.star,
+      "stroke-width": 1, opacity: 0 });
+    g.appendChild(shape); g.appendChild(ring);
+  }
+
+  if (!L.isEvent){
+    label = el("text", { "text-anchor": "middle", "font-size": 12.5,
+      "font-family": "'Spectral',serif", fill: C.star, "font-weight": 500 });
+    L.lines.forEach((ln, j) => {
+      const ts = el("tspan", { x: n.x, y: n.y + 26 + j * 14 });
+      ts.textContent = ln; label.appendChild(ts);
+    });
+    g.appendChild(label);
+  }
+
+  world.appendChild(g);
+  nodeEls.push({ g, glow, shape, ring, gk, label, n, isEvent: L.isEvent });
+});
+
+/* ---------------- focus / repaint ---------------- */
+function applyFocus(animate){
+  const active = state.hovered || state.selected;
+  const focus = active ? new Set([active, ...ADJ[active]]) : null;
+
+  edgeEls.forEach(({ p, ed, st, solid }) => {
+    if (!state.filters[ed.t]) { p.style.display = "none"; return; }
+    p.style.display = "";
+    const touches = focus && (ed.a === active || ed.b === active);
+    p.setAttribute("opacity", focus ? (touches ? 0.98 : 0.05)
+                                    : (ed.t === "part" ? 0.32 : 0.55));
+    p.setAttribute("stroke-width", touches ? st.w * 2 : st.w);
+
+    /* brush-stroke reveal: the relief line is drawn in, as a painter would lay it */
+    if (touches && animate && solid && !reduceMotion){
+      const len = p.getTotalLength();
+      p.style.transition = "none";
+      p.setAttribute("stroke-dasharray", len);
+      p.setAttribute("stroke-dashoffset", len);
+      requestAnimationFrame(() => {
+        p.style.transition = "stroke-dashoffset .55s cubic-bezier(.4,0,.2,1)";
+        p.setAttribute("stroke-dashoffset", 0);
+      });
+    } else if (solid && !touches){
+      p.style.transition = "none";
+      p.removeAttribute("stroke-dasharray");
+      p.removeAttribute("stroke-dashoffset");
+    }
+  });
+
+  const th = SVG_THEME[currentTheme];
+  nodeEls.forEach(({ g, glow, shape, ring, n, isEvent }) => {
+    const dim = focus && !focus.has(n.id);
+    const on = active === n.id;
+    g.setAttribute("opacity", dim ? 0.11 : 1);
+    glow.setAttribute("opacity", on ? 1 : 0);
+    if (isEvent){
+      shape.setAttribute("fill", on ? th.eventFillOn : th.eventFill);
+      shape.setAttribute("stroke", on ? th.eventStrokeOn : th.eventStroke);
+      if (ring) ring.setAttribute("opacity", on ? 0.9 : 0.45);
+    } else if (n.type === "place"){
+      shape.setAttribute("stroke-width", on ? 2.6 : 1.8);
+    } else {
+      shape.setAttribute("r", on ? 10 : 8);
+      if (ring) ring.setAttribute("opacity", on ? 0.85 : 0);
+    }
+  });
+}
+
+/* ---------------- theme toggle: red-figure <-> black-figure ---------------- */
+function repaintTheme(mode){
+  currentTheme = mode;
+  document.body.classList.toggle("light", mode === "light");
+  themeBtn.textContent = mode === "dark" ? "black-figure" : "red-figure";
+  const th = SVG_THEME[mode];
+
+  registerEls.forEach(({ rect, i }) => {
+    rect.setAttribute("fill", i % 2 ? th.registerB : th.registerA);
+    rect.setAttribute("stroke", th.registerStroke);
+  });
+  if (meanderPatternStroke) meanderPatternStroke.setAttribute("stroke", th.meander);
+  eraTextEls.forEach(({ num, name }) => {
+    num.setAttribute("fill", th.eraNum);
+    name.setAttribute("fill", th.eraName);
+  });
+  nodeEls.forEach(({ glow, gk, label, shape, n, isEvent }) => {
+    glow.setAttribute("fill", mode === "dark" ? "url(#glow)" : "url(#glowLight)");
+    if (gk) gk.setAttribute("fill", th.greek);
+    if (label) label.setAttribute("fill", th.text);
+    if (!isEvent && n.type !== "place") shape.setAttribute("stroke", th.nodeStroke);
+    if (!isEvent){
+      const newCol = typeColor(n.type);
+      if (n.type === "place") shape.setAttribute("stroke", newCol);
+      else shape.setAttribute("fill", newCol);
+    }
+  });
+  applyFocus(false);
+  buildLegend();
+  familyNodeEls.forEach(({ shape, n }) => shape.setAttribute("fill", typeColor(n.type)));
+  buildFamilyLegend();
+  applyFamilyFocus();
+  buildRouteLegend();
+  if (state.selected) renderPanel();
+  if (state.mode === "index") renderIndex();
+}
+
+function applyView(){
+  world.setAttribute("transform",
+    "translate(" + state.view.tx + "," + state.view.ty + ") scale(" + state.view.k + ")");
+}
+function resize(){
+  svg.setAttribute("width", stage.clientWidth);
+  svg.setAttribute("height", stage.clientHeight);
+  document.getElementById("familySvg").setAttribute("width", stage.clientWidth);
+  document.getElementById("familySvg").setAttribute("height", stage.clientHeight);
+  document.getElementById("geoSvg").setAttribute("width", stage.clientWidth);
+  document.getElementById("geoSvg").setAttribute("height", stage.clientHeight);
+}
+new ResizeObserver(resize).observe(stage);
+resize();
+
+/* ---------------- pan & zoom ---------------- */
+let dragging = false, dragged = false, lastXY = null;
+svg.addEventListener("pointerdown", e => {
+  dragging = true; dragged = false; lastXY = { x: e.clientX, y: e.clientY };
+  svg.classList.add("drag"); svg.setPointerCapture(e.pointerId);
+});
+svg.addEventListener("pointermove", e => {
+  if (!dragging) return;
+  const dx = e.clientX - lastXY.x, dy = e.clientY - lastXY.y;
+  lastXY = { x: e.clientX, y: e.clientY };
+  if (Math.abs(dx) + Math.abs(dy) > 3) dragged = true;
+  state.view.tx += dx; state.view.ty += dy;
+  applyView();
+});
+const endDrag = () => { dragging = false; svg.classList.remove("drag"); };
+svg.addEventListener("pointerup", endDrag);
+svg.addEventListener("pointercancel", endDrag);
+
+function zoomAt(sx, sy, factor){
+  const v = state.view;
+  const k = Math.min(2.4, Math.max(0.15, v.k * factor));
+  const wx = (sx - v.tx) / v.k, wy = (sy - v.ty) / v.k;
+  v.k = k; v.tx = sx - wx * k; v.ty = sy - wy * k;
+  applyView();
+}
+svg.addEventListener("wheel", e => {
+  e.preventDefault();
+  const r = stage.getBoundingClientRect();
+  zoomAt(e.clientX - r.left, e.clientY - r.top, e.deltaY < 0 ? 1.12 : 1 / 1.12);
+}, { passive: false });
+
+document.getElementById("zin").onclick  = () => {
+  if (state.mode === "family") famZoom.zoomAt(stage.clientWidth/2, stage.clientHeight/2, 1.25);
+  else if (state.mode === "geo") geoZoom.zoomAt(stage.clientWidth/2, stage.clientHeight/2, 1.25);
+  else zoomAt(stage.clientWidth/2, stage.clientHeight/2, 1.25);
+};
+document.getElementById("zout").onclick = () => {
+  if (state.mode === "family") famZoom.zoomAt(stage.clientWidth/2, stage.clientHeight/2, 0.8);
+  else if (state.mode === "geo") geoZoom.zoomAt(stage.clientWidth/2, stage.clientHeight/2, 0.8);
+  else zoomAt(stage.clientWidth/2, stage.clientHeight/2, 0.8);
+};
+document.getElementById("zfit").onclick = () => {
+  if (state.mode === "family") resetFamilyView();
+  else if (state.mode === "geo") resetGeoView();
+  else { state.view = { k:0.6, tx:90, ty:20 }; applyView(); }
+};
+
+function centerOn(id){
+  const n = BY_ID[id]; if (!n) return;
+  const k = Math.max(state.view.k, 0.75);
+  state.view = { k, tx: stage.clientWidth/2 - n.x*k, ty: stage.clientHeight/2 - n.y*k };
+  applyView();
+}
+
+/* ---------------- selection ---------------- */
+svg.addEventListener("click", e => {
+  if (dragged) return;
+  /* pointer capture (used for panning) retargets click events to the svg
+     root itself, so resolve the real element under the cursor directly */
+  const real = document.elementFromPoint(e.clientX, e.clientY);
+  const g = real && real.closest("g[data-id]");
+  if (!g){ select(null); return; }
+  select(g.dataset.id === state.selected ? null : g.dataset.id);
+});
+svg.addEventListener("mouseover", e => {
+  const g = e.target.closest("g[data-id]");
+  if (g && state.hovered !== g.dataset.id){ state.hovered = g.dataset.id; applyFocus(false); }
+});
+svg.addEventListener("mouseout", e => {
+  if (e.target.closest("g[data-id]")){ state.hovered = null; applyFocus(false); }
+});
+
+function select(id){
+  state.selected = id;
+  applyFocus(true);
+  applyFamilyFocus();
+  applyGeoFocus();
+  renderPanel();
+  if (state.mode === "index") renderIndex();
+}
+function navigate(id){
+  if (state.mode === "map") centerOn(id);
+  else if (state.mode === "family"){
+    if (familyIds.has(id)) familyCenterOn(id);
+    else { setMode("map"); centerOn(id); }
+  } else if (state.mode === "geo"){
+    if (LOCATION_IDS.has(id)) geoCenterOn(id);
+    else { setMode("map"); centerOn(id); }
+  }
+  select(id);
+  panel.scrollTop = 0;
+}
+
+/* ---------------- panel ---------------- */
+const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+
+function richText(text){
+  let out = "", last = 0, m;
+  const re = /\[\[([^\]|]+)\|([^\]]+)\]\]/g;
+  while ((m = re.exec(text)) !== null){
+    out += esc(text.slice(last, m.index));
+    const t = BY_ID[m[1]];
+    out += '<a role="button" tabindex="0" data-nav="' + m[1] + '" style="color:' +
+           (t ? typeColor(t.type) : C.muted) + '">' + esc(m[2]) + "</a>";
+    last = m.index + m[0].length;
+  }
+  return out + esc(text.slice(last));
+}
+
+function renderPanel(){
+  const sel = state.selected ? BY_ID[state.selected] : null;
+  if (!sel){ panel.classList.add("hidden"); hint.classList.toggle("hidden", state.mode !== "map"); return; }
+  hint.classList.add("hidden");
+
+  const groups = {};
+  EDGES.forEach(ed => {
+    let other = null;
+    if (ed.a === sel.id) other = ed.b; else if (ed.b === sel.id) other = ed.a;
+    if (!other || !BY_ID[other]) return;
+    (groups[ed.t] = groups[ed.t] || new Set()).add(other);
+  });
+
+  let html = '<div class="meander" style="margin:0"></div><div class="pbody">' +
+    '<div style="display:flex;align-items:flex-start;gap:12px">' +
+      '<div style="flex:1">' +
+        '<div class="ptype" style="color:' + typeColor(sel.type) + '">' +
+          TYPE_LABEL[sel.type] + " &middot; Register " + GREEK_NUM[sel.era] + "</div>" +
+        '<div class="pname">' + esc(sel.name) + "</div>" +
+        (sel.gk ? '<div class="pgreek">' + esc(sel.gk) + "</div>" : "") +
+      "</div>" +
+      '<button class="close" data-close="1" title="Close">×</button>' +
+    '</div><div class="drule"></div>' +
+    '<p class="story">' + richText(sel.story) + "</p>";
+
+  const keys = Object.keys(groups);
+  if (keys.length){
+    html += '<div class="drule"></div>';
+    keys.forEach(t => {
+      html += '<div style="margin-bottom:13px">' +
+        '<div class="grouplab" style="color:' + EDGE_STYLE[t].color + '">' + EDGE_STYLE[t].label + "</div>" +
+        '<div class="chips">' +
+        [...groups[t]].map(id => {
+          const o = BY_ID[id];
+          return '<button class="chip" data-nav="' + id + '"><span class="dot' +
+                 (o.type === "event" ? " sq" : "") + '" style="background:' + typeColor(o.type) +
+                 '"></span>' + esc(o.name) + "</button>";
+        }).join("") + "</div></div>";
+    });
+  }
+  panel.innerHTML = html + "</div>";
+  panel.classList.remove("hidden");
+}
+
+panel.addEventListener("click", e => {
+  if (e.target.closest("[data-close]")){ select(null); return; }
+  const a = e.target.closest("[data-nav]");
+  if (a) navigate(a.dataset.nav);
+});
+panel.addEventListener("keydown", e => {
+  if (e.key !== "Enter" && e.key !== " ") return;
+  const a = e.target.closest("[data-nav]");
+  if (a){ e.preventDefault(); navigate(a.dataset.nav); }
+});
+
+/* ---------------- rail + legend ---------------- */
+const rail = document.getElementById("rail");
+ERAS.forEach((era, i) => {
+  const b = document.createElement("button");
+  b.className = "btn railMapOnly";
+  b.innerHTML = '<span class="num">' + GREEK_NUM[i] + "</span>&nbsp;&nbsp;" + era.name;
+  b.onclick = () => {
+    const k = 0.62;
+    state.view = { k, tx: stage.clientWidth/2 - (W/2)*k, ty: 70 - era.y0*k };
+    applyView();
+  };
+  rail.appendChild(b);
+});
+const keyBtn = document.createElement("button");
+keyBtn.className = "btn railMapOnly"; keyBtn.textContent = "key";
+keyBtn.style.marginLeft = "auto";
+keyBtn.onclick = () => {
+  legend.classList.toggle("hidden");
+  keyBtn.classList.toggle("on", !legend.classList.contains("hidden"));
+};
+rail.appendChild(keyBtn);
+
+function buildLegend(){
+  legend.innerHTML =
+    '<div class="meander" style="margin:0"></div><div style="padding:14px 16px 16px">' +
+    "<h4>Lines — click to filter</h4>" +
+    Object.entries(EDGE_STYLE).map(([k, st]) =>
+      '<button class="lrow' + (state.filters[k] ? "" : " off") + '" data-line="' + k + '">' +
+        '<svg width="30" height="8" style="flex:0 0 auto"><line x1="0" y1="4" x2="30" y2="4" stroke="' +
+        st.color + '" stroke-width="' + (st.w + 0.6) + '"' +
+        (st.dash ? ' stroke-dasharray="' + st.dash + '"' : "") + "/></svg>" + st.label +
+      "</button>").join("") +
+    '<div class="drule"></div><div class="types">' +
+    Object.entries(TYPE_LABEL).map(([k, lab]) =>
+      '<span><span class="dot' + (k === "event" ? " sq" : "") + '" style="background:' +
+      typeColor(k) + '"></span>' + lab + "</span>").join("") +
+    "</div></div>";
+}
+buildLegend();
+
+legend.addEventListener("click", e => {
+  const b = e.target.closest("[data-line]");
+  if (!b) return;
+  const k = b.dataset.line;
+  state.filters[k] = !state.filters[k];
+  b.classList.toggle("off", !state.filters[k]);
+  applyFocus(false);
+});
+
+/* ---------------- search ---------------- */
+const search = document.getElementById("search");
+const results = document.getElementById("results");
+search.addEventListener("input", () => {
+  const q = search.value.trim().toLowerCase();
+  if (!q){ results.classList.add("hidden"); return; }
+  const hits = NODES.filter(n =>
+    n.name.toLowerCase().includes(q) || (n.gk && n.gk.toLowerCase().includes(q))).slice(0, 9);
+  if (!hits.length){ results.classList.add("hidden"); return; }
+  results.innerHTML = hits.map(n =>
+    '<button data-nav="' + n.id + '"><span class="dot' + (n.type === "event" ? " sq" : "") +
+    '" style="background:' + typeColor(n.type) + '"></span>' + esc(n.name) +
+    (n.gk ? '<span style="margin-left:auto;font-family:\'GFS Didot\',serif;font-size:11px;color:#a2704a">' +
+      esc(n.gk) + "</span>" : "") + "</button>").join("");
+  results.classList.remove("hidden");
+});
+results.addEventListener("click", e => {
+  const b = e.target.closest("[data-nav]");
+  if (!b) return;
+  setMode("map"); navigate(b.dataset.nav);
+  search.value = ""; results.classList.add("hidden");
+});
+document.addEventListener("click", e => {
+  if (!e.target.closest(".searchwrap")) results.classList.add("hidden");
+});
+
+/* ---------------- index ---------------- */
+function renderIndex(){
+  indexEl.innerHTML = ERAS.map((era, i) =>
+    '<div class="igroup"><div class="ihead"><span class="num">' + GREEK_NUM[i] +
+    '</span><span class="nm">' + era.name + "</span></div>" +
+    '<div class="chips">' +
+    NODES.filter(n => n.era === i).map(n =>
+      '<button class="chip" data-nav="' + n.id + '"' +
+      (state.selected === n.id ? ' style="border-color:' + C.clay + ';background:rgba(200,112,60,.14)"' : "") +
+      '><span class="dot' + (n.type === "event" ? " sq" : "") + '" style="background:' +
+      typeColor(n.type) + '"></span>' + esc(n.name) + "</button>").join("") +
+    "</div></div>").join("");
+}
+indexEl.addEventListener("click", e => {
+  const b = e.target.closest("[data-nav]");
+  if (b) navigate(b.dataset.nav);
+});
+
+const mMap = document.getElementById("modeMap");
+const mFamily = document.getElementById("modeFamily");
+const mGeo = document.getElementById("modeGeo");
+const mIdx = document.getElementById("modeIndex");
+function setMode(m){
+  state.mode = m;
+  mMap.classList.toggle("on", m === "map");
+  mFamily.classList.toggle("on", m === "family");
+  mGeo.classList.toggle("on", m === "geo");
+  mIdx.classList.toggle("on", m === "index");
+
+  svg.classList.toggle("hidden", m !== "map");
+  familySvg.classList.toggle("hidden", m !== "family");
+  geoSvg.classList.toggle("hidden", m !== "geo");
+  indexEl.classList.toggle("hidden", m !== "index");
+
+  document.getElementById("zoom").classList.toggle("hidden", m === "index");
+  rail.classList.toggle("hidden", m === "index");
+  document.querySelectorAll(".railMapOnly").forEach(b => b.classList.toggle("hidden", m !== "map"));
+  familyKeyBtn.classList.toggle("hidden", m !== "family");
+  geoKeyBtn.classList.toggle("hidden", m !== "geo");
+
+  legend.classList.add("hidden"); keyBtn.classList.remove("on");
+  familyLegend.classList.add("hidden"); familyKeyBtn.classList.remove("on");
+  routeLegend.classList.add("hidden"); geoKeyBtn.classList.remove("on");
+
+  if (m === "index") renderIndex();
+  hint.classList.toggle("hidden", m !== "map" || !!state.selected);
+  familyHint.classList.toggle("hidden", m !== "family" || !!state.selected);
+  geoHint.classList.toggle("hidden", m !== "geo" || !!state.selected);
+}
+mMap.onclick = () => setMode("map");
+mFamily.onclick = () => setMode("family");
+mGeo.onclick = () => setMode("geo");
+mIdx.onclick = () => setMode("index");
+
+const themeBtn = document.getElementById("themeToggle");
+themeBtn.onclick = () => repaintTheme(currentTheme === "dark" ? "light" : "dark");
+
+document.addEventListener("keydown", e => { if (e.key === "Escape") select(null); });
+
+/* ================================================================== */
+/*  SHARED CANVAS HELPER — pan / zoom / click, reused by the family    */
+/*  tree and geography canvases so their interaction matches the map.  */
+/* ================================================================== */
+function wireCanvas(svgEl, view, opts){
+  opts = opts || {};
+  let dragging = false, dragged = false, lastXY = null;
+  svgEl.addEventListener("pointerdown", e => {
+    dragging = true; dragged = false; lastXY = { x: e.clientX, y: e.clientY };
+    svgEl.classList.add("drag"); svgEl.setPointerCapture(e.pointerId);
+  });
+  svgEl.addEventListener("pointermove", e => {
+    if (!dragging) return;
+    const dx = e.clientX - lastXY.x, dy = e.clientY - lastXY.y;
+    lastXY = { x: e.clientX, y: e.clientY };
+    if (Math.abs(dx) + Math.abs(dy) > 3) dragged = true;
+    view.tx += dx; view.ty += dy;
+    if (opts.onView) opts.onView();
+  });
+  const endDrag = () => { dragging = false; svgEl.classList.remove("drag"); };
+  svgEl.addEventListener("pointerup", endDrag);
+  svgEl.addEventListener("pointercancel", endDrag);
+
+  function zoomAt(sx, sy, factor){
+    const k = Math.min(opts.maxK || 2.4, Math.max(opts.minK || 0.15, view.k * factor));
+    const wx = (sx - view.tx) / view.k, wy = (sy - view.ty) / view.k;
+    view.k = k; view.tx = sx - wx * k; view.ty = sy - wy * k;
+    if (opts.onView) opts.onView();
+  }
+  svgEl.addEventListener("wheel", e => {
+    e.preventDefault();
+    const r = svgEl.getBoundingClientRect();
+    zoomAt(e.clientX - r.left, e.clientY - r.top, e.deltaY < 0 ? 1.12 : 1 / 1.12);
+  }, { passive: false });
+
+  svgEl.addEventListener("click", e => {
+    if (dragged) return;
+    /* same elementFromPoint fix as the main map — pointer capture during
+       drag otherwise retargets click events to the svg root itself */
+    const real = document.elementFromPoint(e.clientX, e.clientY);
+    const g = real && real.closest("g[data-id]");
+    if (opts.onClick) opts.onClick(g ? g.dataset.id : null);
+  });
+  svgEl.addEventListener("mouseover", e => {
+    const g = e.target.closest("g[data-id]");
+    if (g && state.hovered !== g.dataset.id){ state.hovered = g.dataset.id; if (opts.onHover) opts.onHover(); }
+  });
+  svgEl.addEventListener("mouseout", e => {
+    if (e.target.closest("g[data-id]")){ state.hovered = null; if (opts.onHover) opts.onHover(); }
+  });
+
+  return { zoomAt };
+}
+
+/* ================================================================== */
+/*  FAMILY TREE — computed automatically from the same NODES/EDGES     */
+/*  data: generation by longest blood/descent path, houses by          */
+/*  connected component, spouses pulled level.                          */
+/* ================================================================== */
+const FAMILY_TYPES = new Set(["titan", "god", "hero", "mortal", "monster"]);
+const familyNodes = NODES.filter(n => FAMILY_TYPES.has(n.type));
+const familyIds = new Set(familyNodes.map(n => n.id));
+const familyEdges = EDGES.filter(ed =>
+  (ed.t === "blood" || ed.t === "descent" || ed.t === "union") &&
+  familyIds.has(ed.a) && familyIds.has(ed.b));
+
+const CURSE_PAIRS = new Set([
+  "tantalus|pelops", "pelops|atreus", "pelops|thyestes", "atreus|agamemnon", "atreus|menelaus",
+  "agamemnon|orestes", "thyestes|aegisthus", "laius|oedipus", "oedipus|eteocles", "oedipus|polynices"
+].map(p => p.split("|").sort().join("|")));
+const isCurse = (a, b) => CURSE_PAIRS.has([a, b].sort().join("|"));
+
+const famChildrenOf = {}, famParentsOf = {};
+familyNodes.forEach(n => { famChildrenOf[n.id] = []; famParentsOf[n.id] = []; });
+familyEdges.filter(e => e.t === "blood" || e.t === "descent").forEach(e => {
+  famChildrenOf[e.a].push(e.b); famParentsOf[e.b].push(e.a);
+});
+
+const famGen = {};
+function computeGen(id, seen){
+  if (famGen[id] !== undefined) return famGen[id];
+  if (seen.has(id)) return 0;
+  seen.add(id);
+  const ps = famParentsOf[id];
+  const g = ps.length ? 1 + Math.max(...ps.map(p => computeGen(p, seen))) : 0;
+  famGen[id] = g;
+  return g;
+}
+familyNodes.forEach(n => computeGen(n.id, new Set()));
+
+const famUnions = familyEdges.filter(e => e.t === "union");
+for (let pass = 0; pass < 3; pass++){
+  famUnions.forEach(e => {
+    const g = Math.max(famGen[e.a], famGen[e.b]);
+    famGen[e.a] = g; famGen[e.b] = g;
+  });
+}
+
+const famUF = {}; familyNodes.forEach(n => famUF[n.id] = n.id);
+function famFind(x){ while (famUF[x] !== x) x = famUF[x]; return x; }
+function famUnion(a, b){ const ra = famFind(a), rb = famFind(b); if (ra !== rb) famUF[ra] = rb; }
+familyEdges.forEach(e => famUnion(e.a, e.b));
+
+const famHouseOf = {}; familyNodes.forEach(n => famHouseOf[n.id] = famFind(n.id));
+const famHouseEra = {};
+familyNodes.forEach(n => {
+  const h = famHouseOf[n.id];
+  if (!(h in famHouseEra) || n.era < famHouseEra[h]) famHouseEra[h] = n.era;
+});
+const famHouseOrder = [...new Set(Object.values(famHouseOf))]
+  .sort((a, b) => (famHouseEra[a] - famHouseEra[b]) || a.localeCompare(b));
+const famHouseIdx = {}; famHouseOrder.forEach((h, i) => famHouseIdx[h] = i);
+
+const famMaxGen = Math.max(...Object.values(famGen));
+const famRows = []; for (let g = 0; g <= famMaxGen; g++) famRows.push([]);
+familyNodes.forEach(n => famRows[famGen[n.id]].push(n.id));
+famRows.forEach(row => row.sort((a, b) =>
+  (famHouseIdx[famHouseOf[a]] - famHouseIdx[famHouseOf[b]]) || (BY_ID[a].x - BY_ID[b].x)));
+
+const FAM_ROW_H = 190, FAM_COL_W = 128, FAM_PAD = 90;
+const famPos = {};
+famRows.forEach((row, g) => row.forEach((id, i) => {
+  famPos[id] = { x: FAM_PAD + i * FAM_COL_W, y: 70 + g * FAM_ROW_H };
+}));
+const FAM_W = FAM_PAD * 2 + FAM_COL_W * Math.max(1, ...famRows.map(r => r.length));
+const FAM_H = 160 + famMaxGen * FAM_ROW_H;
+
+const familySvg = document.getElementById("familySvg");
+const famWorld = el("g", { id: "famWorld" });
+familySvg.appendChild(famWorld);
+const famView = { k: 0.6, tx: 60, ty: 20 };
+function applyFamView(){
+  famWorld.setAttribute("transform",
+    "translate(" + famView.tx + "," + famView.ty + ") scale(" + famView.k + ")");
+}
+
+/* generation guide-lines, each labelled by rough narrative period */
+famRows.forEach((row, g) => {
+  const y = 70 + g * FAM_ROW_H;
+  famWorld.appendChild(el("line", { x1: -40, y1: y - 46, x2: FAM_W, y2: y - 46,
+    style: "stroke:var(--generation-line)", "stroke-width": 1, "stroke-dasharray": "1 6", opacity: 0.7 }));
+  const lbl = el("text", { x: -30, y: y - 4, "font-size": 11, "font-family": "'Spectral',serif",
+    style: "fill:var(--muted)", "letter-spacing": 1.5 });
+  lbl.textContent = "GEN " + (g + 1);
+  famWorld.appendChild(lbl);
+});
+
+/* edges: blood/descent as tree lines, union as a marriage bar, curses overlaid */
+const famFilters = { lineage: true, marriage: true, curse: true };
+const famEdgeEls = [];
+familyEdges.forEach(ed => {
+  const A = famPos[ed.a], B = famPos[ed.b];
+  if (!A || !B) return;
+  const curse = isCurse(ed.a, ed.b);
+  if (ed.t === "union"){
+    const y = (A.y + B.y) / 2;
+    const grp = el("g");
+    grp.appendChild(el("line", { x1: A.x, y1: A.y, x2: A.x, y2: y,
+      style: "stroke:var(--gold)", "stroke-width": 1.3, "stroke-dasharray": "5 4", opacity: 0.85 }));
+    grp.appendChild(el("line", { x1: B.x, y1: B.y, x2: B.x, y2: y,
+      style: "stroke:var(--gold)", "stroke-width": 1.3, "stroke-dasharray": "5 4", opacity: 0.85 }));
+    grp.appendChild(el("line", { x1: A.x, y1: y, x2: B.x, y2: y,
+      style: "stroke:var(--gold)", "stroke-width": 1.3, "stroke-dasharray": "5 4", opacity: 0.85 }));
+    famWorld.appendChild(grp);
+    famEdgeEls.push({ el: grp, cat: "marriage" });
+  } else {
+    const midY = A.y + (B.y - A.y) * 0.5;
+    const d = "M " + A.x + " " + A.y + " C " + A.x + " " + midY + " " + B.x + " " + midY + " " + B.x + " " + B.y;
+    const p = el("path", { d, fill: "none",
+      style: "stroke:" + (curse ? "var(--curse)" : "var(--dilute)"),
+      "stroke-width": curse ? 2.4 : 1.2, "stroke-dasharray": curse ? "7 4" : "none", opacity: curse ? 0.95 : 0.75 });
+    famWorld.appendChild(p);
+    famEdgeEls.push({ el: p, cat: curse ? "curse" : "lineage" });
+  }
+});
+function applyFamFilters(){
+  famEdgeEls.forEach(({ el: e, cat }) => { e.style.display = famFilters[cat] ? "" : "none"; });
+}
+
+const familyNodeEls = [];
+familyNodes.forEach(n => {
+  const p = famPos[n.id]; if (!p) return;
+  const g = el("g", { style: "cursor:pointer" });
+  g.dataset.id = n.id;
+  const shape = el("circle", { cx: p.x, cy: p.y, r: 9, fill: typeColor(n.type), style: "stroke:var(--ground)", "stroke-width": 1.6 });
+  g.appendChild(shape);
+  let gk = null;
+  if (n.gk){
+    gk = el("text", { x: p.x, y: p.y - 17, "text-anchor": "middle", "font-size": 9,
+      "font-family": "'GFS Didot',serif", style: "fill:var(--dilute)", "letter-spacing": 1.2, opacity: 0.8 });
+    gk.textContent = n.gk;
+    g.appendChild(gk);
+  }
+  const label = el("text", { x: p.x, "text-anchor": "middle", "font-size": 12,
+    "font-family": "'Spectral',serif", style: "fill:var(--ivory)", "font-weight": 500 });
+  wrap(n.name, 13).forEach((ln, j) => {
+    const ts = el("tspan", { x: p.x, y: p.y + 26 + j * 14 });
+    ts.textContent = ln; label.appendChild(ts);
+  });
+  g.appendChild(label);
+  famWorld.appendChild(g);
+  familyNodeEls.push({ g, shape, label, gk, n });
+});
+
+const famZoom = wireCanvas(familySvg, famView, {
+  onView: applyFamView,
+  onHover: applyFamilyFocus,
+  onClick: id => { if (!id){ select(null); return; } select(id === state.selected ? null : id); }
+});
+
+function familyCenterOn(id){
+  const p = famPos[id]; if (!p) return;
+  const k = Math.max(famView.k, 0.85);
+  famView.k = k; famView.tx = stage.clientWidth / 2 - p.x * k; famView.ty = stage.clientHeight / 2 - p.y * k;
+  applyFamView();
+}
+function resetFamilyView(){
+  famView.k = 0.55; famView.tx = 60; famView.ty = 20; applyFamView();
+}
+
+function applyFamilyFocus(){
+  const active = state.hovered || state.selected;
+  const focus = active ? new Set([active, ...(ADJ[active] || [])]) : null;
+  familyNodeEls.forEach(({ g, shape, n }) => {
+    const dim = focus && !focus.has(n.id);
+    const on = active === n.id;
+    g.setAttribute("opacity", dim ? 0.15 : 1);
+    shape.setAttribute("r", on ? 11 : 9);
+  });
+}
+
+/* ================================================================== */
+/*  GEOGRAPHY — real coastlines (Natural Earth 50m admin-0 boundaries,   */
+/*  equirectangular projection) with locations placed at their actual    */
+/*  latitude/longitude, so distances and directions are for real.        */
+/* ================================================================== */
+const GEO_CANVAS_W = 1500, GEO_CANVAS_H = 1588.2;
+const GEO_POS = {
+  rome: {x:286.6,y:180.8}, albalonga: {x:295.1,y:187.1}, aeaea: {x:312.2,y:211.0},
+  carthage: {x:190.7,y:403.6}, ithaca: {x:649.1,y:335.7}, iolcus: {x:747.5,y:292.8},
+  thebes: {x:764.0,y:338.9}, attica: {x:785.3,y:350.7}, athens: {x:782.1,y:353.7},
+  corinth: {x:744.9,y:357.1}, achaea: {x:694.2,y:342.1}, mycenae: {x:739.3,y:364.8},
+  argos: {x:738.2,y:369.1}, sparta: {x:724.7,y:393.5}, peloponnese: {x:719.1,y:375.0},
+  seriphos: {x:816.5,y:391.1}, naxos: {x:854.9,y:392.5}, crete: {x:833.8,y:472.1},
+  troy: {x:892.9,y:266.6}, ethiopia: {x:1224.1,y:1282.4}
+};
+const LOCATION_IDS = new Set(Object.keys(GEO_POS));
+const COAST_PATH = "M 787.6 461.7 L 790.6 462.0 L 794.7 461.9 L 795.6 461.7 L 798.2 459.1 L 801.4 459.0 L 802.8 461.6 L 799.6 462.8 L 798.9 463.4 L 799.6 464.0 L 802.0 465.0 L 805.4 464.6 L 805.5 466.6 L 806.2 468.3 L 807.9 469.2 L 809.7 469.4 L 813.7 469.1 L 817.7 468.5 L 821.8 467.2 L 825.9 466.6 L 838.4 467.2 L 842.8 470.0 L 851.3 470.3 L 859.2 471.8 L 863.4 470.8 L 870.4 469.9 L 871.6 470.9 L 870.7 477.2 L 871.1 479.0 L 873.1 479.9 L 875.2 479.4 L 877.6 477.4 L 883.6 475.8 L 889.8 475.8 L 895.0 471.6 L 896.5 471.4 L 895.5 473.4 L 894.7 478.3 L 893.6 481.1 L 893.1 483.3 L 889.7 484.5 L 884.4 484.7 L 874.8 484.2 L 865.2 485.0 L 847.3 487.1 L 829.4 488.2 L 827.0 487.5 L 826.9 484.7 L 826.6 482.7 L 825.4 481.4 L 819.9 480.2 L 814.6 478.2 L 793.9 475.5 L 789.0 474.4 L 781.1 475.0 L 778.2 474.9 L 776.2 473.9 L 774.8 472.3 L 774.2 467.0 L 775.1 461.7 L 776.9 460.3 L 777.6 461.9 L 779.7 462.6 L 781.6 461.0 L 781.5 458.6 L 782.5 456.4 L 784.0 457.3 L 785.0 460.8 L 787.6 461.7 Z M 768.3 310.6 L 770.8 315.4 L 773.2 317.1 L 778.1 319.0 L 780.4 319.2 L 788.7 322.7 L 798.5 323.3 L 799.7 324.3 L 800.9 327.0 L 802.9 329.1 L 803.4 330.7 L 802.4 332.5 L 803.8 338.0 L 806.3 343.2 L 810.0 345.8 L 814.6 346.5 L 819.0 346.4 L 820.1 347.5 L 819.6 352.1 L 817.8 353.8 L 816.3 354.3 L 815.0 353.8 L 813.8 352.7 L 812.5 352.2 L 810.0 352.1 L 808.1 350.3 L 803.5 347.8 L 802.6 346.3 L 802.5 343.9 L 800.5 342.2 L 798.7 339.0 L 796.9 338.1 L 796.0 336.4 L 789.1 335.3 L 783.5 335.2 L 778.7 333.4 L 777.2 328.6 L 774.4 327.3 L 772.3 325.9 L 770.5 324.0 L 766.1 320.5 L 761.1 317.6 L 756.4 315.7 L 751.3 314.4 L 747.2 315.9 L 744.8 315.5 L 744.3 314.5 L 749.4 312.5 L 756.4 308.7 L 761.4 307.4 L 763.8 307.3 L 768.3 310.6 Z M 1255.7 459.1 L 1232.7 472.4 L 1231.2 476.4 L 1232.3 479.1 L 1235.5 482.4 L 1236.3 483.3 L 1237.5 485.8 L 1232.5 486.6 L 1227.5 486.8 L 1224.7 486.5 L 1222.0 486.6 L 1213.9 493.8 L 1209.5 496.3 L 1204.3 497.7 L 1198.9 498.6 L 1196.3 498.7 L 1193.9 499.6 L 1192.3 501.3 L 1192.2 502.9 L 1191.5 504.3 L 1188.6 504.0 L 1187.4 501.4 L 1185.3 500.2 L 1180.2 500.8 L 1177.6 500.8 L 1169.4 498.3 L 1166.9 497.2 L 1165.3 495.1 L 1161.1 487.4 L 1160.3 481.6 L 1164.3 483.1 L 1168.0 481.3 L 1171.6 478.4 L 1175.8 477.2 L 1178.5 477.7 L 1181.1 478.3 L 1185.9 477.3 L 1187.9 473.0 L 1188.6 468.1 L 1196.6 469.5 L 1204.8 470.2 L 1211.4 470.5 L 1218.0 469.7 L 1238.1 464.4 L 1243.8 461.2 L 1247.3 460.1 L 1253.4 457.5 L 1259.8 456.1 L 1255.7 459.1 Z M 160.2 225.8 L 162.4 228.6 L 167.4 240.2 L 167.9 242.7 L 166.9 245.2 L 165.6 247.0 L 160.7 252.9 L 161.4 257.7 L 163.3 260.7 L 163.5 264.0 L 162.6 268.0 L 159.6 293.2 L 158.1 297.6 L 157.2 301.5 L 153.8 302.7 L 149.5 301.4 L 144.0 299.3 L 141.5 299.4 L 138.9 300.1 L 136.8 299.5 L 134.8 298.3 L 133.4 306.9 L 130.9 310.4 L 127.1 312.7 L 123.6 312.8 L 119.9 312.1 L 116.8 312.1 L 114.5 310.4 L 112.6 307.5 L 109.7 303.9 L 106.7 299.7 L 106.4 296.0 L 105.8 287.6 L 106.7 285.7 L 108.0 284.0 L 108.6 280.2 L 108.1 277.0 L 109.0 275.8 L 110.8 277.0 L 112.1 276.5 L 112.0 274.9 L 112.4 271.8 L 110.1 269.2 L 106.2 268.4 L 105.9 265.7 L 106.3 263.0 L 108.3 261.3 L 109.0 258.9 L 109.0 251.8 L 106.3 249.2 L 105.2 245.2 L 103.8 242.6 L 101.3 240.1 L 98.4 238.0 L 96.6 236.0 L 96.2 230.7 L 97.2 226.3 L 98.1 224.4 L 99.1 224.7 L 101.9 226.9 L 104.3 227.4 L 108.9 227.9 L 113.5 227.2 L 119.1 225.2 L 124.5 222.8 L 132.3 215.7 L 137.1 214.3 L 139.5 212.4 L 140.4 209.9 L 142.4 209.2 L 144.8 211.7 L 147.8 211.9 L 152.4 214.0 L 154.4 215.9 L 156.1 218.2 L 157.8 219.2 L 159.5 219.8 L 158.4 220.9 L 156.8 223.6 L 157.7 224.3 L 160.2 225.8 Z M 153.5 140.9 L 152.4 147.4 L 153.2 149.3 L 154.8 150.6 L 155.6 152.1 L 156.9 169.4 L 156.6 170.7 L 151.3 177.7 L 150.0 179.7 L 149.8 188.3 L 148.9 190.6 L 146.9 192.9 L 143.5 200.3 L 140.6 203.6 L 132.5 199.6 L 127.7 197.8 L 125.4 195.9 L 123.9 194.6 L 124.8 192.9 L 127.0 191.1 L 127.4 189.7 L 122.2 188.1 L 119.9 187.0 L 119.9 185.1 L 121.7 182.2 L 120.9 179.8 L 118.0 179.9 L 115.7 179.5 L 115.4 178.3 L 117.1 176.7 L 119.2 174.6 L 119.2 172.3 L 116.5 171.3 L 114.2 169.4 L 113.2 166.8 L 115.1 165.1 L 118.0 163.9 L 115.8 161.3 L 114.4 161.3 L 113.2 160.7 L 114.2 159.5 L 116.5 157.7 L 119.7 152.2 L 124.2 149.7 L 132.1 148.0 L 134.3 147.3 L 136.3 145.4 L 138.4 144.1 L 141.1 144.3 L 143.5 145.0 L 145.0 145.8 L 146.2 145.0 L 147.3 142.6 L 146.6 140.6 L 147.0 134.8 L 148.4 131.6 L 150.7 131.4 L 152.8 133.2 L 152.7 134.8 L 153.5 138.5 L 153.5 140.9 Z M 422.5 343.2 L 419.5 348.2 L 418.0 350.2 L 407.4 362.4 L 406.2 365.3 L 405.4 368.4 L 404.3 371.0 L 402.8 373.6 L 401.4 376.8 L 401.7 380.5 L 402.2 382.3 L 403.5 383.5 L 405.6 384.6 L 407.2 386.3 L 404.7 387.8 L 407.5 390.9 L 409.8 392.8 L 410.1 394.6 L 410.1 396.5 L 405.2 399.9 L 403.3 401.8 L 402.2 404.2 L 401.7 406.5 L 402.2 408.7 L 402.0 410.8 L 397.2 410.6 L 392.2 409.3 L 387.2 409.8 L 380.0 407.4 L 377.4 406.9 L 375.1 405.9 L 369.1 398.3 L 364.4 395.0 L 359.2 392.5 L 354.0 392.3 L 348.8 392.6 L 344.1 391.1 L 334.7 385.8 L 324.7 381.7 L 320.5 379.0 L 318.6 377.1 L 316.3 375.9 L 310.6 374.7 L 305.5 371.9 L 303.1 371.7 L 298.1 372.0 L 295.5 371.8 L 293.0 370.8 L 287.9 367.5 L 284.8 362.9 L 283.9 360.9 L 286.2 355.6 L 288.9 350.6 L 291.2 349.2 L 294.0 348.2 L 295.7 346.7 L 297.1 344.9 L 302.2 350.1 L 304.5 351.4 L 306.9 351.1 L 311.0 349.2 L 311.3 347.2 L 315.9 344.5 L 321.7 344.5 L 324.3 345.0 L 325.7 347.3 L 327.9 348.1 L 330.5 348.4 L 338.9 352.9 L 341.2 353.6 L 343.6 353.8 L 350.1 351.9 L 355.1 351.2 L 365.6 352.2 L 371.3 351.1 L 375.3 350.9 L 381.0 349.2 L 385.5 346.3 L 387.8 345.6 L 390.3 345.4 L 396.3 345.5 L 402.3 346.2 L 404.8 345.5 L 406.9 343.6 L 409.4 342.8 L 412.1 343.4 L 419.1 340.1 L 422.1 339.9 L 425.1 341.1 L 422.5 343.2 Z M 366.8 440.0 L 364.1 440.6 L 361.5 439.3 L 360.9 438.5 L 364.6 437.8 L 366.3 438.4 L 367.1 439.6 L 366.8 440.0 Z M 350.2 233.6 L 348.2 234.0 L 347.1 233.4 L 346.5 232.8 L 347.3 231.1 L 351.3 232.1 L 351.2 233.0 L 350.2 233.6 Z M 267.0 407.8 L 264.9 408.3 L 262.1 406.7 L 261.9 404.6 L 262.4 404.0 L 265.8 405.0 L 266.8 406.9 L 267.0 407.8 Z M 469.9 132.5 L 478.0 133.7 L 484.0 133.2 L 489.4 133.9 L 492.8 135.3 L 493.6 136.0 L 489.2 136.1 L 484.3 135.5 L 478.7 137.0 L 473.8 136.2 L 471.9 135.3 L 470.6 134.1 L 469.9 132.5 Z M 493.9 126.8 L 490.8 127.3 L 471.1 126.9 L 465.4 126.0 L 459.1 123.6 L 457.8 122.9 L 464.2 122.2 L 470.1 122.9 L 471.9 124.6 L 488.0 126.0 L 493.9 126.8 Z M 475.8 120.4 L 468.9 120.5 L 462.8 119.7 L 459.8 118.4 L 460.1 117.2 L 461.0 115.3 L 467.7 115.5 L 478.0 116.9 L 480.5 118.5 L 479.7 119.2 L 475.8 120.4 Z M 1503.4 1319.9 L 1504.9 1324.2 L 1500.5 1322.5 L 1499.8 1321.6 L 1501.7 1320.0 L 1502.1 1318.9 L 1503.4 1319.9 Z M 1363.3 909.6 L 1362.1 909.6 L 1359.0 906.6 L 1357.2 904.4 L 1355.4 902.9 L 1346.9 899.9 L 1345.8 898.0 L 1347.1 896.1 L 1348.0 898.0 L 1349.5 899.1 L 1356.5 901.8 L 1364.3 907.7 L 1365.7 908.2 L 1363.3 909.6 Z M 1349.8 895.0 L 1347.5 894.1 L 1347.6 890.7 L 1349.2 888.7 L 1349.1 891.4 L 1349.8 894.1 L 1349.8 895.0 Z M 1506.2 1336.9 L 1508.1 1339.3 L 1509.3 1339.1 L 1510.3 1338.3 L 1511.0 1336.6 L 1513.2 1337.6 L 1513.2 1342.1 L 1508.6 1341.3 L 1504.2 1341.6 L 1498.9 1340.6 L 1497.7 1336.9 L 1501.1 1338.7 L 1502.8 1338.3 L 1500.7 1335.3 L 1497.4 1334.8 L 1497.6 1332.8 L 1499.1 1332.1 L 1500.0 1331.1 L 1498.1 1328.4 L 1501.9 1329.0 L 1504.3 1330.7 L 1505.8 1332.6 L 1506.2 1336.9 Z M 963.7 444.3 L 960.5 445.2 L 959.4 445.1 L 958.0 443.1 L 959.9 438.1 L 958.2 435.0 L 958.1 433.6 L 960.6 431.7 L 962.4 429.0 L 966.8 425.9 L 978.2 422.4 L 980.8 422.0 L 980.7 424.8 L 976.9 431.9 L 973.6 435.5 L 974.5 438.3 L 969.1 439.1 L 963.7 444.3 Z M 934.2 464.8 L 932.6 467.2 L 930.8 465.2 L 931.6 462.7 L 929.6 458.9 L 933.4 453.3 L 933.4 450.5 L 936.3 449.1 L 935.6 453.8 L 933.4 457.5 L 935.7 460.6 L 936.8 464.2 L 934.2 464.8 Z M 964.4 416.7 L 963.5 417.4 L 961.2 415.4 L 961.1 414.4 L 963.4 413.2 L 964.5 412.9 L 964.8 413.7 L 964.8 415.5 L 964.4 416.7 Z M 927.3 398.9 L 922.9 399.5 L 923.7 396.0 L 921.6 393.2 L 925.0 394.8 L 927.2 396.6 L 928.2 397.0 L 928.0 398.1 L 927.3 398.9 Z M 924.2 409.1 L 922.9 409.2 L 924.5 407.0 L 929.2 404.1 L 936.0 401.5 L 938.2 401.2 L 942.0 402.8 L 935.0 405.5 L 933.1 406.9 L 928.0 407.2 L 924.2 409.1 Z M 862.3 398.5 L 858.4 400.2 L 855.7 397.7 L 854.2 394.0 L 861.4 388.4 L 863.1 388.9 L 864.2 390.3 L 864.0 395.3 L 862.3 398.5 Z M 850.5 394.0 L 847.0 397.4 L 844.1 397.1 L 842.9 395.5 L 844.7 392.3 L 848.6 390.5 L 850.4 391.0 L 850.2 393.3 L 850.5 394.0 Z M 859.5 423.9 L 857.5 426.2 L 854.6 425.3 L 855.8 424.5 L 856.5 423.3 L 856.5 421.7 L 855.7 420.6 L 858.9 422.0 L 859.5 423.9 Z M 855.1 411.4 L 854.3 412.1 L 851.0 409.3 L 849.7 407.7 L 851.3 406.4 L 856.2 409.5 L 855.1 411.4 Z M 918.7 361.3 L 924.1 362.7 L 925.7 362.6 L 928.2 363.1 L 928.9 365.8 L 925.5 366.2 L 919.6 368.6 L 917.1 368.1 L 914.1 365.9 L 909.4 365.7 L 908.0 365.1 L 910.5 362.6 L 915.1 361.3 L 918.7 361.3 Z M 883.6 373.7 L 881.6 373.9 L 882.2 372.1 L 886.2 369.0 L 891.7 368.9 L 896.7 367.4 L 897.9 367.3 L 895.5 369.7 L 891.4 372.0 L 883.6 373.7 Z M 876.1 406.3 L 872.3 406.7 L 871.0 406.3 L 873.4 405.6 L 875.0 404.8 L 875.8 403.8 L 879.8 402.1 L 882.4 399.8 L 885.2 401.3 L 881.7 402.4 L 876.1 406.3 Z M 902.7 415.4 L 899.2 416.4 L 897.0 418.6 L 894.3 417.0 L 894.3 414.9 L 897.2 415.6 L 899.3 414.4 L 898.7 413.0 L 900.9 413.6 L 902.7 415.4 Z M 809.8 371.6 L 806.9 373.8 L 806.4 370.5 L 808.3 367.2 L 810.8 366.9 L 811.8 368.4 L 809.8 371.6 Z M 813.3 381.9 L 810.8 383.2 L 811.7 380.1 L 810.4 378.5 L 811.5 377.2 L 813.1 376.1 L 813.9 377.2 L 815.4 379.1 L 813.3 381.9 Z M 817.8 407.5 L 817.8 410.1 L 817.5 411.0 L 808.5 412.3 L 809.3 409.3 L 809.9 408.3 L 812.9 409.7 L 814.0 409.0 L 814.4 408.2 L 817.8 407.5 Z M 835.7 375.3 L 835.5 379.9 L 834.3 379.8 L 833.7 379.1 L 833.6 377.4 L 834.1 374.6 L 835.7 375.3 Z M 837.9 363.5 L 836.6 366.5 L 833.1 363.1 L 829.3 360.7 L 827.9 358.6 L 825.6 357.4 L 825.0 354.6 L 827.8 353.5 L 829.0 353.4 L 831.8 356.7 L 836.3 357.1 L 836.0 359.2 L 837.4 361.9 L 837.9 363.5 Z M 849.5 370.6 L 847.9 373.5 L 845.1 373.0 L 840.5 370.0 L 839.0 368.6 L 838.1 367.2 L 840.0 367.0 L 842.3 368.5 L 848.2 369.2 L 849.5 370.6 Z M 825.9 400.5 L 825.1 400.7 L 824.0 398.9 L 823.7 397.1 L 824.2 396.1 L 825.7 396.0 L 827.8 399.3 L 825.9 400.5 Z M 886.5 343.3 L 882.3 345.8 L 877.6 342.2 L 876.8 341.0 L 880.3 339.6 L 882.0 337.3 L 880.6 334.6 L 875.8 330.5 L 875.6 327.6 L 882.9 326.4 L 887.2 328.9 L 889.4 329.1 L 888.6 331.5 L 889.0 332.3 L 889.3 339.6 L 887.2 340.6 L 886.9 342.6 L 886.5 343.3 Z M 900.4 294.3 L 899.7 296.9 L 905.8 301.2 L 907.9 304.0 L 908.6 306.7 L 908.1 307.4 L 905.8 306.0 L 903.9 305.5 L 904.5 307.4 L 906.5 309.1 L 903.0 310.0 L 899.6 310.0 L 889.4 307.7 L 887.1 305.2 L 893.2 301.6 L 894.4 300.1 L 890.1 300.3 L 885.5 304.6 L 878.2 302.7 L 876.0 300.9 L 875.5 300.0 L 878.4 296.1 L 883.5 296.3 L 886.3 295.4 L 889.6 294.2 L 889.7 292.3 L 897.7 291.9 L 900.4 294.3 Z M 784.4 303.8 L 782.4 305.3 L 779.4 304.6 L 776.2 299.6 L 784.4 303.8 Z M 789.2 301.8 L 787.1 302.4 L 789.2 298.8 L 792.8 297.0 L 791.5 300.0 L 789.2 301.8 Z M 823.9 317.2 L 819.2 318.3 L 818.0 318.1 L 819.0 316.8 L 814.5 313.7 L 815.0 310.5 L 815.5 309.7 L 819.0 311.4 L 819.8 314.2 L 823.9 317.2 Z M 868.5 245.9 L 863.5 247.0 L 858.0 243.4 L 863.3 241.9 L 865.8 243.0 L 867.5 244.2 L 868.5 245.9 Z M 857.5 265.4 L 855.9 266.9 L 854.7 269.5 L 854.0 273.2 L 851.4 273.3 L 849.9 272.5 L 849.3 271.1 L 849.2 269.4 L 848.1 269.4 L 847.2 271.3 L 846.4 272.2 L 843.8 272.4 L 841.0 271.2 L 841.1 268.7 L 840.5 265.7 L 840.8 264.7 L 848.6 264.5 L 850.8 266.6 L 853.6 265.4 L 854.7 264.0 L 858.0 263.2 L 857.5 265.4 Z M 828.3 237.6 L 822.6 239.1 L 816.9 236.2 L 816.9 234.4 L 820.0 230.8 L 821.6 229.7 L 825.8 230.0 L 828.2 232.5 L 828.8 233.7 L 828.0 235.6 L 828.3 237.6 Z M 881.0 258.7 L 870.9 260.1 L 867.7 258.7 L 870.9 256.0 L 876.8 254.4 L 878.8 254.2 L 881.3 256.9 L 881.0 258.7 Z M 232.9 496.2 L 226.0 499.3 L 227.3 496.6 L 231.8 493.2 L 233.0 494.0 L 232.9 496.2 Z M 218.7 541.7 L 217.6 541.9 L 215.4 543.1 L 214.3 543.2 L 211.1 541.9 L 209.9 541.9 L 208.3 540.9 L 208.8 535.8 L 209.3 534.3 L 217.1 534.1 L 221.4 537.2 L 222.1 538.0 L 222.2 538.9 L 220.3 540.6 L 218.7 541.7 Z M 193.9 138.6 L 195.4 140.3 L 195.5 141.3 L 194.6 142.5 L 195.0 145.0 L 191.3 142.9 L 185.7 144.0 L 182.3 143.7 L 181.3 141.8 L 182.1 140.7 L 187.4 140.5 L 189.1 139.9 L 192.3 140.2 L 193.9 138.6 Z M 109.4 305.8 L 106.8 310.2 L 104.2 307.1 L 104.1 304.5 L 104.4 303.7 L 107.7 304.8 L 109.4 305.8 Z M 100.9 218.8 L 99.4 220.8 L 97.3 220.7 L 98.1 219.2 L 100.0 216.2 L 102.4 215.2 L 103.4 216.1 L 102.3 217.8 L 100.9 218.8 Z M 377.9 447.7 L 376.4 449.1 L 372.2 449.0 L 368.5 446.8 L 368.4 442.1 L 372.7 443.1 L 376.6 446.2 L 377.9 447.7 Z M 407.3 85.5 L 407.9 87.0 L 402.4 84.1 L 400.4 82.2 L 400.0 81.3 L 407.3 85.5 Z M 388.7 45.1 L 383.3 46.1 L 380.7 44.4 L 380.0 43.0 L 375.5 42.6 L 372.8 40.6 L 372.3 39.8 L 376.1 37.6 L 378.1 34.2 L 380.7 36.3 L 383.9 40.1 L 385.6 41.2 L 388.7 45.1 Z M 389.6 54.8 L 390.7 56.7 L 386.6 54.9 L 382.9 54.3 L 382.1 52.9 L 382.6 51.9 L 383.4 50.8 L 386.2 51.0 L 386.6 52.0 L 389.6 54.8 Z M 405.4 73.4 L 404.2 74.6 L 401.4 72.4 L 398.8 70.9 L 396.9 69.1 L 393.2 66.8 L 392.0 64.2 L 386.5 58.9 L 385.7 57.5 L 388.4 59.6 L 390.7 61.0 L 392.6 61.3 L 397.3 64.7 L 402.0 69.0 L 407.6 72.8 L 406.5 72.9 L 405.4 73.4 Z M 405.4 91.7 L 406.0 92.3 L 403.7 92.1 L 392.3 82.7 L 391.1 80.8 L 395.0 83.1 L 405.4 91.7 Z M 413.4 89.4 L 416.3 92.7 L 413.6 92.0 L 410.7 90.0 L 409.0 87.8 L 413.4 89.4 Z M 374.5 59.1 L 374.1 60.8 L 371.4 58.7 L 370.1 54.8 L 366.7 48.5 L 366.3 46.7 L 368.0 45.0 L 367.9 43.2 L 365.6 37.7 L 367.6 36.8 L 368.7 36.7 L 369.2 40.5 L 370.3 42.7 L 373.6 45.4 L 372.9 49.9 L 373.6 56.2 L 374.2 57.6 L 374.5 59.1 Z M 512.1 142.5 L 518.1 145.6 L 500.5 141.6 L 502.5 141.2 L 504.4 141.2 L 512.1 142.5 Z M 644.7 336.0 L 645.2 341.1 L 648.3 342.1 L 652.5 346.7 L 652.1 349.0 L 651.2 349.8 L 644.4 347.7 L 642.7 348.6 L 640.7 348.2 L 639.5 345.7 L 639.6 344.8 L 638.5 343.3 L 637.6 342.6 L 634.9 344.6 L 633.2 345.0 L 633.2 343.2 L 635.7 338.1 L 636.8 337.2 L 638.9 338.9 L 640.6 338.3 L 641.8 335.5 L 641.9 332.8 L 642.5 332.0 L 644.7 336.0 Z M 656.8 361.5 L 661.5 365.8 L 657.8 364.8 L 653.8 367.7 L 648.7 364.3 L 645.7 360.7 L 645.0 359.3 L 648.2 356.0 L 651.1 359.4 L 654.7 360.0 L 656.8 361.5 Z M 647.9 326.1 L 646.2 326.4 L 644.8 326.2 L 643.4 326.4 L 642.1 327.2 L 642.3 323.7 L 643.8 319.4 L 645.6 316.9 L 648.3 315.7 L 649.4 317.7 L 649.2 324.8 L 647.9 326.1 Z M 651.1 338.4 L 648.9 338.9 L 646.2 334.7 L 645.2 331.8 L 646.3 331.6 L 647.4 331.9 L 648.6 333.0 L 648.6 334.2 L 649.0 335.4 L 650.3 336.8 L 651.1 338.4 Z M 621.1 289.7 L 622.0 292.2 L 616.5 290.7 L 612.5 288.5 L 609.2 283.0 L 602.2 276.8 L 602.1 275.0 L 604.7 273.6 L 610.5 272.6 L 612.9 273.7 L 614.4 274.7 L 614.9 275.9 L 611.6 278.3 L 610.9 279.3 L 613.4 281.5 L 613.4 282.4 L 614.4 286.5 L 615.7 288.1 L 618.9 289.3 L 621.1 289.7 Z M 774.3 356.2 L 772.6 357.3 L 770.6 357.2 L 769.2 356.8 L 768.5 356.0 L 769.4 355.6 L 770.4 353.8 L 771.3 353.3 L 772.7 353.6 L 773.6 354.3 L 774.3 356.2 Z M 752.4 432.8 L 751.9 434.7 L 747.3 433.4 L 746.1 431.4 L 745.8 427.0 L 747.0 424.9 L 747.8 424.2 L 749.9 426.7 L 754.3 430.3 L 752.4 432.8 Z M 856.0 378.6 L 851.8 378.8 L 852.0 375.5 L 853.6 374.6 L 858.7 376.3 L 858.4 377.3 L 856.0 378.6 Z M 817.2 391.5 L 815.6 392.2 L 812.9 391.2 L 813.6 388.8 L 815.5 387.8 L 817.5 388.6 L 817.8 389.7 L 817.2 391.5 Z M 1513.2 -13.2 L 1513.2 1141.9 L 1503.6 1135.3 L 1494.9 1134.1 L 1488.0 1129.8 L 1483.0 1124.2 L 1477.6 1114.5 L 1468.1 1104.1 L 1460.0 1089.2 L 1462.5 1083.8 L 1462.4 1080.0 L 1459.9 1073.6 L 1457.2 1068.7 L 1455.3 1064.0 L 1456.8 1057.3 L 1457.4 1049.9 L 1459.0 1045.9 L 1460.1 1041.5 L 1458.6 1032.7 L 1455.9 1028.0 L 1456.2 1024.8 L 1453.2 1023.3 L 1450.7 1019.9 L 1453.3 1019.9 L 1448.6 1015.2 L 1446.9 1012.6 L 1445.2 1006.1 L 1442.9 1001.2 L 1435.7 990.1 L 1432.2 983.3 L 1424.5 974.5 L 1416.1 968.0 L 1410.8 965.1 L 1408.2 962.4 L 1403.9 962.3 L 1399.1 958.5 L 1395.8 958.3 L 1391.6 957.7 L 1386.7 950.3 L 1382.6 943.4 L 1375.6 934.4 L 1377.4 932.1 L 1379.4 928.2 L 1378.4 923.2 L 1377.3 919.8 L 1374.2 913.6 L 1364.1 898.2 L 1361.5 895.9 L 1357.2 893.3 L 1354.5 886.6 L 1353.3 880.6 L 1346.4 877.7 L 1334.5 856.1 L 1327.7 848.6 L 1324.9 843.5 L 1317.0 835.1 L 1313.1 826.8 L 1305.1 819.2 L 1298.1 805.9 L 1287.4 792.6 L 1282.9 790.3 L 1271.8 789.3 L 1267.2 788.4 L 1262.9 791.3 L 1262.5 787.6 L 1265.4 782.5 L 1269.7 771.7 L 1270.5 762.3 L 1277.2 734.4 L 1278.6 728.6 L 1278.2 725.5 L 1275.2 728.9 L 1272.7 730.9 L 1267.8 738.1 L 1262.5 760.7 L 1255.0 778.4 L 1254.1 789.4 L 1252.9 793.4 L 1249.3 799.0 L 1245.0 804.5 L 1237.3 801.7 L 1224.7 792.0 L 1217.4 782.8 L 1209.5 776.9 L 1202.1 769.1 L 1200.1 763.4 L 1200.2 759.8 L 1196.9 751.0 L 1194.5 746.8 L 1185.5 737.4 L 1182.9 732.4 L 1180.9 730.1 L 1178.9 727.0 L 1175.6 714.8 L 1172.0 707.0 L 1167.9 709.2 L 1168.7 712.4 L 1165.1 716.9 L 1162.9 722.2 L 1164.6 726.5 L 1172.0 733.0 L 1173.5 735.8 L 1175.2 742.0 L 1174.9 750.3 L 1176.1 753.2 L 1181.7 759.4 L 1183.7 763.1 L 1184.8 766.3 L 1186.7 769.2 L 1192.2 774.6 L 1200.1 784.9 L 1207.6 791.9 L 1213.0 795.2 L 1215.3 798.6 L 1215.8 807.3 L 1215.4 811.4 L 1220.2 819.2 L 1221.9 823.2 L 1226.5 826.4 L 1228.6 830.1 L 1230.6 836.1 L 1233.5 853.7 L 1237.5 858.1 L 1249.8 881.3 L 1260.2 896.0 L 1265.3 906.9 L 1272.9 920.3 L 1288.0 949.6 L 1296.9 958.7 L 1300.5 963.8 L 1307.0 967.7 L 1314.0 973.3 L 1307.3 972.8 L 1305.6 973.1 L 1303.3 974.1 L 1302.1 977.5 L 1301.7 980.3 L 1302.5 995.2 L 1304.3 1002.7 L 1310.2 1017.1 L 1314.6 1021.4 L 1316.7 1024.2 L 1319.7 1026.2 L 1333.7 1031.1 L 1341.8 1041.4 L 1360.1 1054.5 L 1361.9 1058.1 L 1362.0 1059.0 L 1362.5 1069.0 L 1364.4 1077.1 L 1371.2 1088.6 L 1377.0 1094.7 L 1379.1 1098.2 L 1379.3 1099.7 L 1379.0 1101.2 L 1377.2 1099.5 L 1374.3 1098.4 L 1373.9 1103.7 L 1374.6 1107.6 L 1375.3 1114.8 L 1377.7 1122.5 L 1375.9 1129.6 L 1376.2 1141.7 L 1379.2 1156.2 L 1378.6 1165.5 L 1383.6 1187.1 L 1388.4 1199.1 L 1391.1 1202.1 L 1394.1 1203.6 L 1399.8 1204.7 L 1408.3 1210.8 L 1415.0 1217.2 L 1417.4 1220.6 L 1420.7 1224.3 L 1422.9 1223.6 L 1424.3 1222.6 L 1426.5 1225.6 L 1437.1 1232.1 L 1438.7 1235.1 L 1452.0 1260.6 L 1457.4 1275.6 L 1462.2 1291.4 L 1465.7 1315.0 L 1469.1 1327.0 L 1474.5 1332.9 L 1478.2 1344.2 L 1481.4 1344.6 L 1483.7 1347.7 L 1487.7 1358.2 L 1490.5 1362.1 L 1492.0 1358.8 L 1491.9 1356.8 L 1490.7 1353.6 L 1491.8 1349.4 L 1494.0 1346.9 L 1499.0 1350.3 L 1501.8 1352.9 L 1502.6 1358.1 L 1503.7 1360.9 L 1509.0 1367.0 L 1513.2 1368.7 L 1513.2 1601.5 L -13.2 1601.5 L -13.2 406.4 L -12.1 405.9 L 2.9 403.0 L 11.0 399.8 L 14.5 395.0 L 21.5 393.3 L 25.4 396.9 L 40.9 400.6 L 50.4 399.6 L 54.6 398.4 L 53.1 393.0 L 63.2 394.4 L 70.9 397.1 L 79.0 402.3 L 84.3 403.4 L 93.8 401.0 L 113.7 399.8 L 124.6 397.2 L 135.0 390.2 L 138.6 388.5 L 162.7 382.0 L 165.8 382.5 L 169.3 383.4 L 168.3 385.8 L 166.9 387.7 L 169.0 391.1 L 171.9 389.0 L 171.1 387.7 L 171.0 385.8 L 175.9 385.7 L 180.3 386.0 L 185.1 388.0 L 184.8 395.6 L 191.2 403.0 L 189.4 406.7 L 194.7 408.9 L 199.3 406.3 L 201.7 402.4 L 210.3 400.1 L 218.4 394.4 L 223.0 393.9 L 224.0 398.5 L 226.2 402.6 L 223.1 404.1 L 219.1 408.4 L 211.7 419.4 L 204.8 422.7 L 199.7 426.9 L 198.0 429.9 L 197.5 433.4 L 198.8 439.7 L 202.5 446.2 L 206.9 450.0 L 211.0 451.2 L 220.8 457.3 L 220.6 461.0 L 222.0 465.3 L 222.5 470.5 L 225.9 474.7 L 218.6 483.8 L 214.7 490.4 L 207.0 499.5 L 200.1 505.4 L 185.3 514.1 L 181.7 517.1 L 179.3 520.1 L 178.2 523.2 L 178.6 526.9 L 183.5 536.0 L 189.9 541.4 L 196.5 544.3 L 207.9 543.1 L 207.5 546.6 L 208.4 550.8 L 213.0 550.6 L 216.1 550.0 L 218.7 545.9 L 224.3 548.7 L 227.2 557.2 L 231.9 559.9 L 232.5 560.9 L 230.8 561.5 L 229.5 562.5 L 230.9 563.2 L 235.5 564.3 L 238.3 563.6 L 242.8 565.5 L 249.6 568.3 L 256.5 569.4 L 277.1 579.8 L 283.5 581.1 L 297.9 582.3 L 314.9 578.1 L 321.3 577.3 L 332.5 581.3 L 337.4 582.4 L 345.7 582.7 L 359.8 586.3 L 363.4 587.6 L 371.6 593.4 L 375.6 595.1 L 404.8 600.4 L 408.8 603.9 L 412.9 610.6 L 413.1 618.9 L 415.3 625.0 L 419.0 632.8 L 423.3 638.3 L 428.2 643.0 L 433.8 645.8 L 446.6 650.1 L 461.1 651.7 L 475.7 652.3 L 500.7 658.2 L 521.9 665.0 L 527.2 668.3 L 537.8 671.6 L 559.0 687.5 L 570.7 693.1 L 579.0 694.1 L 586.4 693.2 L 599.6 687.6 L 605.0 684.3 L 618.2 670.6 L 622.6 663.4 L 624.3 658.3 L 623.9 653.1 L 622.2 648.5 L 618.5 643.6 L 615.9 637.2 L 614.4 625.7 L 616.5 617.7 L 619.0 612.9 L 623.0 608.0 L 634.0 598.6 L 645.0 592.1 L 664.5 583.4 L 675.8 583.3 L 680.5 582.4 L 689.8 576.3 L 693.6 576.1 L 698.8 577.6 L 714.2 577.1 L 720.9 578.8 L 729.0 582.6 L 739.2 585.0 L 746.3 587.3 L 754.0 590.3 L 755.7 597.9 L 754.9 600.1 L 754.7 603.0 L 762.6 608.2 L 785.2 610.6 L 789.6 612.0 L 795.8 616.0 L 799.8 617.2 L 815.3 617.8 L 824.3 616.9 L 832.9 618.3 L 836.1 619.7 L 839.3 622.8 L 843.3 630.3 L 844.9 632.9 L 848.2 638.2 L 855.1 639.1 L 877.6 634.4 L 902.5 639.2 L 916.3 641.0 L 937.4 645.1 L 950.3 652.4 L 953.8 653.3 L 963.1 653.2 L 969.2 657.5 L 993.3 659.5 L 1006.2 664.3 L 1013.5 668.1 L 1017.9 669.3 L 1021.8 669.1 L 1027.0 667.6 L 1033.6 665.0 L 1040.8 661.3 L 1055.7 651.7 L 1061.0 650.1 L 1064.5 650.5 L 1068.6 650.4 L 1070.4 647.8 L 1072.6 646.0 L 1074.0 644.0 L 1076.3 641.6 L 1084.0 640.9 L 1099.6 636.8 L 1097.8 638.7 L 1083.7 643.4 L 1089.7 643.9 L 1095.9 642.4 L 1103.0 641.3 L 1104.3 639.4 L 1105.2 635.7 L 1106.6 635.1 L 1111.5 635.8 L 1126.1 641.5 L 1129.7 641.7 L 1140.0 638.5 L 1142.2 637.9 L 1145.5 639.6 L 1153.1 646.7 L 1150.4 646.6 L 1142.3 640.5 L 1141.6 643.5 L 1137.0 648.9 L 1142.7 651.2 L 1147.4 652.0 L 1150.0 655.0 L 1151.5 657.7 L 1156.2 656.5 L 1159.5 652.9 L 1157.8 650.9 L 1156.6 648.8 L 1158.1 648.8 L 1161.3 650.5 L 1170.6 657.3 L 1173.7 658.7 L 1177.3 658.5 L 1184.8 656.6 L 1186.8 656.9 L 1196.9 654.3 L 1198.1 656.2 L 1199.8 658.0 L 1207.8 656.0 L 1220.6 656.0 L 1231.0 653.8 L 1243.1 648.4 L 1244.0 647.5 L 1252.4 640.4 L 1256.4 636.0 L 1265.2 622.2 L 1270.8 609.0 L 1276.0 590.6 L 1279.7 581.2 L 1282.8 575.0 L 1284.2 569.8 L 1286.3 566.5 L 1288.4 562.1 L 1290.5 556.2 L 1294.2 551.3 L 1301.9 534.7 L 1306.4 528.0 L 1308.0 518.5 L 1314.9 510.1 L 1320.1 507.6 L 1322.6 505.3 L 1322.5 501.7 L 1319.1 491.8 L 1318.6 487.6 L 1318.7 482.6 L 1321.0 475.4 L 1319.9 472.1 L 1319.8 469.8 L 1319.2 466.7 L 1313.1 460.1 L 1316.5 447.8 L 1318.8 444.9 L 1321.6 441.3 L 1318.5 434.2 L 1315.2 427.5 L 1318.4 423.2 L 1324.9 418.1 L 1331.8 412.1 L 1331.8 408.4 L 1331.5 405.6 L 1329.5 403.6 L 1325.7 401.0 L 1319.3 403.8 L 1314.8 406.8 L 1311.8 407.5 L 1308.6 409.2 L 1307.0 412.4 L 1303.1 414.8 L 1296.8 415.8 L 1287.2 413.2 L 1276.9 409.2 L 1271.1 405.9 L 1266.3 405.1 L 1261.8 406.6 L 1248.5 414.5 L 1236.3 426.1 L 1233.3 428.2 L 1221.8 433.1 L 1214.2 434.8 L 1210.7 434.4 L 1195.6 436.6 L 1188.1 437.0 L 1182.1 439.6 L 1170.6 436.7 L 1163.7 433.1 L 1159.6 429.4 L 1152.8 421.4 L 1148.0 417.6 L 1137.3 414.1 L 1118.5 405.8 L 1113.6 404.9 L 1100.7 403.7 L 1087.2 403.0 L 1084.5 406.0 L 1083.5 418.0 L 1081.1 421.3 L 1080.2 427.5 L 1078.5 429.3 L 1075.9 430.4 L 1071.9 428.5 L 1069.0 427.6 L 1062.5 430.2 L 1049.5 433.8 L 1045.1 434.3 L 1030.1 429.8 L 1024.6 426.9 L 1021.0 423.7 L 1019.8 418.2 L 1017.6 415.1 L 1017.3 413.0 L 1016.4 410.6 L 1013.4 409.6 L 1010.1 411.5 L 1006.6 411.4 L 1002.3 410.3 L 991.9 405.7 L 984.0 405.4 L 979.2 410.9 L 975.5 412.7 L 971.4 413.2 L 971.2 411.6 L 974.3 408.0 L 961.9 408.7 L 955.4 411.4 L 950.3 411.0 L 946.5 409.8 L 947.1 408.2 L 950.9 407.7 L 954.3 406.5 L 967.7 405.5 L 970.8 404.5 L 974.3 400.6 L 980.5 397.2 L 981.3 395.8 L 976.5 395.8 L 956.0 396.7 L 941.9 396.2 L 940.2 397.9 L 938.1 398.1 L 937.5 393.6 L 939.7 391.5 L 942.7 391.7 L 950.1 389.8 L 949.4 386.1 L 944.1 383.5 L 943.1 382.0 L 939.2 381.7 L 936.1 379.9 L 935.5 375.4 L 933.0 370.4 L 929.5 368.0 L 929.9 366.7 L 936.4 365.1 L 937.7 358.1 L 936.7 353.9 L 933.5 353.5 L 924.0 350.2 L 921.1 350.5 L 918.0 346.8 L 912.5 344.2 L 909.8 345.2 L 908.0 346.4 L 905.5 345.8 L 901.2 343.5 L 897.0 342.2 L 895.2 340.7 L 897.5 336.6 L 900.7 336.7 L 901.3 333.5 L 898.8 328.2 L 899.0 325.4 L 901.8 324.7 L 905.0 325.2 L 908.2 328.4 L 909.3 331.5 L 908.6 334.5 L 910.6 337.4 L 912.1 338.1 L 913.1 335.1 L 914.4 334.5 L 916.3 335.8 L 920.4 336.5 L 930.8 334.6 L 932.8 333.0 L 925.2 333.2 L 922.4 331.7 L 919.3 328.3 L 917.4 325.3 L 917.1 323.8 L 916.0 321.6 L 917.2 320.5 L 922.5 318.7 L 927.1 313.8 L 925.2 312.4 L 923.0 311.7 L 920.6 312.2 L 918.3 310.5 L 918.0 308.2 L 919.8 306.3 L 920.0 303.7 L 914.1 297.3 L 912.4 295.9 L 913.7 293.8 L 918.2 290.3 L 922.5 286.0 L 922.0 284.6 L 918.8 284.0 L 903.7 285.9 L 897.8 287.5 L 887.3 288.2 L 886.6 285.8 L 886.8 283.7 L 889.2 279.9 L 889.0 270.3 L 890.4 265.1 L 896.2 263.6 L 903.3 256.0 L 914.9 247.0 L 927.0 247.2 L 931.8 244.7 L 939.0 244.6 L 940.3 246.4 L 941.1 248.1 L 947.5 250.6 L 958.6 250.2 L 961.3 249.2 L 963.9 247.9 L 958.8 243.5 L 960.4 242.2 L 965.1 242.1 L 970.1 243.1 L 970.4 244.1 L 969.0 245.5 L 967.5 247.9 L 968.9 248.4 L 983.3 246.9 L 998.4 248.1 L 1003.2 247.5 L 1015.0 247.5 L 1017.1 246.0 L 1013.6 244.1 L 1010.1 243.4 L 1007.7 242.5 L 1005.3 241.1 L 1012.9 236.9 L 1017.1 236.1 L 1037.1 233.5 L 1052.0 232.1 L 1052.2 231.2 L 1050.0 231.2 L 1030.8 229.0 L 1026.2 227.3 L 1019.7 223.3 L 1018.3 222.2 L 1016.7 220.3 L 1017.7 216.1 L 1018.9 212.8 L 1021.2 210.8 L 1028.9 210.5 L 1055.3 213.9 L 1074.0 211.9 L 1094.6 216.8 L 1114.2 215.8 L 1118.2 213.6 L 1123.1 206.5 L 1150.9 194.6 L 1160.6 188.4 L 1171.0 185.0 L 1188.8 181.2 L 1203.7 176.3 L 1208.0 175.7 L 1243.8 178.1 L 1268.4 178.4 L 1279.7 173.7 L 1286.2 175.3 L 1285.6 176.9 L 1284.4 178.4 L 1284.8 181.3 L 1288.6 185.5 L 1292.5 188.4 L 1304.0 192.6 L 1320.0 189.1 L 1322.6 189.5 L 1325.8 190.5 L 1331.4 201.8 L 1335.8 205.8 L 1341.4 208.5 L 1346.0 209.0 L 1349.4 206.2 L 1352.1 205.0 L 1357.8 204.6 L 1367.3 208.4 L 1370.6 212.5 L 1386.7 215.6 L 1401.4 217.1 L 1407.8 220.5 L 1428.6 223.9 L 1436.3 223.4 L 1449.4 219.8 L 1474.7 215.9 L 1491.5 221.4 L 1496.1 222.1 L 1500.0 221.6 L 1505.7 223.1 L 1511.7 222.3 L 1513.2 221.8 L 1513.2 121.5 L 1508.4 118.6 L 1499.0 113.8 L 1494.4 111.5 L 1478.7 100.2 L 1470.4 92.8 L 1443.4 75.5 L 1439.8 74.2 L 1425.5 71.7 L 1419.8 69.7 L 1405.2 57.4 L 1398.7 59.1 L 1392.9 58.6 L 1389.5 57.6 L 1385.8 55.8 L 1383.2 53.5 L 1380.2 48.3 L 1376.7 45.4 L 1365.2 41.0 L 1352.2 38.5 L 1351.2 37.4 L 1350.8 35.9 L 1362.0 33.0 L 1365.1 31.3 L 1359.3 29.1 L 1357.1 28.7 L 1355.3 27.7 L 1358.5 26.0 L 1361.7 25.3 L 1366.7 27.2 L 1372.2 30.8 L 1377.1 32.1 L 1379.3 30.4 L 1396.2 27.5 L 1397.3 25.2 L 1397.3 22.6 L 1395.6 22.7 L 1394.6 22.1 L 1394.7 19.2 L 1397.2 15.3 L 1404.7 8.8 L 1408.8 -0.1 L 1412.4 -2.1 L 1415.0 -0.8 L 1414.8 1.3 L 1415.3 2.9 L 1417.6 -0.1 L 1419.9 -4.2 L 1425.5 -4.2 L 1429.4 -3.5 L 1433.5 -4.0 L 1425.7 -10.7 L 1421.7 -13.2 L 1294.2 -13.2 L 1290.7 -9.0 L 1288.4 -7.5 L 1285.2 -5.6 L 1281.9 -4.6 L 1280.1 -4.7 L 1289.0 -10.2 L 1291.8 -12.3 L 1292.1 -13.2 L 1283.6 -13.2 L 1282.2 -11.8 L 1278.1 -10.7 L 1272.8 -8.4 L 1272.5 -3.2 L 1273.1 0.6 L 1275.3 5.3 L 1280.4 13.2 L 1290.9 24.4 L 1295.9 28.5 L 1299.6 30.2 L 1304.0 30.4 L 1312.5 26.9 L 1316.2 26.4 L 1324.1 27.7 L 1326.9 25.4 L 1331.1 24.1 L 1336.3 24.0 L 1342.4 25.0 L 1348.9 26.8 L 1346.2 30.7 L 1343.4 33.9 L 1342.4 37.4 L 1340.9 41.2 L 1333.7 43.0 L 1325.9 42.8 L 1317.8 43.9 L 1314.9 42.4 L 1312.9 41.0 L 1309.3 39.6 L 1304.5 38.9 L 1300.3 39.8 L 1295.2 45.1 L 1286.2 48.7 L 1283.3 52.8 L 1274.5 51.9 L 1266.9 52.6 L 1256.0 56.4 L 1247.7 64.5 L 1238.6 69.5 L 1231.3 71.1 L 1224.5 70.6 L 1220.1 69.1 L 1211.1 63.8 L 1211.6 61.9 L 1212.9 60.9 L 1214.6 58.2 L 1218.2 48.2 L 1217.7 44.9 L 1215.7 39.8 L 1208.5 35.8 L 1202.7 36.6 L 1199.4 35.5 L 1187.6 28.8 L 1181.1 28.3 L 1174.0 29.6 L 1171.4 28.7 L 1169.5 26.3 L 1183.6 18.0 L 1197.5 11.1 L 1203.5 10.4 L 1211.7 7.1 L 1220.5 2.3 L 1219.3 -1.4 L 1217.4 -4.2 L 1213.2 -3.5 L 1210.1 -2.5 L 1202.8 -5.5 L 1200.1 -7.8 L 1188.6 -5.5 L 1182.2 -5.8 L 1168.1 -3.7 L 1161.6 -5.8 L 1148.6 -11.5 L 1143.8 -12.7 L 1139.6 -12.4 L 1138.7 -13.2 L 1088.4 -13.2 L 1087.8 -11.8 L 1081.4 -4.6 L 1080.6 -4.0 L 1068.5 5.9 L 1066.9 6.6 L 1059.1 8.9 L 1054.5 10.9 L 1050.9 11.8 L 1044.9 10.8 L 1042.4 12.2 L 1041.2 14.0 L 1041.2 17.6 L 1044.3 20.3 L 1046.8 29.0 L 1045.8 32.7 L 1045.1 35.6 L 1044.6 37.4 L 1042.7 45.0 L 1041.4 47.8 L 1039.3 51.0 L 1016.8 54.8 L 1018.3 53.0 L 1017.8 49.8 L 1016.8 47.4 L 1018.9 45.2 L 1013.9 44.4 L 1011.6 45.6 L 1009.9 47.7 L 1011.4 52.5 L 1009.0 55.1 L 1008.0 56.6 L 1007.9 60.1 L 1006.5 61.7 L 1006.2 63.3 L 1009.8 62.9 L 1008.2 65.9 L 1001.4 71.7 L 999.1 75.2 L 999.6 88.9 L 996.6 97.2 L 996.4 99.6 L 995.4 110.2 L 991.1 115.2 L 984.7 113.5 L 976.5 114.9 L 972.1 120.5 L 969.7 122.2 L 967.5 124.1 L 966.0 131.4 L 965.7 143.4 L 962.6 144.9 L 959.7 145.3 L 947.9 155.8 L 954.7 158.8 L 957.7 161.0 L 962.7 167.3 L 969.8 174.4 L 971.2 177.8 L 970.0 182.9 L 972.8 188.4 L 979.3 196.1 L 985.9 200.0 L 1012.4 209.6 L 1017.2 210.5 L 1016.1 214.4 L 1014.5 217.9 L 1012.8 220.2 L 1005.0 221.7 L 983.6 217.4 L 978.2 217.0 L 974.4 217.9 L 967.3 221.0 L 959.4 220.0 L 948.5 221.8 L 945.4 227.6 L 937.9 234.4 L 925.4 239.8 L 916.4 242.7 L 903.0 253.2 L 896.9 259.3 L 894.3 260.4 L 891.3 261.4 L 892.3 258.5 L 893.8 255.8 L 893.5 253.8 L 893.6 250.8 L 898.0 247.5 L 902.1 245.1 L 914.1 240.7 L 917.3 237.1 L 907.9 237.1 L 898.3 238.0 L 892.2 237.4 L 887.0 237.7 L 885.3 234.6 L 884.1 232.6 L 882.8 230.8 L 876.0 227.5 L 860.2 225.5 L 852.6 223.1 L 849.3 223.6 L 842.8 220.8 L 838.4 222.0 L 829.1 226.9 L 824.1 226.3 L 818.7 223.4 L 815.2 222.9 L 811.0 224.4 L 804.5 230.0 L 797.7 232.8 L 791.7 231.7 L 783.7 231.7 L 782.8 234.8 L 784.4 237.0 L 788.8 240.7 L 786.7 243.5 L 788.2 246.2 L 791.1 246.8 L 795.5 246.6 L 803.5 250.2 L 807.0 254.0 L 809.3 258.2 L 804.4 255.2 L 801.1 252.4 L 796.6 251.3 L 790.3 248.9 L 786.3 248.5 L 782.1 250.2 L 781.8 252.1 L 786.3 255.7 L 790.5 257.9 L 792.7 259.7 L 794.2 263.6 L 793.3 265.0 L 791.8 266.2 L 786.9 263.7 L 779.3 254.8 L 768.8 253.1 L 767.0 254.9 L 769.1 259.6 L 770.6 261.4 L 779.7 266.5 L 779.0 267.6 L 777.7 268.1 L 767.5 265.2 L 764.5 260.7 L 763.8 255.2 L 754.3 251.3 L 745.4 247.1 L 743.4 243.1 L 745.3 241.6 L 746.6 238.6 L 741.7 239.2 L 738.6 241.0 L 733.7 242.8 L 733.5 245.8 L 734.2 248.5 L 732.6 252.5 L 731.0 259.4 L 732.0 263.1 L 742.8 273.5 L 746.4 281.1 L 749.1 283.9 L 754.6 287.1 L 760.3 293.0 L 762.7 296.1 L 764.5 301.1 L 759.6 304.2 L 756.8 304.3 L 755.3 303.0 L 757.4 299.5 L 757.1 297.5 L 749.7 294.2 L 746.5 295.3 L 742.9 297.4 L 745.0 301.3 L 747.3 303.9 L 748.5 307.5 L 752.9 307.1 L 746.9 311.1 L 741.3 313.2 L 735.7 313.3 L 732.2 313.7 L 731.0 314.7 L 733.9 315.4 L 736.2 315.5 L 740.0 317.6 L 750.9 320.2 L 756.1 323.5 L 761.2 323.8 L 766.3 329.8 L 775.1 331.3 L 780.2 337.4 L 786.9 338.6 L 792.7 340.8 L 794.4 342.9 L 795.2 346.8 L 795.6 354.9 L 796.8 361.0 L 796.9 362.9 L 796.6 365.8 L 795.0 367.2 L 792.9 367.2 L 788.7 362.7 L 782.3 358.1 L 775.6 352.5 L 773.7 351.5 L 772.1 351.4 L 768.5 353.3 L 758.5 354.7 L 753.9 356.8 L 752.1 357.2 L 751.6 358.3 L 753.8 359.4 L 756.5 362.0 L 756.5 365.5 L 758.7 369.7 L 761.6 370.8 L 765.3 370.7 L 767.5 371.5 L 768.0 373.2 L 770.2 375.1 L 771.6 376.6 L 771.6 377.6 L 761.1 380.4 L 759.0 381.7 L 757.1 382.3 L 754.4 381.0 L 754.3 377.6 L 750.7 375.8 L 747.4 374.2 L 743.4 373.6 L 740.1 371.2 L 737.9 373.1 L 739.6 379.7 L 743.4 384.2 L 749.8 396.4 L 752.7 403.5 L 753.2 407.0 L 751.8 412.7 L 754.9 417.0 L 757.1 421.4 L 754.7 421.2 L 752.7 419.7 L 749.2 417.9 L 742.6 410.9 L 740.3 406.5 L 737.5 406.1 L 732.7 406.8 L 727.5 416.1 L 727.5 421.5 L 724.8 420.2 L 722.4 418.5 L 722.7 412.7 L 722.5 410.2 L 716.1 402.2 L 713.2 401.3 L 711.8 398.7 L 709.4 395.8 L 706.4 396.3 L 703.9 397.5 L 703.2 401.8 L 703.0 405.7 L 701.1 408.6 L 694.3 403.1 L 687.5 393.5 L 687.3 388.2 L 692.3 383.4 L 691.7 380.0 L 687.0 373.2 L 680.1 368.8 L 676.3 367.5 L 674.5 362.9 L 670.8 360.5 L 667.9 359.4 L 667.3 357.7 L 668.2 356.5 L 675.4 351.7 L 679.6 344.3 L 681.7 343.9 L 686.0 345.7 L 690.8 345.2 L 694.8 340.8 L 698.1 338.5 L 703.8 338.8 L 716.6 344.6 L 730.4 347.9 L 737.3 350.9 L 741.2 353.8 L 743.2 354.4 L 746.5 354.8 L 746.3 352.6 L 745.3 350.7 L 748.0 349.6 L 755.4 349.7 L 756.7 348.7 L 758.1 347.0 L 756.6 345.2 L 754.1 344.3 L 751.5 344.0 L 749.8 343.4 L 747.0 344.0 L 742.7 342.6 L 740.5 341.4 L 739.1 340.2 L 731.6 337.7 L 724.5 333.6 L 722.9 335.9 L 720.0 337.2 L 715.9 337.4 L 704.4 334.7 L 697.3 336.8 L 693.4 337.3 L 690.4 337.3 L 686.8 338.2 L 682.6 338.8 L 679.0 334.9 L 677.4 332.0 L 676.4 331.4 L 676.3 334.2 L 675.1 336.4 L 669.8 337.7 L 666.8 336.0 L 664.4 330.7 L 661.4 324.1 L 656.2 318.7 L 651.9 317.3 L 651.6 314.4 L 651.9 312.0 L 657.1 311.4 L 665.0 313.9 L 666.7 313.4 L 668.5 312.3 L 668.1 309.7 L 667.0 307.5 L 664.8 307.4 L 663.3 307.7 L 658.4 307.2 L 652.0 308.4 L 649.1 307.3 L 648.1 305.8 L 642.9 302.3 L 638.3 297.6 L 630.9 294.4 L 626.1 284.7 L 622.0 280.5 L 617.7 277.5 L 617.5 273.5 L 616.1 270.3 L 611.1 262.8 L 594.9 255.4 L 591.1 252.1 L 589.4 249.4 L 587.7 246.7 L 589.3 246.7 L 590.9 247.3 L 593.0 248.1 L 593.8 246.8 L 592.9 244.0 L 588.7 237.3 L 588.4 235.4 L 590.5 229.8 L 593.9 223.5 L 593.6 215.9 L 594.7 210.2 L 593.5 206.4 L 593.0 201.8 L 595.5 195.8 L 597.6 194.3 L 598.9 192.3 L 599.0 185.8 L 594.2 182.8 L 588.6 182.2 L 581.8 178.7 L 578.9 173.8 L 568.9 165.5 L 557.3 159.8 L 556.7 158.9 L 557.4 157.8 L 557.9 156.9 L 555.5 156.9 L 553.8 157.6 L 552.2 157.4 L 544.1 153.2 L 536.5 148.5 L 521.6 141.3 L 511.1 139.5 L 496.7 133.7 L 487.3 131.7 L 490.9 131.2 L 495.0 131.2 L 517.2 138.9 L 514.7 136.9 L 511.1 135.1 L 509.0 134.0 L 499.8 127.3 L 491.0 123.0 L 481.0 115.0 L 467.7 111.9 L 458.6 108.4 L 453.0 108.9 L 447.0 110.0 L 443.2 110.1 L 440.5 109.4 L 438.6 107.3 L 438.9 105.6 L 438.6 103.4 L 433.3 99.9 L 426.0 96.6 L 419.1 92.3 L 405.3 80.6 L 402.5 76.9 L 405.2 76.2 L 407.3 76.3 L 409.6 75.5 L 413.4 75.5 L 417.8 76.2 L 413.9 73.8 L 409.0 71.3 L 396.2 61.6 L 392.4 57.1 L 392.0 52.1 L 392.9 45.4 L 390.6 40.5 L 380.8 34.3 L 377.2 31.0 L 370.0 29.0 L 366.7 29.2 L 364.8 31.7 L 363.4 37.1 L 356.9 44.2 L 354.8 47.3 L 351.4 51.4 L 348.5 51.6 L 346.8 51.3 L 341.6 44.5 L 336.6 39.3 L 335.9 36.9 L 335.4 33.9 L 331.6 22.9 L 334.3 21.3 L 336.9 20.5 L 340.6 18.2 L 343.4 16.4 L 336.5 10.1 L 333.5 10.1 L 329.3 12.8 L 317.9 10.1 L 315.7 11.2 L 314.1 13.3 L 310.2 16.0 L 304.5 17.2 L 298.3 20.1 L 291.7 22.2 L 286.7 23.7 L 283.8 23.5 L 288.4 20.1 L 286.4 20.0 L 280.3 22.4 L 276.8 24.4 L 275.7 27.8 L 274.7 33.5 L 277.3 35.0 L 282.0 42.4 L 287.8 45.5 L 286.7 48.6 L 285.2 50.9 L 281.7 53.0 L 278.8 51.5 L 277.0 51.5 L 275.7 56.4 L 278.2 69.3 L 282.2 78.4 L 286.2 82.3 L 295.2 88.5 L 304.7 91.7 L 321.9 102.1 L 331.2 105.4 L 333.7 107.1 L 339.4 115.2 L 344.3 124.4 L 349.6 138.9 L 353.4 146.0 L 361.0 154.1 L 376.8 165.7 L 391.2 174.2 L 404.5 179.4 L 414.9 180.3 L 439.6 179.1 L 443.9 179.6 L 448.4 181.1 L 449.5 184.7 L 447.9 187.1 L 442.7 189.7 L 437.4 193.2 L 436.8 198.0 L 441.7 201.4 L 465.5 210.4 L 489.9 217.8 L 497.4 221.7 L 506.2 227.6 L 527.4 235.8 L 531.0 239.8 L 543.9 248.3 L 549.7 255.0 L 550.8 260.1 L 548.1 265.3 L 546.8 269.0 L 544.6 272.6 L 539.1 271.2 L 532.8 267.5 L 523.5 252.3 L 506.3 250.8 L 502.8 249.7 L 496.7 247.1 L 496.3 245.4 L 494.8 243.2 L 493.2 242.5 L 486.7 242.1 L 482.1 244.5 L 476.8 250.3 L 470.7 258.7 L 464.6 270.9 L 464.2 275.8 L 467.5 280.6 L 477.5 283.3 L 485.3 287.6 L 490.3 292.0 L 490.7 302.8 L 493.0 308.9 L 489.6 312.4 L 483.2 311.5 L 474.5 313.7 L 468.4 317.6 L 465.8 321.4 L 466.5 331.2 L 465.2 334.9 L 453.6 341.9 L 447.5 349.1 L 446.0 352.1 L 443.7 355.5 L 429.0 355.6 L 425.6 351.4 L 425.4 345.2 L 427.9 341.4 L 433.3 339.6 L 437.0 331.6 L 435.8 325.9 L 438.0 323.3 L 440.0 321.5 L 444.1 320.5 L 449.9 319.4 L 450.4 311.4 L 445.9 307.8 L 444.3 302.7 L 442.2 293.2 L 434.8 281.2 L 430.8 270.4 L 427.6 265.1 L 422.9 262.4 L 414.3 262.4 L 410.1 261.6 L 394.9 254.2 L 393.8 253.0 L 393.9 251.0 L 396.4 248.1 L 394.7 244.0 L 393.0 240.2 L 390.0 236.9 L 386.7 235.2 L 379.9 236.3 L 377.5 237.1 L 373.2 236.8 L 369.8 238.2 L 367.9 238.3 L 373.3 232.6 L 371.8 231.2 L 366.6 228.9 L 359.4 228.5 L 357.5 228.2 L 356.3 229.7 L 354.9 228.9 L 355.0 226.3 L 346.8 214.9 L 341.2 210.2 L 338.4 209.4 L 333.3 210.3 L 324.8 208.3 L 319.7 207.8 L 316.9 208.3 L 312.7 209.8 L 310.6 208.8 L 309.9 207.3 L 302.2 202.6 L 292.5 199.9 L 273.8 184.7 L 268.0 179.1 L 256.2 172.9 L 248.7 163.8 L 242.6 160.5 L 233.7 157.8 L 231.6 158.1 L 228.9 159.1 L 226.8 159.3 L 225.1 158.1 L 226.8 156.9 L 228.7 156.3 L 228.0 152.9 L 217.8 143.9 L 211.9 141.0 L 210.2 139.2 L 209.0 136.8 L 207.7 135.2 L 204.9 134.2 L 202.5 134.4 L 199.2 133.8 L 199.3 129.5 L 200.0 126.2 L 199.4 123.4 L 196.2 116.0 L 190.6 109.7 L 187.3 94.8 L 184.8 90.6 L 178.6 87.4 L 164.6 83.8 L 145.1 74.2 L 141.0 74.0 L 129.3 70.2 L 122.0 69.6 L 112.6 73.0 L 101.1 82.2 L 91.8 91.8 L 88.5 93.7 L 76.5 96.9 L 65.9 98.5 L 55.7 101.6 L 52.1 103.3 L 38.2 113.0 L 31.6 115.9 L 30.3 117.6 L 29.0 120.8 L 25.2 123.6 L 21.8 124.9 L 13.5 126.2 L 5.1 129.2 L 1.3 127.9 L -8.4 128.0 L -13.2 125.2 L -13.2 -13.2 Z";
+const ROUTES = [
+  { id: "odysseus", label: "Odysseus's ten years home", color: "#5f8a85", path: ["troy","aeaea","ithaca"] },
+  { id: "aeneas",   label: "Aeneas's flight from Troy",  color: "#c8703c", path: ["troy","carthage","albalonga"] },
+  { id: "theseus",  label: "Theseus to Crete and Naxos", color: "#a2453a", path: ["attica","crete","naxos","attica"] },
+  { id: "perseus",  label: "Perseus and the Gorgon's head", color: "#dda94b", path: ["seriphos","ethiopia","argos","mycenae"] },
+  { id: "helen",    label: "Helen taken to Troy",        color: "#b6543f", path: ["sparta","troy"] },
+  { id: "muster",   label: "The fleet musters for Troy", color: "#8fbf7a", path: ["ithaca","mycenae","sparta","troy"] },
+];
+const routeState = Object.fromEntries(ROUTES.map(r => [r.id, false]));
+
+const geoSvg = document.getElementById("geoSvg");
+const geoWorld = el("g", { id: "geoWorld" });
+geoSvg.appendChild(geoWorld);
+/* default view: centred on the Aegean/Italy cluster; Ethiopia sits far
+   south and is reached by panning down, same as the real geography */
+const geoView = { k: 0.62, tx: 40, ty: -30 };
+function applyGeoView(){
+  geoWorld.setAttribute("transform",
+    "translate(" + geoView.tx + "," + geoView.ty + ") scale(" + geoView.k + ")");
+}
+
+geoWorld.appendChild(el("path", { id: "coastPath", d: COAST_PATH,
+  style: "fill:var(--land);stroke:var(--rule)", "stroke-width": 0.8, "fill-rule": "evenodd", opacity: 0.92 }));
+
+const routeLayer = el("g");
+geoWorld.appendChild(routeLayer);
+function drawRoutes(){
+  routeLayer.innerHTML = "";
+  const active = state.hovered || state.selected;
+  ROUTES.forEach(r => {
+    if (!routeState[r.id]) return;
+    const pts = r.path.map(id => GEO_POS[id]).filter(Boolean);
+    if (pts.length < 2) return;
+    let d = "M " + pts[0].x + " " + pts[0].y;
+    for (let i = 1; i < pts.length; i++){
+      const p0 = pts[i-1], p1 = pts[i];
+      const mx = (p0.x+p1.x)/2, my = (p0.y+p1.y)/2;
+      const dx = p1.x-p0.x, dy = p1.y-p0.y, len = Math.hypot(dx,dy)||1;
+      const bow = Math.min(30, len*0.15);
+      const cx = mx + (-dy/len)*bow, cy = my + (dx/len)*bow;
+      d += " Q " + cx + " " + cy + " " + p1.x + " " + p1.y;
+    }
+    const touches = active && r.path.includes(active);
+    const opacity = active ? (touches ? 0.98 : 0.1) : 0.85;
+    const width = touches ? 4.4 : 3;
+    routeLayer.appendChild(el("path", { d, fill: "none", stroke: r.color, "stroke-width": width,
+      "stroke-linecap": "round", opacity, "marker-end": "url(#routeArrow)" }));
+  });
+}
+
+/* arrowhead marker for routes */
+const geoDefs = el("defs");
+geoDefs.innerHTML = '<marker id="routeArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="context-stroke"/></marker>';
+geoWorld.insertBefore(geoDefs, geoWorld.firstChild);
+
+const geoNodeEls = [];
+Object.entries(GEO_POS).forEach(([id, p]) => {
+  const n = BY_ID[id]; if (!n) return;
+  const g = el("g", { style: "cursor:pointer" });
+  g.dataset.id = id;
+  const shape = el("circle", { cx: p.x, cy: p.y, r: 7, style: "fill:var(--aegean);stroke:var(--ground)", "stroke-width": 1.4 });
+  g.appendChild(shape);
+  const label = el("text", { x: p.x, y: p.y - 12, "text-anchor": "middle", "font-size": 12.5,
+    "font-family": "'Spectral',serif", style: "fill:var(--ivory)", "font-weight": 500 });
+  label.textContent = n.name;
+  g.appendChild(label);
+  if (n.gk){
+    const gk = el("text", { x: p.x, y: p.y + 20, "text-anchor": "middle", "font-size": 9,
+      "font-family": "'GFS Didot',serif", style: "fill:var(--dilute)", "letter-spacing": 1.2, opacity: 0.8 });
+    gk.textContent = n.gk;
+    g.appendChild(gk);
+  }
+  geoWorld.appendChild(g);
+  geoNodeEls.push({ g, shape, n });
+});
+
+const geoZoom = wireCanvas(geoSvg, geoView, {
+  onView: applyGeoView,
+  onHover: applyGeoFocus,
+  onClick: id => { if (!id){ select(null); return; } select(id === state.selected ? null : id); }
+});
+
+function geoCenterOn(id){
+  const p = GEO_POS[id]; if (!p) return;
+  const k = Math.max(geoView.k, 0.9);
+  geoView.k = k; geoView.tx = stage.clientWidth / 2 - p.x * k; geoView.ty = stage.clientHeight / 2 - p.y * k;
+  applyGeoView();
+}
+function resetGeoView(){
+  geoView.k = 0.62; geoView.tx = 40; geoView.ty = -30; applyGeoView();
+}
+
+function applyGeoFocus(){
+  const active = state.hovered || state.selected;
+  const focus = active ? new Set([active, ...(ADJ[active] || [])]) : null;
+  geoNodeEls.forEach(({ g, shape, n }) => {
+    const dim = focus && !focus.has(n.id);
+    const on = active === n.id;
+    g.setAttribute("opacity", dim ? 0.18 : 1);
+    shape.setAttribute("r", on ? 9 : 7);
+  });
+  drawRoutes();
+}
+
+const routeLegend = document.getElementById("routeLegend");
+function buildRouteLegend(){
+  routeLegend.innerHTML =
+    '<div class="meander" style="margin:0"></div><div style="padding:14px 16px 16px">' +
+    "<h4>Routes — click to trace</h4>" +
+    ROUTES.map(r =>
+      '<button class="lrow' + (routeState[r.id] ? "" : " off") + '" data-route="' + r.id + '">' +
+        '<svg width="30" height="8" style="flex:0 0 auto"><line x1="0" y1="4" x2="30" y2="4" stroke="' +
+        r.color + '" stroke-width="2.6"/></svg>' + r.label +
+      "</button>").join("") +
+    "</div>";
+}
+buildRouteLegend();
+routeLegend.addEventListener("click", e => {
+  const b = e.target.closest("[data-route]");
+  if (!b) return;
+  const k = b.dataset.route;
+  routeState[k] = !routeState[k];
+  b.classList.toggle("off", !routeState[k]);
+  drawRoutes();
+});
+const geoKeyBtn = document.createElement("button");
+geoKeyBtn.className = "btn"; geoKeyBtn.id = "geoKeyBtn"; geoKeyBtn.textContent = "routes";
+geoKeyBtn.style.marginLeft = "auto";
+geoKeyBtn.onclick = () => {
+  routeLegend.classList.toggle("hidden");
+  geoKeyBtn.classList.toggle("on", !routeLegend.classList.contains("hidden"));
+};
+
+const familyLegend = document.getElementById("familyLegend");
+function buildFamilyLegend(){
+  const rows = [
+    { cat: "lineage", color: "var(--dilute)", dash: null, label: "Parent to child" },
+    { cat: "marriage", color: "var(--gold)", dash: "5 4", label: "Marriage or affair" },
+    { cat: "curse", color: "var(--curse)", dash: "7 4", label: "A curse passed down the blood" },
+  ];
+  familyLegend.innerHTML =
+    '<div class="meander" style="margin:0"></div><div style="padding:14px 16px 16px">' +
+    "<h4>Lines — click to filter</h4>" +
+    rows.map(r =>
+      '<button class="lrow' + (famFilters[r.cat] ? "" : " off") + '" data-famline="' + r.cat + '">' +
+        '<svg width="30" height="8" style="flex:0 0 auto"><line x1="0" y1="4" x2="30" y2="4" style="stroke:' +
+        r.color + '" stroke-width="2.4"' + (r.dash ? ' stroke-dasharray="' + r.dash + '"' : "") +
+        '/></svg>' + r.label + "</button>").join("") +
+    '<div class="drule"></div><div class="types">' +
+    Object.entries(TYPE_LABEL).filter(([k]) => FAMILY_TYPES.has(k)).map(([k, lab]) =>
+      '<span><span class="dot" style="background:' + typeColor(k) + '"></span>' + lab + "</span>").join("") +
+    "</div></div>";
+}
+buildFamilyLegend();
+familyLegend.addEventListener("click", e => {
+  const b = e.target.closest("[data-famline]");
+  if (!b) return;
+  const k = b.dataset.famline;
+  famFilters[k] = !famFilters[k];
+  b.classList.toggle("off", !famFilters[k]);
+  applyFamFilters();
+});
+const familyKeyBtn = document.createElement("button");
+familyKeyBtn.className = "btn"; familyKeyBtn.id = "familyKeyBtn"; familyKeyBtn.textContent = "key";
+familyKeyBtn.style.marginLeft = "auto";
+familyKeyBtn.onclick = () => {
+  familyLegend.classList.toggle("hidden");
+  familyKeyBtn.classList.toggle("on", !familyLegend.classList.contains("hidden"));
+};
+rail.appendChild(familyKeyBtn);
+rail.appendChild(geoKeyBtn);
+
+applyFamView();
+applyGeoView();
+applyFamilyFocus();
+applyGeoFocus();
+applyFamFilters();
+
+applyView();
+repaintTheme("dark");
+</script>
+</body>
+</html>
