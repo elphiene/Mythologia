@@ -1337,7 +1337,7 @@ svg.addEventListener("pointercancel", endDrag);
 
 function zoomAt(sx, sy, factor){
   const v = state.view;
-  const k = Math.min(2.4, Math.max(0.15, v.k * factor));
+  const k = Math.min(9, Math.max(0.15, v.k * factor));
   const wx = (sx - v.tx) / v.k, wy = (sy - v.ty) / v.k;
   v.k = k; v.tx = sx - wx * k; v.ty = sy - wy * k;
   applyView();
@@ -1639,7 +1639,7 @@ function wireCanvas(svgEl, view, opts){
   svgEl.addEventListener("pointercancel", endDrag);
 
   function zoomAt(sx, sy, factor){
-    const k = Math.min(opts.maxK || 2.4, Math.max(opts.minK || 0.15, view.k * factor));
+    const k = Math.min(opts.maxK || 9, Math.max(opts.minK || 0.15, view.k * factor));
     const wx = (sx - view.tx) / view.k, wy = (sy - view.ty) / view.k;
     view.k = k; view.tx = sx - wx * k; view.ty = sy - wy * k;
     if (opts.onView) opts.onView();
