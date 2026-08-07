@@ -93,8 +93,8 @@
   .rail .num{font-family:var(--didot);color:var(--gold);font-size:13px;letter-spacing:0}
 
   #stage{flex:1;position:relative;min-height:0}
-  #svg,#familySvg,#geoSvg{display:block;touch-action:none;cursor:grab;position:absolute;top:0;left:0}
-  #svg.drag,#familySvg.drag,#geoSvg.drag{cursor:grabbing}
+  #svg,#familySvg,#geoSvg,#threadsSvg{display:block;touch-action:none;cursor:grab;position:absolute;top:0;left:0}
+  #svg.drag,#familySvg.drag,#geoSvg.drag,#threadsSvg.drag{cursor:grabbing}
 
   /* ---- vase-panel styling for floating boxes ---- */
   .vase{background:var(--panel-bg);border:1px solid var(--rule);
@@ -130,18 +130,21 @@
   #zoom button.small{font-size:9.5px;letter-spacing:.14em;color:var(--muted);font-family:var(--serif);
                      text-transform:uppercase}
 
-  #legend,#familyLegend,#routeLegend{position:absolute;left:64px;bottom:18px;z-index:6;width:262px}
-  #legend h4,#familyLegend h4,#routeLegend h4{font-size:10px;letter-spacing:.2em;color:var(--muted);
+  #legend,#familyLegend,#routeLegend,#threadsLegend{position:absolute;left:64px;bottom:18px;z-index:6;width:262px;
+             max-height:calc(100% - 36px);overflow-y:auto}
+  #legend h4,#familyLegend h4,#routeLegend h4,#threadsLegend h4{font-size:10px;letter-spacing:.2em;color:var(--muted);
              text-transform:uppercase;margin:0 0 10px;font-weight:400}
   .lrow{display:flex;align-items:center;gap:10px;width:100%;background:none;border:none;padding:5px 0;
         cursor:pointer;color:var(--ivory);font-size:12.5px;text-align:left;font-family:var(--serif)}
   .lrow.off{opacity:.28}
+  .lrow.master{letter-spacing:.14em;text-transform:uppercase;font-size:11px;color:var(--muted)}
+  .lrow.sub{padding-left:24px;font-size:12px}
   .types{display:flex;flex-wrap:wrap;gap:6px 13px}
   .types span{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted)}
 
-  #hint,#familyHint,#geoHint{position:absolute;right:18px;top:18px;max-width:274px;padding:16px 18px;
+  #hint,#familyHint,#geoHint,#threadsHint{position:absolute;right:18px;top:18px;max-width:274px;padding:16px 18px;
         font-size:13px;line-height:1.62;color:var(--muted);z-index:2;font-weight:300}
-  #hint b,#familyHint b,#geoHint b{color:var(--ivory);font-weight:500}
+  #hint b,#familyHint b,#geoHint b,#threadsHint b{color:var(--ivory);font-weight:500}
 
   #index{position:absolute;inset:0;overflow-y:auto;padding:26px 32px}
   .ihead{display:flex;align-items:baseline;gap:13px;padding-bottom:8px;margin:0 0 14px;
@@ -154,7 +157,7 @@
 
   @media (max-width:860px){
     #panel{right:0;left:0;top:auto;bottom:0;width:100%;max-height:66%;border-left:none;border-right:none}
-    #hint,#familyHint,#geoHint{display:none}
+    #hint,#familyHint,#geoHint,#threadsHint{display:none}
     .title{font-size:25px}
   }
   @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
@@ -174,6 +177,7 @@
     <button class="btn on" id="modeMap">map</button>
     <button class="btn" id="modeFamily">family tree</button>
     <button class="btn" id="modeGeo">geography</button>
+    <button class="btn" id="modeThreads">threads</button>
     <button class="btn" id="modeIndex">index</button>
   </div>
   <button class="btn" id="themeToggle" title="Switch between red-figure (dark ground) and black-figure (pale ground) styles">black-figure</button>
@@ -191,6 +195,7 @@
   <svg id="svg"></svg>
   <svg id="familySvg" class="hidden"></svg>
   <svg id="geoSvg" class="hidden"></svg>
+  <svg id="threadsSvg" class="hidden"></svg>
 
   <div id="zoom">
     <button id="zin" title="Zoom in">+</button>
@@ -201,6 +206,7 @@
   <div id="legend" class="vase hidden"></div>
   <div id="familyLegend" class="vase hidden"></div>
   <div id="routeLegend" class="vase hidden"></div>
+  <div id="threadsLegend" class="vase hidden"></div>
 
   <div id="hint" class="vase">
     <b>Click any figure</b> to read its story — the lines that touch it are painted in, the rest fall away.
@@ -219,6 +225,14 @@
     Odysseus's ten years home, Aeneas's flight from Troy, and others — across the map. Places marked
     with a dashed ring and an <b>*</b> are legendary stops Homer never pinned to real ground — their
     position follows the traditional guess named in their own story.
+  </div>
+
+  <div id="threadsHint" class="vase hidden">
+    <b>Causal chains, read downward.</b> Each vertical branch is a run of stories where one
+    <b>leads directly to</b> the next; the deeper a story sits, the longer the chain of cause behind it.
+    Branches fork where a story sets two things in motion and merge where separate chains drive the
+    same event — Troy above all. Turn on <b>figures</b>, <b>places</b> and the dashed <b>bridges</b>
+    below to fold the wider web back in.
   </div>
 
   <div id="panel" class="vase hidden"></div>
@@ -998,6 +1012,7 @@ const TYPE_PALETTES = {
   light: { titan:"#8a3a30", god:"#8a4a1e", hero:"#95501f", mortal:"#6b3f22", monster:"#5c5926", event:"#241a12", place:"#3f6b66" }
 };
 const typeColor = t => (TYPE_PALETTES[currentTheme] && TYPE_PALETTES[currentTheme][t]) || C.muted;
+const CHARACTER_TYPES = ["titan", "god", "hero", "mortal", "monster"];
 
 function wrap(text, max){
   const words = text.split(" "); const lines = []; let cur = "";
@@ -1022,6 +1037,9 @@ NODES.forEach(n => {
 const state = {
   selected: null, hovered: null, mode: "map",
   filters: Object.fromEntries(Object.keys(EDGE_STYLE).map(k => [k, true])),
+  /* map tab: node-type visibility, all shown by default (this only adds
+     filtering on top of the already fully-visible map) */
+  typeFilters: Object.fromEntries(Object.keys(TYPE_LABEL).map(k => [k, true])),
   view: { k: 0.6, tx: 90, ty: 20 }
 };
 
@@ -1216,6 +1234,13 @@ function applyFocus(animate){
   edgeEls.forEach(({ p, ed, st, solid }) => {
     if (!state.filters[ed.t]) { p.style.display = "none"; return; }
     p.style.display = "";
+    /* an edge with a now-hidden node type at either end fades right back */
+    if (!state.typeFilters[BY_ID[ed.a].type] || !state.typeFilters[BY_ID[ed.b].type]){
+      p.setAttribute("opacity", 0.05);
+      p.setAttribute("stroke-width", st.w);
+      if (solid){ p.style.transition = "none"; p.removeAttribute("stroke-dasharray"); p.removeAttribute("stroke-dashoffset"); }
+      return;
+    }
     const touches = focus && (ed.a === active || ed.b === active);
     p.setAttribute("opacity", focus ? (touches ? 0.98 : 0.05)
                                     : (ed.t === "part" ? 0.32 : 0.55));
@@ -1240,6 +1265,8 @@ function applyFocus(animate){
 
   const th = SVG_THEME[currentTheme];
   nodeEls.forEach(({ g, glow, shape, ring, n, isEvent }) => {
+    if (!state.typeFilters[n.type]){ g.setAttribute("display", "none"); return; }
+    g.removeAttribute("display");
     const dim = focus && !focus.has(n.id);
     const on = active === n.id;
     g.setAttribute("opacity", dim ? 0.11 : 1);
@@ -1289,6 +1316,13 @@ function repaintTheme(mode){
   familyNodeEls.forEach(({ shape, n }) => shape.setAttribute("fill", typeColor(n.type)));
   buildFamilyLegend();
   applyFamilyFocus();
+  threadsNodeEls.forEach(({ shape, n }) => {
+    if (n.type === "event") return;
+    if (n.type === "place") shape.setAttribute("stroke", typeColor(n.type));
+    else shape.setAttribute("fill", typeColor(n.type));
+  });
+  buildThreadsLegend();
+  applyThreadsFocus();
   buildRouteLegend();
   if (state.selected) renderPanel();
   if (state.mode === "index") renderIndex();
@@ -1313,6 +1347,8 @@ function resize(){
   document.getElementById("familySvg").setAttribute("height", stage.clientHeight);
   document.getElementById("geoSvg").setAttribute("width", stage.clientWidth);
   document.getElementById("geoSvg").setAttribute("height", stage.clientHeight);
+  document.getElementById("threadsSvg").setAttribute("width", stage.clientWidth);
+  document.getElementById("threadsSvg").setAttribute("height", stage.clientHeight);
 }
 new ResizeObserver(resize).observe(stage);
 resize();
@@ -1351,16 +1387,19 @@ svg.addEventListener("wheel", e => {
 document.getElementById("zin").onclick  = () => {
   if (state.mode === "family") famZoom.zoomAt(stage.clientWidth/2, stage.clientHeight/2, 1.25);
   else if (state.mode === "geo") geoZoom.zoomAt(stage.clientWidth/2, stage.clientHeight/2, 1.25);
+  else if (state.mode === "threads") threadsZoom.zoomAt(stage.clientWidth/2, stage.clientHeight/2, 1.25);
   else zoomAt(stage.clientWidth/2, stage.clientHeight/2, 1.25);
 };
 document.getElementById("zout").onclick = () => {
   if (state.mode === "family") famZoom.zoomAt(stage.clientWidth/2, stage.clientHeight/2, 0.8);
   else if (state.mode === "geo") geoZoom.zoomAt(stage.clientWidth/2, stage.clientHeight/2, 0.8);
+  else if (state.mode === "threads") threadsZoom.zoomAt(stage.clientWidth/2, stage.clientHeight/2, 0.8);
   else zoomAt(stage.clientWidth/2, stage.clientHeight/2, 0.8);
 };
 document.getElementById("zfit").onclick = () => {
   if (state.mode === "family") resetFamilyView();
   else if (state.mode === "geo") resetGeoView();
+  else if (state.mode === "threads") resetThreadsView();
   else { state.view = { k:0.6, tx:90, ty:20 }; applyView(); }
 };
 
@@ -1394,6 +1433,7 @@ function select(id){
   applyFocus(true);
   applyFamilyFocus();
   applyGeoFocus();
+  applyThreadsFocus();
   renderPanel();
   if (state.mode === "index") renderIndex();
 }
@@ -1404,6 +1444,9 @@ function navigate(id){
     else { setMode("map"); centerOn(id); }
   } else if (state.mode === "geo"){
     if (LOCATION_IDS.has(id)) geoCenterOn(id);
+    else { setMode("map"); centerOn(id); }
+  } else if (state.mode === "threads"){
+    if (threadsPos[id]) threadsCenterOn(id);
     else { setMode("map"); centerOn(id); }
   }
   select(id);
@@ -1503,6 +1546,37 @@ keyBtn.onclick = () => {
 };
 rail.appendChild(keyBtn);
 
+/* a figure-toggle row (colour swatch + label), matching the edge-filter rows */
+function typeRow(key, on, label, color, sq, cls){
+  return '<button class="lrow' + (on ? "" : " off") + (cls ? " " + cls : "") + '" data-type="' + key + '">' +
+    (color !== null
+      ? '<span class="dot' + (sq ? " sq" : "") + '" style="background:' + color + '"></span>'
+      : '<span style="width:8px;flex:0 0 auto"></span>') +
+    label + "</button>";
+}
+/* the shared Figures block, reused by the map legend and the Threads legend */
+function figureToggles(tf){
+  const charOn = CHARACTER_TYPES.some(t => tf[t]);
+  return "<h4>Figures — click to filter</h4>" +
+    typeRow("characters", charOn, "Characters", null, false, "master") +
+    CHARACTER_TYPES.map(t => typeRow(t, tf[t], TYPE_LABEL[t], typeColor(t), false, "sub")).join("") +
+    typeRow("event", tf.event, "Stories", typeColor("event"), true) +
+    typeRow("place", tf.place, "Places", typeColor("place"), false);
+}
+/* toggle handler shared by both Figures blocks; returns true if it handled the click */
+function handleTypeToggle(e, tf){
+  const b = e.target.closest("[data-type]");
+  if (!b) return false;
+  const k = b.dataset.type;
+  if (k === "characters"){
+    const allOn = CHARACTER_TYPES.every(t => tf[t]);
+    CHARACTER_TYPES.forEach(t => tf[t] = !allOn);
+  } else {
+    tf[k] = !tf[k];
+  }
+  return true;
+}
+
 function buildLegend(){
   legend.innerHTML =
     '<div class="meander" style="margin:0"></div><div style="padding:14px 16px 16px">' +
@@ -1513,21 +1587,21 @@ function buildLegend(){
         st.color + '" stroke-width="' + (st.w + 0.6) + '"' +
         (st.dash ? ' stroke-dasharray="' + st.dash + '"' : "") + "/></svg>" + st.label +
       "</button>").join("") +
-    '<div class="drule"></div><div class="types">' +
-    Object.entries(TYPE_LABEL).map(([k, lab]) =>
-      '<span><span class="dot' + (k === "event" ? " sq" : "") + '" style="background:' +
-      typeColor(k) + '"></span>' + lab + "</span>").join("") +
-    "</div></div>";
+    '<div class="drule"></div>' + figureToggles(state.typeFilters) +
+    "</div>";
 }
 buildLegend();
 
 legend.addEventListener("click", e => {
   const b = e.target.closest("[data-line]");
-  if (!b) return;
-  const k = b.dataset.line;
-  state.filters[k] = !state.filters[k];
-  b.classList.toggle("off", !state.filters[k]);
-  applyFocus(false);
+  if (b){
+    const k = b.dataset.line;
+    state.filters[k] = !state.filters[k];
+    b.classList.toggle("off", !state.filters[k]);
+    applyFocus(false);
+    return;
+  }
+  if (handleTypeToggle(e, state.typeFilters)){ buildLegend(); applyFocus(false); }
 });
 
 /* ---------------- search ---------------- */
@@ -1577,17 +1651,20 @@ indexEl.addEventListener("click", e => {
 const mMap = document.getElementById("modeMap");
 const mFamily = document.getElementById("modeFamily");
 const mGeo = document.getElementById("modeGeo");
+const mThreads = document.getElementById("modeThreads");
 const mIdx = document.getElementById("modeIndex");
 function setMode(m){
   state.mode = m;
   mMap.classList.toggle("on", m === "map");
   mFamily.classList.toggle("on", m === "family");
   mGeo.classList.toggle("on", m === "geo");
+  mThreads.classList.toggle("on", m === "threads");
   mIdx.classList.toggle("on", m === "index");
 
   svg.classList.toggle("hidden", m !== "map");
   familySvg.classList.toggle("hidden", m !== "family");
   geoSvg.classList.toggle("hidden", m !== "geo");
+  threadsSvg.classList.toggle("hidden", m !== "threads");
   indexEl.classList.toggle("hidden", m !== "index");
 
   document.getElementById("zoom").classList.toggle("hidden", m === "index");
@@ -1595,19 +1672,23 @@ function setMode(m){
   document.querySelectorAll(".railMapOnly").forEach(b => b.classList.toggle("hidden", m !== "map"));
   familyKeyBtn.classList.toggle("hidden", m !== "family");
   geoKeyBtn.classList.toggle("hidden", m !== "geo");
+  threadsKeyBtn.classList.toggle("hidden", m !== "threads");
 
   legend.classList.add("hidden"); keyBtn.classList.remove("on");
   familyLegend.classList.add("hidden"); familyKeyBtn.classList.remove("on");
   routeLegend.classList.add("hidden"); geoKeyBtn.classList.remove("on");
+  threadsLegend.classList.add("hidden"); threadsKeyBtn.classList.remove("on");
 
   if (m === "index") renderIndex();
   hint.classList.toggle("hidden", m !== "map" || !!state.selected);
   familyHint.classList.toggle("hidden", m !== "family" || !!state.selected);
   geoHint.classList.toggle("hidden", m !== "geo" || !!state.selected);
+  threadsHint.classList.toggle("hidden", m !== "threads" || !!state.selected);
 }
 mMap.onclick = () => setMode("map");
 mFamily.onclick = () => setMode("family");
 mGeo.onclick = () => setMode("geo");
+mThreads.onclick = () => setMode("threads");
 mIdx.onclick = () => setMode("index");
 
 const themeBtn = document.getElementById("themeToggle");
@@ -2075,11 +2156,338 @@ familyKeyBtn.onclick = () => {
 rail.appendChild(familyKeyBtn);
 rail.appendChild(geoKeyBtn);
 
+/* ================================================================== */
+/*  THREADS — causal chains as a layered DAG. Depth (vertical) is the   */
+/*  longest path along "cause" edges from a root; lane (horizontal)     */
+/*  forks where one story causes two, and converges where two chains    */
+/*  drive the same downstream event. Figures & places hang off their    */
+/*  events; kinship / reference bridges cross the branches.             */
+/* ================================================================== */
+const THREAD_EVENTS = NODES.filter(n => n.type === "event");
+const THREAD_EVENT_IDS = new Set(THREAD_EVENTS.map(n => n.id));
+/* the backbone: cause edges only ever join event to event */
+const causeEdges = EDGES.filter(e => e.t === "cause" &&
+  THREAD_EVENT_IDS.has(e.a) && THREAD_EVENT_IDS.has(e.b));
+
+const causeParents = {}, causeChildren = {};
+THREAD_EVENTS.forEach(n => { causeParents[n.id] = []; causeChildren[n.id] = []; });
+causeEdges.forEach(e => { causeChildren[e.a].push(e.b); causeParents[e.b].push(e.a); });
+
+/* depth = longest cause-path from a root; a node with two cause-parents at
+   different depths sits at the DEEPER one (same longest-path rule the family
+   tree uses for generations) */
+const thDepth = {};
+function causeDepth(id, seen){
+  if (thDepth[id] !== undefined) return thDepth[id];
+  if (seen.has(id)) return 0;
+  seen.add(id);
+  const ps = causeParents[id];
+  const d = ps.length ? 1 + Math.max(...ps.map(p => causeDepth(p, seen))) : 0;
+  thDepth[id] = d;
+  return d;
+}
+THREAD_EVENTS.forEach(n => causeDepth(n.id, new Set()));
+const thMaxDepth = Math.max(0, ...Object.values(thDepth));
+
+/* branch identity = connected component of the cause graph (undirected),
+   so a story and everything that flows from it share one branch */
+const thUF = {}; THREAD_EVENTS.forEach(n => thUF[n.id] = n.id);
+function thFind(x){ while (thUF[x] !== x) x = thUF[x]; return x; }
+causeEdges.forEach(e => { const ra = thFind(e.a), rb = thFind(e.b); if (ra !== rb) thUF[ra] = rb; });
+const thComp = {}; THREAD_EVENTS.forEach(n => thComp[n.id] = thFind(n.id));
+
+/* lane assignment, level by level. Every cause-parent has strictly smaller
+   depth than its child, so processing depth-ascending means parents are
+   always placed first. Roots each get their own lane; deeper nodes gravitate
+   to the mean of their parents (convergence) and get pushed apart on overlap
+   (the fork), then recentred so siblings straddle their parent. */
+const TH_LANE_W = 210, TH_ROW_H = 175, TH_TOP = 96, TH_LEFT = 140;
+const laneX = {};
+const thLevels = []; for (let d = 0; d <= thMaxDepth; d++) thLevels.push([]);
+THREAD_EVENTS.forEach(n => thLevels[thDepth[n.id]].push(n.id));
+
+thLevels[0].sort((a, b) =>
+  (BY_ID[a].era - BY_ID[b].era) || (BY_ID[a].y - BY_ID[b].y) || a.localeCompare(b));
+thLevels[0].forEach((id, i) => laneX[id] = TH_LEFT + i * TH_LANE_W);
+
+for (let d = 1; d <= thMaxDepth; d++){
+  const level = thLevels[d];
+  const desired = {};
+  level.forEach(id => {
+    const ps = causeParents[id];
+    desired[id] = ps.length ? ps.reduce((s, p) => s + laneX[p], 0) / ps.length : TH_LEFT;
+  });
+  level.sort((a, b) =>
+    (desired[a] - desired[b]) || (BY_ID[a].era - BY_ID[b].era) || a.localeCompare(b));
+  let prev = -Infinity;
+  level.forEach(id => { let x = desired[id]; if (x < prev + TH_LANE_W) x = prev + TH_LANE_W; laneX[id] = x; prev = x; });
+  if (level.length){
+    let shift = 0; level.forEach(id => shift += desired[id] - laneX[id]); shift /= level.length;
+    level.forEach(id => laneX[id] += shift);
+  }
+}
+
+const threadsPos = {};
+THREAD_EVENTS.forEach(n => threadsPos[n.id] = { x: laneX[n.id], y: TH_TOP + thDepth[n.id] * TH_ROW_H });
+
+/* figures & places hang off the events they take part in (part edges with
+   exactly one event end). A node's anchor is its shallowest such event. */
+const thPartOf = {};
+EDGES.filter(e => e.t === "part").forEach(e => {
+  let ev = null, node = null;
+  if (THREAD_EVENT_IDS.has(e.a) && !THREAD_EVENT_IDS.has(e.b)){ ev = e.a; node = e.b; }
+  else if (THREAD_EVENT_IDS.has(e.b) && !THREAD_EVENT_IDS.has(e.a)){ ev = e.b; node = e.a; }
+  else return;
+  (thPartOf[node] = thPartOf[node] || []).push(ev);
+});
+const thAnchor = {};
+Object.keys(thPartOf).forEach(node => {
+  const evs = thPartOf[node].slice().sort((a, b) =>
+    (thDepth[a] - thDepth[b]) || (laneX[a] - laneX[b]) || a.localeCompare(b));
+  thAnchor[node] = evs[0];
+});
+/* place each attached figure at its anchor's depth, fanned out just beneath
+   the event box so the vertical band still reads as that event's depth */
+const TH_ATTACH_DX = 70, TH_ATTACH_DY = 56, TH_ATTACH_PER = 3;
+const thAttachedBy = {};
+Object.keys(thAnchor).forEach(node => {
+  (thAttachedBy[thAnchor[node]] = thAttachedBy[thAnchor[node]] || []).push(node);
+});
+Object.entries(thAttachedBy).forEach(([ev, nodes]) => {
+  const base = threadsPos[ev], box = LAYOUT[ev];
+  nodes.sort((a, b) => BY_ID[a].name.localeCompare(BY_ID[b].name));
+  nodes.forEach((node, i) => {
+    const rowi = Math.floor(i / TH_ATTACH_PER);
+    const inRow = Math.min(TH_ATTACH_PER, nodes.length - rowi * TH_ATTACH_PER);
+    const col = i % TH_ATTACH_PER;
+    threadsPos[node] = {
+      x: base.x + (col - (inRow - 1) / 2) * TH_ATTACH_DX,
+      y: base.y + box.h / 2 + 34 + rowi * TH_ATTACH_DY
+    };
+  });
+});
+
+const thBranchOf = id => THREAD_EVENT_IDS.has(id) ? thComp[id] : thComp[thAnchor[id]];
+
+const threadsTypeFilters = { titan:false, god:false, hero:false, mortal:false, monster:false, event:true, place:false };
+const threadsBridges = { kinship:false, reference:false };
+
+/* extents, for the depth guide-lines */
+const thAllX = Object.values(threadsPos).map(p => p.x);
+const TH_W = (thAllX.length ? Math.max(...thAllX) : TH_LEFT) + TH_LANE_W;
+const TH_MINX = (thAllX.length ? Math.min(...thAllX) : TH_LEFT) - TH_LANE_W;
+
+const threadsSvg = document.getElementById("threadsSvg");
+const threadsWorld = el("g", { id: "threadsWorld" });
+threadsSvg.appendChild(threadsWorld);
+const threadsView = { k: 0.62, tx: 60, ty: 20 };
+function applyThreadsView(){
+  threadsWorld.setAttribute("transform",
+    "translate(" + threadsView.tx + "," + threadsView.ty + ") scale(" + threadsView.k + ")");
+  rescaleThreadsNodes();
+}
+function rescaleThreadsNodes(){
+  const invK = 1 / threadsView.k;
+  const t = " scale(" + invK + ") translate(";
+  threadsNodeEls.forEach(({ g, n }) => {
+    const p = threadsPos[n.id]; if (!p) return;
+    g.setAttribute("transform", "translate(" + p.x + "," + p.y + ")" + t + (-p.x) + "," + (-p.y) + ")");
+  });
+}
+
+/* faint depth guide-lines, one per level of the chain */
+for (let d = 0; d <= thMaxDepth; d++){
+  const y = TH_TOP + d * TH_ROW_H;
+  threadsWorld.appendChild(el("line", { x1: TH_MINX, y1: y - 44, x2: TH_W, y2: y - 44,
+    style: "stroke:var(--generation-line)", "stroke-width": 1, "stroke-dasharray": "1 6", opacity: 0.7 }));
+  const lbl = el("text", { x: TH_MINX + TH_LANE_W - 46, y: y - 4, "font-size": 11,
+    "font-family": "'Spectral',serif", style: "fill:var(--muted)", "letter-spacing": 1.5 });
+  lbl.textContent = "DEPTH " + (d + 1);
+  threadsWorld.appendChild(lbl);
+}
+
+/* diagonal bridge helper (kinship / reference) */
+function threadBridge(a, b, color, dash){
+  const A = threadsPos[a], B = threadsPos[b];
+  return el("line", { x1: A.x, y1: A.y, x2: B.x, y2: B.y,
+    style: "stroke:" + color, "stroke-width": 1.3, "stroke-dasharray": dash, opacity: 0.8 });
+}
+
+/* backbone: cause edges as smooth vertical branch lines */
+const threadsCauseEls = [];
+causeEdges.forEach(e => {
+  const A = threadsPos[e.a], B = threadsPos[e.b];
+  const midY = A.y + (B.y - A.y) * 0.5;
+  const d = "M " + A.x + " " + A.y + " C " + A.x + " " + midY + " " + B.x + " " + midY + " " + B.x + " " + B.y;
+  const p = el("path", { d, fill: "none", style: "stroke:var(--clay)", "stroke-width": 1.8, opacity: 0.82 });
+  threadsWorld.appendChild(p);
+  threadsCauseEls.push({ el: p, e });
+});
+
+/* figure/place attachments (same-branch part edges) and reference bridges
+   (crossover + cross-branch part edges) */
+const threadsAttachEls = [], threadsRefEls = [], threadsKinEls = [];
+EDGES.filter(e => e.t === "part").forEach(e => {
+  let ev = null, node = null;
+  if (THREAD_EVENT_IDS.has(e.a) && !THREAD_EVENT_IDS.has(e.b)){ ev = e.a; node = e.b; }
+  else if (THREAD_EVENT_IDS.has(e.b) && !THREAD_EVENT_IDS.has(e.a)){ ev = e.b; node = e.a; }
+  else return;
+  if (!threadsPos[node] || !threadsPos[ev]) return;
+  if (thComp[ev] === thBranchOf(node)){
+    const A = threadsPos[node], B = threadsPos[ev];
+    const p = el("line", { x1: A.x, y1: A.y, x2: B.x, y2: B.y,
+      style: "stroke:var(--dilute)", "stroke-width": 1, opacity: 0.5 });
+    threadsWorld.appendChild(p);
+    threadsAttachEls.push({ el: p, node, ev });
+  } else {
+    const p = threadBridge(node, ev, "var(--purple)", "2 5");
+    threadsWorld.appendChild(p);
+    threadsRefEls.push({ el: p });
+  }
+});
+EDGES.filter(e => e.t === "crossover").forEach(e => {
+  if (!threadsPos[e.a] || !threadsPos[e.b]) return;
+  const p = threadBridge(e.a, e.b, "var(--purple)", "2 5");
+  threadsWorld.appendChild(p);
+  threadsRefEls.push({ el: p });
+});
+/* kinship bridges: blood / descent / union between two placed figures */
+EDGES.filter(e => e.t === "blood" || e.t === "descent" || e.t === "union").forEach(e => {
+  if (!threadsPos[e.a] || !threadsPos[e.b]) return;
+  const p = threadBridge(e.a, e.b, "var(--aegean)", "5 4");
+  threadsWorld.appendChild(p);
+  threadsKinEls.push({ el: p });
+});
+
+/* nodes: events framed like the map's scenes, figures as discs, places as pediments */
+const threadsNodeEls = [];
+NODES.filter(n => threadsPos[n.id]).forEach(n => {
+  const p = threadsPos[n.id];
+  const g = el("g", { style: "cursor:pointer" });
+  g.dataset.id = n.id;
+  let shape, label;
+  if (n.type === "event"){
+    const L = LAYOUT[n.id];
+    shape = el("rect", { x: p.x - L.w / 2, y: p.y - L.h / 2, width: L.w, height: L.h,
+      style: "fill:var(--register);stroke:var(--clay)", "stroke-width": 1 });
+    g.appendChild(shape);
+    label = el("text", { "text-anchor": "middle", "font-size": 11.5,
+      "font-family": "'Spectral',serif", style: "fill:var(--ivory)" });
+    L.lines.forEach((ln, j) => {
+      const ts = el("tspan", { x: p.x, y: p.y - L.h / 2 + 18 + j * 13 });
+      ts.textContent = ln; label.appendChild(ts);
+    });
+    g.appendChild(label);
+  } else if (n.type === "place"){
+    shape = el("path", {
+      d: "M " + (p.x - 9) + " " + (p.y + 7) + " L " + (p.x - 9) + " " + (p.y - 1) +
+         " L " + p.x + " " + (p.y - 8) + " L " + (p.x + 9) + " " + (p.y - 1) +
+         " L " + (p.x + 9) + " " + (p.y + 7) + " Z",
+      fill: "transparent", stroke: typeColor(n.type), "stroke-width": 1.8, "stroke-linejoin": "round" });
+    g.appendChild(shape);
+  } else {
+    shape = el("circle", { cx: p.x, cy: p.y, r: 7, fill: typeColor(n.type),
+      style: "stroke:var(--ground)", "stroke-width": 1.4 });
+    g.appendChild(shape);
+  }
+  if (n.type !== "event"){
+    label = el("text", { "text-anchor": "middle", "font-size": 11.5,
+      "font-family": "'Spectral',serif", style: "fill:var(--ivory)", "font-weight": 500 });
+    wrap(n.name, 13).forEach((ln, j) => {
+      const ts = el("tspan", { x: p.x, y: p.y + 22 + j * 13 });
+      ts.textContent = ln; label.appendChild(ts);
+    });
+    g.appendChild(label);
+  }
+  threadsWorld.appendChild(g);
+  threadsNodeEls.push({ g, shape, label, n, isEvent: n.type === "event" });
+});
+
+const threadsZoom = wireCanvas(threadsSvg, threadsView, {
+  onView: applyThreadsView,
+  onHover: applyThreadsFocus,
+  onClick: id => { if (!id){ select(null); return; } select(id === state.selected ? null : id); }
+});
+
+function threadsCenterOn(id){
+  const p = threadsPos[id]; if (!p) return;
+  const k = Math.max(threadsView.k, 0.85);
+  threadsView.k = k; threadsView.tx = stage.clientWidth / 2 - p.x * k; threadsView.ty = stage.clientHeight / 2 - p.y * k;
+  applyThreadsView();
+}
+function resetThreadsView(){
+  threadsView.k = 0.62; threadsView.tx = 60; threadsView.ty = 20; applyThreadsView();
+}
+
+/* type toggles hide figures/places/stories in place; bridges follow ONLY
+   their own toggle (no hide-cascade) so the graph stays fully connected */
+function applyThreadsFilters(){
+  const showEvents = threadsTypeFilters.event;
+  threadsNodeEls.forEach(({ g, n }) => { g.style.display = threadsTypeFilters[n.type] ? "" : "none"; });
+  threadsCauseEls.forEach(({ el: e }) => { e.style.display = showEvents ? "" : "none"; });
+  threadsAttachEls.forEach(({ el: e, node }) => {
+    e.style.display = (threadsTypeFilters[BY_ID[node].type] && showEvents) ? "" : "none";
+  });
+  threadsKinEls.forEach(({ el: e }) => { e.style.display = threadsBridges.kinship ? "" : "none"; });
+  threadsRefEls.forEach(({ el: e }) => { e.style.display = threadsBridges.reference ? "" : "none"; });
+}
+
+function applyThreadsFocus(){
+  const active = state.hovered || state.selected;
+  const focus = active ? new Set([active, ...(ADJ[active] || [])]) : null;
+  threadsNodeEls.forEach(({ g, shape, n, isEvent }) => {
+    const dim = focus && !focus.has(n.id);
+    const on = active === n.id;
+    g.setAttribute("opacity", dim ? 0.15 : 1);
+    if (isEvent) shape.setAttribute("stroke-width", on ? 2 : 1);
+    else if (n.type === "place") shape.setAttribute("stroke-width", on ? 2.6 : 1.8);
+    else shape.setAttribute("r", on ? 9 : 7);
+  });
+}
+
+const threadsLegend = document.getElementById("threadsLegend");
+function buildThreadsLegend(){
+  const bridgeRow = (cat, color, dash, label) =>
+    '<button class="lrow' + (threadsBridges[cat] ? "" : " off") + '" data-bridge="' + cat + '">' +
+      '<svg width="30" height="8" style="flex:0 0 auto"><line x1="0" y1="4" x2="30" y2="4" style="stroke:' +
+      color + '" stroke-width="2.4" stroke-dasharray="' + dash + '"/></svg>' + label + "</button>";
+  threadsLegend.innerHTML =
+    '<div class="meander" style="margin:0"></div><div style="padding:14px 16px 16px">' +
+    figureToggles(threadsTypeFilters) +
+    '<div class="drule"></div><h4>Bridges — click to filter</h4>' +
+    bridgeRow("kinship", "var(--aegean)", "5 4", "Kinship bridges") +
+    bridgeRow("reference", "var(--purple)", "2 5", "Reference bridges") +
+    "</div>";
+}
+buildThreadsLegend();
+threadsLegend.addEventListener("click", e => {
+  const bridge = e.target.closest("[data-bridge]");
+  if (bridge){
+    const k = bridge.dataset.bridge;
+    threadsBridges[k] = !threadsBridges[k];
+    bridge.classList.toggle("off", !threadsBridges[k]);
+    applyThreadsFilters();
+    return;
+  }
+  if (handleTypeToggle(e, threadsTypeFilters)){ buildThreadsLegend(); applyThreadsFilters(); }
+});
+const threadsKeyBtn = document.createElement("button");
+threadsKeyBtn.className = "btn hidden"; threadsKeyBtn.id = "threadsKeyBtn"; threadsKeyBtn.textContent = "key";
+threadsKeyBtn.style.marginLeft = "auto";
+threadsKeyBtn.onclick = () => {
+  threadsLegend.classList.toggle("hidden");
+  threadsKeyBtn.classList.toggle("on", !threadsLegend.classList.contains("hidden"));
+};
+rail.appendChild(threadsKeyBtn);
+
 applyFamView();
 applyGeoView();
+applyThreadsView();
 applyFamilyFocus();
 applyGeoFocus();
+applyThreadsFocus();
 applyFamFilters();
+applyThreadsFilters();
 
 applyView();
 repaintTheme("dark");
