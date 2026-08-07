@@ -164,7 +164,7 @@
   #zoom button.small{font-size:9.5px;letter-spacing:.14em;color:var(--muted);font-family:var(--serif);
                      text-transform:uppercase}
 
-  #legend,#familyLegend,#routeLegend,#threadsLegend{position:absolute;left:64px;bottom:18px;z-index:6;width:262px;
+  #legend,#familyLegend,#routeLegend,#threadsLegend,#storyPanel{position:absolute;left:64px;bottom:18px;z-index:6;width:262px;
              max-height:calc(100% - 36px);overflow-y:auto}
   #legend h4,#familyLegend h4,#routeLegend h4,#threadsLegend h4{font-size:10px;letter-spacing:.2em;color:var(--muted);
              text-transform:uppercase;margin:0 0 10px;font-weight:400}
@@ -208,7 +208,7 @@
     #results{left:0;right:0;width:auto}
     .rail{padding:8px 12px}
     .rail .btn{font-size:10.5px;padding:6px 9px}
-    #legend,#familyLegend,#routeLegend{width:min(262px,calc(100vw - 28px));left:50%;transform:translateX(-50%)}
+    #legend,#familyLegend,#routeLegend,#storyPanel{width:min(262px,calc(100vw - 28px));left:50%;transform:translateX(-50%)}
 
     /* views collapse into a hamburger dropdown */
     #menuToggle{display:inline-block}
@@ -1165,6 +1165,33 @@ const ADJ = {};
 NODES.forEach(n => ADJ[n.id] = new Set());
 EDGES.forEach(ed => { if (ADJ[ed.a] && ADJ[ed.b]) { ADJ[ed.a].add(ed.b); ADJ[ed.b].add(ed.a); } });
 
+/* ---- story cycles ----
+   filtering by a story shows that story's cast (its `part`-linked figures & places)
+   plus the stories one `cause`-hop away and their casts. computed automatically, so a
+   new story with its part/cause edges becomes a filterable cycle with no extra tagging. */
+const isEventId = id => BY_ID[id] && BY_ID[id].type === "event";
+const AMBIENT_TYPES = new Set(["god", "titan"]);   // the divine backdrop: kept faint in any cycle
+const eventCast = {}, causeNbr = {};
+NODES.filter(n => n.type === "event").forEach(n => { eventCast[n.id] = new Set(); causeNbr[n.id] = new Set(); });
+EDGES.forEach(e => {
+  if (e.t === "part"){
+    if (isEventId(e.a) && !isEventId(e.b)) eventCast[e.a].add(e.b);
+    if (isEventId(e.b) && !isEventId(e.a)) eventCast[e.b].add(e.a);
+  } else if (e.t === "cause"){
+    if (causeNbr[e.a]) causeNbr[e.a].add(e.b);
+    if (causeNbr[e.b]) causeNbr[e.b].add(e.a);
+  }
+});
+function storyCycleSet(storyIds){
+  const m = new Set();
+  storyIds.forEach(S => {
+    if (!eventCast[S]) return;
+    m.add(S); eventCast[S].forEach(x => m.add(x));
+    causeNbr[S].forEach(E => { m.add(E); eventCast[E].forEach(x => m.add(x)); });
+  });
+  return m;
+}
+
 const TYPE_PALETTES = {
   dark:  { titan:"#a2453a", god:"#dda94b", hero:"#dd8b52", mortal:"#b98a63", monster:"#8e8a4a", event:"#f0e4cf", place:"#5f8a85" },
   light: { titan:"#8a3a30", god:"#8a4a1e", hero:"#95501f", mortal:"#6b3f22", monster:"#5c5926", event:"#241a12", place:"#3f6b66" }
@@ -1198,6 +1225,8 @@ const state = {
   /* map tab: node-type visibility, all shown by default (this only adds
      filtering on top of the already fully-visible map) */
   typeFilters: Object.fromEntries(Object.keys(TYPE_LABEL).map(k => [k, true])),
+  /* map tab: active story-cycle filter (empty = show the whole map) */
+  storyFilter: new Set(),
   view: { k: 0.6, tx: 90, ty: 20 }
 };
 
@@ -1405,8 +1434,26 @@ function applyFocus(animate){
     });
   }
 
+  /* story-cycle filter: keep the selected cycles' members, hide the rest, and let the
+     gods linger faintly as the divine backdrop */
+  const cycleSet = state.storyFilter.size ? storyCycleSet([...state.storyFilter]) : null;
+  const memberOrGod = id => !cycleSet || cycleSet.has(id) || AMBIENT_TYPES.has(BY_ID[id].type);
+
   edgeEls.forEach(({ p, ed, st, solid }) => {
     if (!state.filters[ed.t]) { p.style.display = "none"; return; }
+    /* story-cycle gate: an edge shows only between two members, or faintly between a
+       member and an ambient god; everything else is hidden while a cycle is active */
+    if (cycleSet){
+      const aIn = cycleSet.has(ed.a), bIn = cycleSet.has(ed.b);
+      if (!(aIn && bIn)){
+        if ((aIn || bIn) && memberOrGod(ed.a) && memberOrGod(ed.b)){
+          p.style.display = ""; p.setAttribute("opacity", 0.07); p.setAttribute("stroke-width", st.w);
+          if (solid){ p.style.transition = "none"; p.removeAttribute("stroke-dasharray"); p.removeAttribute("stroke-dashoffset"); }
+          return;
+        }
+        p.style.display = "none"; return;
+      }
+    }
     p.style.display = "";
     /* an edge with a now-hidden node type at either end fades right back */
     if (!state.typeFilters[BY_ID[ed.a].type] || !state.typeFilters[BY_ID[ed.b].type]){
@@ -1442,10 +1489,16 @@ function applyFocus(animate){
     if (!state.typeFilters[n.type] || (activeNodeSet && !activeNodeSet.has(n.id))){
       g.setAttribute("display", "none"); return;
     }
+    /* story-cycle gate: non-members drop out; gods stay on as a faint backdrop */
+    let ambient = false;
+    if (cycleSet && !cycleSet.has(n.id)){
+      if (AMBIENT_TYPES.has(n.type)) ambient = true;
+      else { g.setAttribute("display", "none"); return; }
+    }
     g.removeAttribute("display");
     const dim = focus && !focus.has(n.id);
     const on = active === n.id;
-    g.setAttribute("opacity", dim ? 0.11 : 1);
+    g.setAttribute("opacity", ambient ? 0.16 : (dim ? 0.11 : 1));
     glow.setAttribute("opacity", on ? 1 : 0);
     if (isEvent){
       shape.setAttribute("fill", on ? th.eventFillOn : th.eventFill);
@@ -1743,13 +1796,53 @@ ERAS.forEach((era, i) => {
   };
   rail.appendChild(b);
 });
+/* ---- story-cycle filter panel ---- */
+const storyPanel = document.createElement("div");
+storyPanel.id = "storyPanel"; storyPanel.className = "vase hidden";
+stage.appendChild(storyPanel);
+function buildStoryPanel(){
+  const active = state.storyFilter;
+  let html = '<div class="meander" style="margin:0"></div><div style="padding:14px 16px 16px">' +
+    '<h4>Story — isolate a cycle (multi-select)</h4>';
+  ERAS.forEach((era, i) => {
+    const evs = NODES.filter(n => n.type === "event" && n.era === i && eventCast[n.id] && eventCast[n.id].size);
+    if (!evs.length) return;
+    html += '<div class="grouplab" style="margin:11px 0 4px;color:var(--muted)">' + GREEK_NUM[i] + ' &middot; ' + esc(era.name) + '</div>' +
+      evs.map(n => '<button class="lrow' + (active.has(n.id) ? "" : " off") + '" data-story="' + n.id + '">' +
+        '<span class="dot sq" style="background:' + typeColor("event") + '"></span>' + esc(n.name) + "</button>").join("");
+  });
+  html += '<div class="drule"></div>' +
+    '<button class="lrow' + (active.size ? "" : " off") + '" data-story-clear="1" ' +
+    'style="letter-spacing:.14em;text-transform:uppercase;font-size:11px;color:var(--muted)">' +
+    '<span style="width:8px;flex:0 0 auto"></span>' + (active.size ? ("Clear filter (" + active.size + ")") : "Showing all") + "</button>";
+  storyPanel.innerHTML = html + "</div>";
+}
+storyPanel.addEventListener("click", e => {
+  if (e.target.closest("[data-story-clear]")){ state.storyFilter.clear(); buildStoryPanel(); applyFocus(false); return; }
+  const b = e.target.closest("[data-story]");
+  if (!b) return;
+  const id = b.dataset.story;
+  if (state.storyFilter.has(id)) state.storyFilter.delete(id); else state.storyFilter.add(id);
+  buildStoryPanel(); applyFocus(false);
+});
+buildStoryPanel();
+
 const keyBtn = document.createElement("button");
 keyBtn.className = "btn railMapOnly"; keyBtn.textContent = "key";
-keyBtn.style.marginLeft = "auto";
 keyBtn.onclick = () => {
+  storyPanel.classList.add("hidden"); storyBtn.classList.remove("on");   // key & stories are mutually exclusive
   legend.classList.toggle("hidden");
   keyBtn.classList.toggle("on", !legend.classList.contains("hidden"));
 };
+const storyBtn = document.createElement("button");
+storyBtn.className = "btn railMapOnly"; storyBtn.textContent = "stories";
+storyBtn.style.marginLeft = "auto";
+storyBtn.onclick = () => {
+  legend.classList.add("hidden"); keyBtn.classList.remove("on");
+  storyPanel.classList.toggle("hidden");
+  storyBtn.classList.toggle("on", !storyPanel.classList.contains("hidden"));
+};
+rail.appendChild(storyBtn);
 rail.appendChild(keyBtn);
 
 /* a figure-toggle row (colour swatch + label), matching the edge-filter rows */
@@ -1881,6 +1974,7 @@ function setMode(m){
   threadsKeyBtn.classList.toggle("hidden", m !== "threads");
 
   legend.classList.add("hidden"); keyBtn.classList.remove("on");
+  storyPanel.classList.add("hidden"); storyBtn.classList.remove("on");
   familyLegend.classList.add("hidden"); familyKeyBtn.classList.remove("on");
   routeLegend.classList.add("hidden"); geoKeyBtn.classList.remove("on");
   threadsLegend.classList.add("hidden"); threadsKeyBtn.classList.remove("on");
