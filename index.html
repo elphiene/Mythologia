@@ -91,8 +91,10 @@
   .meander.dim{opacity:.4}
   .meander.flip{transform:scaleY(-1)}
 
-  header{padding:14px 22px 10px;display:flex;align-items:flex-end;gap:20px;
+  header{padding:14px 22px 10px;display:flex;align-items:flex-end;gap:20px;position:relative;
          flex-wrap:wrap;background:var(--overlay-bg);z-index:5;transition:background .25s}
+  #modeNav{display:flex;gap:7px}
+  #menuToggle{display:none;font-size:16px;line-height:1;padding:7px 12px}
   .eyebrow{font-family:var(--didot);font-size:11px;letter-spacing:.42em;color:var(--clay);
            text-transform:uppercase;margin-bottom:5px}
   .title{font-family:var(--didot);font-size:34px;letter-spacing:.14em;line-height:1;
@@ -195,16 +197,29 @@
     .sub{display:none}
   }
   @media (max-width:600px){
-    header{padding:10px 14px 8px;gap:9px 12px}
-    .eyebrow{font-size:9.5px;letter-spacing:.3em}
-    .title{font-size:21px;letter-spacing:.1em}
+    header{padding:8px 14px 7px;gap:8px 12px}
+    .eyebrow{display:none}                 /* reclaim header height on phones */
+    .meander{height:8px}
+    .meander.dim{display:none}
+    .title{font-size:20px;letter-spacing:.1em}
     header>div{flex-wrap:wrap}
-    .searchwrap{flex:1 1 100%}
+    .searchwrap{flex:1 1 100%;order:3}
     #search{width:100%}
     #results{left:0;right:0;width:auto}
     .rail{padding:8px 12px}
     .rail .btn{font-size:10.5px;padding:6px 9px}
     #legend,#familyLegend,#routeLegend{width:min(262px,calc(100vw - 28px));left:50%;transform:translateX(-50%)}
+
+    /* views collapse into a hamburger dropdown */
+    #menuToggle{display:inline-block}
+    #modeNav{position:absolute;top:calc(100% + 4px);right:12px;flex-direction:column;gap:6px;
+             padding:8px;background:var(--overlay-bg);border:1px solid var(--rule);z-index:40;
+             box-shadow:0 14px 44px rgba(0,0,0,.55);display:none}
+    #modeNav.open{display:flex}
+    #modeNav .btn{width:100%;text-align:left}
+
+    /* the story fills the screen so it's actually readable on a phone */
+    #panel{inset:0;width:100%;max-height:100%;border:none}
   }
   /* comfortable tap targets on touch devices, without changing the desktop look */
   @media (pointer:coarse){
@@ -227,7 +242,8 @@
     <div class="title">Mythologia</div>
     <div class="sub" id="counts"></div>
   </div>
-  <div style="display:flex;gap:7px">
+  <button class="btn" id="menuToggle" aria-label="Views menu" aria-expanded="false" aria-controls="modeNav">☰</button>
+  <div id="modeNav">
     <button class="btn on" id="modeMap">map</button>
     <button class="btn" id="modeFamily">family tree</button>
     <button class="btn" id="modeGeo">geography</button>
@@ -424,7 +440,11 @@ const NODES = [
   { id: "athens", name: "Athens", type: "place", x: 130, y: 1075, era: 2,
     story: "Named for [[athena|Athena]] after the [[athenscontest|contest]], and unified into a single state by [[atticaunion|Theseus]]. In the myths it becomes the place where things get resolved rather than avenged — most importantly at the trial that ends the [[orestesrevenge|curse on the House of Atreus]]. That is Athens telling its own story about law replacing vendetta." },
   { id: "europa", name: "Europa", type: "mortal", x: 330, y: 805, era: 2,
-    story: "A Phoenician princess, sister of [[cadmus|Cadmus]]. [[zeus|Zeus]] took the form of a white bull, carried her across the sea to Crete, and fathered Minos — whose wife later bears the [[minotaur|Minotaur]]. She gives her name to the continent of Europe, and her disappearance is what sends Cadmus westward to [[thebesfounding|found Thebes]]." },
+    story: "A Phoenician princess, sister of [[cadmus|Cadmus]]. [[zeus|Zeus]] took the form of a white bull, carried her across the sea to Crete, and fathered [[minos|Minos]] and [[sarpedon|Sarpedon]] — and Minos's wife later bears the [[minotaur|Minotaur]]. She gives her name to the continent of Europe, and her disappearance is what sends Cadmus westward to [[thebesfounding|found Thebes]]." },
+  { id: "minos", name: "Minos", type: "hero", x: 600, y: 900, era: 2,
+    story: "Son of [[zeus|Zeus]] and [[europa|Europa]], king of [[crete|Crete]]. He wins the throne with a bull sent by [[poseidon|Poseidon]], then refuses to sacrifice it; Poseidon's revenge, worked through Minos's wife Pasiphaë, is the [[minotaur|Minotaur]] he must hide away in the labyrinth. In death he became one of the judges of the dead." },
+  { id: "sarpedon", name: "Sarpedon", type: "hero", x: 740, y: 900, era: 2,
+    story: "Son of [[zeus|Zeus]] and [[europa|Europa]] and brother of [[minos|Minos]]. Driven from [[crete|Crete]] by his brother, he founded a kingdom in Lycia; a later Sarpedon of that line fights and falls at [[troy|Troy]], mourned by Zeus himself." },
   { id: "cadmus", name: "Cadmus", type: "mortal", x: 330, y: 905, era: 2,
     story: "Phoenician prince sent to find his sister [[europa|Europa]] and forbidden to return without her. He never finds her, consults Delphi instead, and [[thebesfounding|founds Thebes]]. Greek tradition also credits him with bringing the alphabet to Greece. His line runs straight down to [[laius|Laius]] and [[oedipus|Oedipus]]." },
   { id: "thebesfounding", name: "The Sown Men", type: "event", x: 330, y: 1025, era: 2,
@@ -712,6 +732,12 @@ const EDGES = [
   e("deucalion", "hellen", "blood"), e("pyrrha", "hellen", "blood"),
   e("hellen", "dorus", "blood"), e("hellen", "aeolus", "blood"), e("hellen", "xuthus", "blood"),
   e("cadmus", "europa", "blood"), e("zeus", "europa", "union"),
+  /* demigod parentage: the sons of Zeus & Europa, and Zeus as father of Tantalus
+     (roots the cursed Atreid line in the divine tree) */
+  e("zeus", "minos", "blood"), e("europa", "minos", "blood"),
+  e("zeus", "sarpedon", "blood"), e("europa", "sarpedon", "blood"),
+  e("minos", "crete", "part"), e("sarpedon", "crete", "part"), e("minos", "minotaur", "part"),
+  e("zeus", "tantalus", "blood"),
   e("cadmus", "semele", "blood"), e("harmonia", "semele", "blood"),
   e("zeus", "dionysus", "blood"), e("semele", "dionysus", "blood"),
   e("cadmus", "pentheus", "descent"), e("cadmus", "laius", "descent"),
@@ -921,6 +947,8 @@ const GREEK = {
   cecrops: "ΚΕΚΡΟΨ",
   athens: "ΑΘΗΝΑΙ",
   europa: "ΕΥΡΩΠΗ",
+  minos: "ΜΙΝΩΣ",
+  sarpedon: "ΣΑΡΠΗΔΩΝ",
   cadmus: "ΚΑΔΜΟΣ",
   harmonia: "ΑΡΜΟΝΙΑ",
   thebes: "ΘΗΒΑΙ",
@@ -1285,6 +1313,22 @@ function applyFocus(animate){
   const active = state.hovered || state.selected;
   const focus = active ? new Set([active, ...ADJ[active]]) : null;
 
+  /* once any line-type filter is off, drop figures/places/stories that no longer
+     have a single visible line touching them — so "just parent-child" shows only
+     the blood-linked figures, "parent-child + marriage" reads like a family tree.
+     with every line-type on, nothing is hidden (isolated nodes stay visible). */
+  const allEdgeFiltersOn = Object.values(state.filters).every(Boolean);
+  let activeNodeSet = null;
+  if (!allEdgeFiltersOn){
+    activeNodeSet = new Set();
+    EDGES.forEach(ed => {
+      if (!state.filters[ed.t]) return;
+      const A = BY_ID[ed.a], B = BY_ID[ed.b];
+      if (!A || !B || !state.typeFilters[A.type] || !state.typeFilters[B.type]) return;
+      activeNodeSet.add(ed.a); activeNodeSet.add(ed.b);
+    });
+  }
+
   edgeEls.forEach(({ p, ed, st, solid }) => {
     if (!state.filters[ed.t]) { p.style.display = "none"; return; }
     p.style.display = "";
@@ -1319,7 +1363,9 @@ function applyFocus(animate){
 
   const th = SVG_THEME[currentTheme];
   nodeEls.forEach(({ g, glow, shape, ring, n, isEvent }) => {
-    if (!state.typeFilters[n.type]){ g.setAttribute("display", "none"); return; }
+    if (!state.typeFilters[n.type] || (activeNodeSet && !activeNodeSet.has(n.id))){
+      g.setAttribute("display", "none"); return;
+    }
     g.removeAttribute("display");
     const dim = focus && !focus.has(n.id);
     const on = active === n.id;
@@ -1764,6 +1810,10 @@ function setMode(m){
   threadsLegend.classList.add("hidden"); threadsKeyBtn.classList.remove("on");
 
   if (m === "index") renderIndex();
+  /* frame the wide diagrams to the viewport the first time they're opened, so they
+     start readable — especially on a narrow phone */
+  if (m === "family" && !setMode._famDone){ setMode._famDone = true; resetFamilyView(); }
+  if (m === "threads" && !setMode._thDone){ setMode._thDone = true; resetThreadsView(); }
   hint.classList.toggle("hidden", m !== "map" || !!state.selected);
   familyHint.classList.toggle("hidden", m !== "family" || !!state.selected);
   geoHint.classList.toggle("hidden", m !== "geo" || !!state.selected);
@@ -1775,10 +1825,23 @@ mGeo.onclick = () => setMode("geo");
 mThreads.onclick = () => setMode("threads");
 mIdx.onclick = () => setMode("index");
 
+/* mobile: views live behind a hamburger */
+const menuToggle = document.getElementById("menuToggle");
+const modeNav = document.getElementById("modeNav");
+function setMenu(open){
+  modeNav.classList.toggle("open", open);
+  menuToggle.setAttribute("aria-expanded", open ? "true" : "false");
+}
+menuToggle.onclick = e => { e.stopPropagation(); setMenu(!modeNav.classList.contains("open")); };
+modeNav.addEventListener("click", () => setMenu(false));   // picking a view closes it
+document.addEventListener("click", e => {
+  if (!e.target.closest("#modeNav") && !e.target.closest("#menuToggle")) setMenu(false);
+});
+
 const themeBtn = document.getElementById("themeToggle");
 themeBtn.onclick = () => repaintTheme(currentTheme === "dark" ? "light" : "dark");
 
-document.addEventListener("keydown", e => { if (e.key === "Escape") select(null); });
+document.addEventListener("keydown", e => { if (e.key === "Escape"){ select(null); setMenu(false); } });
 
 /* ================================================================== */
 /*  SHARED CANVAS HELPER — pan / zoom / click, reused by the family    */
@@ -1929,12 +1992,37 @@ familyNodes.forEach(n => famRows[famGen[n.id]].push(n.id));
 famRows.forEach(row => row.sort((a, b) =>
   (famHouseIdx[famHouseOf[a]] - famHouseIdx[famHouseOf[b]]) || (BY_ID[a].x - BY_ID[b].x)));
 
+/* break the houses out into their own horizontal bands, with a gap between them,
+   so the side-families (Ajax's line, Penelope's, Dido's, the lone figures) read as
+   separate clusters instead of being packed flush against the main genealogy. each
+   house gets a band as wide as its busiest generation; a generation's members are
+   centred within their house band. */
+const famHouseMaxRow = {};
+famHouseOrder.forEach(h => famHouseMaxRow[h] = 0);
+famRows.forEach(row => {
+  const c = {};
+  row.forEach(id => { const h = famHouseOf[id]; c[h] = (c[h] || 0) + 1; });
+  for (const h in c) if (c[h] > famHouseMaxRow[h]) famHouseMaxRow[h] = c[h];
+});
+const HOUSE_GAP = 1.4;                       // blank columns between adjacent houses
+const houseStartCol = {}; let famColCursor = 0;
+famHouseOrder.forEach(h => { houseStartCol[h] = famColCursor; famColCursor += famHouseMaxRow[h] + HOUSE_GAP; });
+const famTotalCols = Math.max(1, famColCursor - HOUSE_GAP);
+
 const FAM_ROW_H = 190, FAM_COL_W = 128, FAM_PAD = 90;
 const famPos = {};
-famRows.forEach((row, g) => row.forEach((id, i) => {
-  famPos[id] = { x: FAM_PAD + i * FAM_COL_W, y: 70 + g * FAM_ROW_H };
-}));
-const FAM_W = FAM_PAD * 2 + FAM_COL_W * Math.max(1, ...famRows.map(r => r.length));
+famRows.forEach((row, g) => {
+  const byHouse = {};
+  row.forEach(id => { const h = famHouseOf[id]; (byHouse[h] = byHouse[h] || []).push(id); });
+  Object.keys(byHouse).forEach(h => {
+    const members = byHouse[h];
+    const startCol = houseStartCol[h] + (famHouseMaxRow[h] - members.length) / 2;
+    members.forEach((id, i) => {
+      famPos[id] = { x: FAM_PAD + (startCol + i) * FAM_COL_W, y: 70 + g * FAM_ROW_H };
+    });
+  });
+});
+const FAM_W = FAM_PAD * 2 + famTotalCols * FAM_COL_W;
 const FAM_H = 160 + famMaxGen * FAM_ROW_H;
 
 const familySvg = document.getElementById("familySvg");
@@ -2035,8 +2123,23 @@ function familyCenterOn(id){
   famView.k = k; famView.tx = stage.clientWidth / 2 - p.x * k; famView.ty = stage.clientHeight / 2 - p.y * k;
   applyFamView();
 }
+/* frame a whole diagram to fit the current stage — fits to width, never zooming in
+   past `capK` (so desktop keeps its usual scale) and shrinking on a narrow phone so
+   wide graphs like the family tree and threads are actually visible. tall graphs
+   top-align (scroll down); ones that fit are centred. */
+function fitView(view, applyFn, b, capK){
+  const w = stage.clientWidth, h = stage.clientHeight, pad = 40;
+  const cw = Math.max(1, b.maxX - b.minX), ch = Math.max(1, b.maxY - b.minY);
+  const k = Math.max(0.1, Math.min(capK, (w - pad * 2) / cw));
+  view.k = k;
+  /* centre when it fits, otherwise anchor to the top-left so the busiest part of the
+     diagram (which starts at minX/minY) is on screen rather than empty inter-cluster space */
+  view.tx = (cw * k <= w - pad * 2) ? (w - cw * k) / 2 - b.minX * k : pad - b.minX * k;
+  view.ty = (ch * k <= h - pad * 2) ? (h - ch * k) / 2 - b.minY * k : pad - b.minY * k;
+  applyFn();
+}
 function resetFamilyView(){
-  famView.k = 0.55; famView.tx = 60; famView.ty = 20; applyFamView();
+  fitView(famView, applyFamView, { minX: -60, minY: 0, maxX: FAM_W, maxY: FAM_H }, 0.55);
 }
 
 function applyFamilyFocus(){
@@ -2089,6 +2192,30 @@ const ROUTES = [
 ];
 const routeState = Object.fromEntries(ROUTES.map(r => [r.id, false]));
 
+/* hand-authored waypoints so a leg follows the water / the road instead of cutting
+   straight across land. keyed "fromId>toId"; each entry is a list of [x,y] points in
+   GEO_POS map coordinates, inserted between the two named stops. authored by tracing
+   a coast-avoiding path against COAST_PATH and simplifying it to a few points, so the
+   sea voyages round the Peloponnese, thread the Aegean and pass through the straits to
+   the Black Sea rather than crossing dry land. */
+const ROUTE_VIA = {
+  "troy>lotuseaters":      [[783,273],[771,345],[687,423],[507,435],[429,465],[207,471]],
+  "lotuseaters>cyclopsisland":[[207,471],[345,459],[399,405],[399,357]],
+  "cyclopsisland>aeolia":  [[393,351],[375,393],[285,393],[243,351],[243,315],[273,285],[345,285]],
+  "aeolia>laestrygonians": [[309,249]],
+  "aeaea>underworld":      [[243,237],[237,351],[321,447],[621,435]],
+  "underworld>sirenrocks": [[621,435],[321,447],[249,375],[243,309]],
+  "sirenrocks>scyllacharybdis":[[339,255]],
+  "scyllacharybdis>ogygia":[[357,279],[279,279],[243,315],[243,357],[285,399]],
+  "ogygia>corfu":          [[447,399],[573,273]],
+  "troy>carthage":         [[783,273],[771,345],[687,423],[645,435],[321,453],[219,351]],
+  "carthage>cumae":        [[183,333]],
+  "cumae>albalonga":       [[279,207]],
+  "crete>naxos":           [[765,381]],
+  "sparta>troy":           [[651,387],[699,411],[771,345],[783,273]],
+  "iolcus>colchis":        [[760,256],[812,220],[930,196],[1010,168],[1150,150],[1330,150],[1420,162]],
+};
+
 const geoSvg = document.getElementById("geoSvg");
 const geoWorld = el("g", { id: "geoWorld" });
 geoSvg.appendChild(geoWorld);
@@ -2119,17 +2246,20 @@ function drawRoutes(){
   const active = state.hovered || state.selected;
   ROUTES.forEach(r => {
     if (!routeState[r.id]) return;
-    const pts = r.path.map(id => GEO_POS[id]).filter(Boolean);
+    /* expand the named stops with any hand-authored waypoints between them so the
+       drawn line follows the sea lane / road rather than a straight cut across land */
+    const pts = [];
+    for (let i = 0; i < r.path.length; i++){
+      const P = GEO_POS[r.path[i]]; if (!P) continue;
+      if (i > 0){
+        const via = ROUTE_VIA[r.path[i-1] + ">" + r.path[i]];
+        if (via) via.forEach(([x, y]) => pts.push({ x, y }));
+      }
+      pts.push(P);
+    }
     if (pts.length < 2) return;
     let d = "M " + pts[0].x + " " + pts[0].y;
-    for (let i = 1; i < pts.length; i++){
-      const p0 = pts[i-1], p1 = pts[i];
-      const mx = (p0.x+p1.x)/2, my = (p0.y+p1.y)/2;
-      const dx = p1.x-p0.x, dy = p1.y-p0.y, len = Math.hypot(dx,dy)||1;
-      const bow = Math.min(30, len*0.15);
-      const cx = mx + (-dy/len)*bow, cy = my + (dx/len)*bow;
-      d += " Q " + cx + " " + cy + " " + p1.x + " " + p1.y;
-    }
+    for (let i = 1; i < pts.length; i++) d += " L " + pts[i].x + " " + pts[i].y;
     const touches = active && r.path.includes(active);
     const opacity = active ? (touches ? 0.98 : 0.1) : 0.85;
     const width = touches ? 4.4 : 3;
@@ -2388,8 +2518,11 @@ const threadsBridges = { kinship:false, reference:false };
 
 /* extents, for the depth guide-lines */
 const thAllX = Object.values(threadsPos).map(p => p.x);
+const thAllY = Object.values(threadsPos).map(p => p.y);
 const TH_W = (thAllX.length ? Math.max(...thAllX) : TH_LEFT) + TH_LANE_W;
 const TH_MINX = (thAllX.length ? Math.min(...thAllX) : TH_LEFT) - TH_LANE_W;
+const TH_MINY = TH_TOP - 70;
+const TH_MAXY = (thAllY.length ? Math.max(...thAllY) : TH_TOP) + 160;
 
 const threadsSvg = document.getElementById("threadsSvg");
 const threadsWorld = el("g", { id: "threadsWorld" });
@@ -2530,7 +2663,7 @@ function threadsCenterOn(id){
   applyThreadsView();
 }
 function resetThreadsView(){
-  threadsView.k = 0.62; threadsView.tx = 60; threadsView.ty = 20; applyThreadsView();
+  fitView(threadsView, applyThreadsView, { minX: TH_MINX, minY: TH_MINY, maxX: TH_W, maxY: TH_MAXY }, 0.62);
 }
 
 /* type toggles hide figures/places/stories in place; bridges follow ONLY
