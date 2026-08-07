@@ -188,6 +188,28 @@
     #panel{right:0;left:0;top:auto;bottom:0;width:100%;max-height:66%;border-left:none;border-right:none}
     #hint,#familyHint,#geoHint{display:none}
     .title{font-size:25px}
+    header{gap:12px 16px;padding:12px 16px 9px}
+    .sub{display:none}
+  }
+  @media (max-width:600px){
+    header{padding:10px 14px 8px;gap:9px 12px}
+    .eyebrow{font-size:9.5px;letter-spacing:.3em}
+    .title{font-size:21px;letter-spacing:.1em}
+    header>div{flex-wrap:wrap}
+    .searchwrap{flex:1 1 100%}
+    #search{width:100%}
+    #results{left:0;right:0;width:auto}
+    .rail{padding:8px 12px}
+    .rail .btn{font-size:10.5px;padding:6px 9px}
+    #legend,#familyLegend,#routeLegend{width:min(262px,calc(100vw - 28px));left:50%;transform:translateX(-50%)}
+  }
+  /* comfortable tap targets on touch devices, without changing the desktop look */
+  @media (pointer:coarse){
+    #zoom button{width:44px;height:44px}
+    .chip{padding:9px 12px}
+    .close{width:40px;height:40px}
+    .btn{padding:9px 13px}
+    .rail .btn{padding:8px 12px}
   }
   @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -1351,11 +1373,32 @@ resize();
 
 /* ---------------- pan & zoom ---------------- */
 let dragging = false, dragged = false, lastXY = null;
+const mapPts = new Map();          // active pointers (for pinch)
+let pinch = null;                  // { dist, mx, my } from the previous 2-pointer frame
 svg.addEventListener("pointerdown", e => {
-  dragging = true; dragged = false; lastXY = { x: e.clientX, y: e.clientY };
-  svg.classList.add("drag"); svg.setPointerCapture(e.pointerId);
+  mapPts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  svg.setPointerCapture(e.pointerId);
+  if (mapPts.size === 1){
+    dragging = true; dragged = false; lastXY = { x: e.clientX, y: e.clientY };
+    svg.classList.add("drag");
+  } else { dragging = false; pinch = null; }   // second finger begins a pinch
 });
 svg.addEventListener("pointermove", e => {
+  if (mapPts.has(e.pointerId)) mapPts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (mapPts.size >= 2){                        // pinch-zoom + two-finger pan
+    dragged = true;
+    const [a, b] = [...mapPts.values()];
+    const r = stage.getBoundingClientRect();
+    const mx = (a.x + b.x) / 2 - r.left, my = (a.y + b.y) / 2 - r.top;
+    const dist = Math.hypot(a.x - b.x, a.y - b.y);
+    if (pinch){
+      zoomAt(mx, my, dist / pinch.dist);
+      state.view.tx += mx - pinch.mx; state.view.ty += my - pinch.my;
+      applyView();
+    }
+    pinch = { dist, mx, my };
+    return;
+  }
   if (!dragging) return;
   const dx = e.clientX - lastXY.x, dy = e.clientY - lastXY.y;
   lastXY = { x: e.clientX, y: e.clientY };
@@ -1363,7 +1406,16 @@ svg.addEventListener("pointermove", e => {
   state.view.tx += dx; state.view.ty += dy;
   applyView();
 });
-const endDrag = () => { dragging = false; svg.classList.remove("drag"); };
+const endDrag = e => {
+  if (e && e.pointerId !== undefined) mapPts.delete(e.pointerId);
+  if (mapPts.size < 2) pinch = null;
+  if (mapPts.size === 1){                        // one finger left → resume single-finger pan
+    const rem = [...mapPts.values()][0];
+    lastXY = { x: rem.x, y: rem.y }; dragging = true; svg.classList.add("drag");
+  } else if (mapPts.size === 0){
+    dragging = false; svg.classList.remove("drag");
+  }
+};
 svg.addEventListener("pointerup", endDrag);
 svg.addEventListener("pointercancel", endDrag);
 
@@ -1654,11 +1706,32 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") select(null)
 function wireCanvas(svgEl, view, opts){
   opts = opts || {};
   let dragging = false, dragged = false, lastXY = null;
+  const pts = new Map();            // active pointers (for pinch)
+  let pinch = null;                 // { dist, mx, my } from the previous 2-pointer frame
   svgEl.addEventListener("pointerdown", e => {
-    dragging = true; dragged = false; lastXY = { x: e.clientX, y: e.clientY };
-    svgEl.classList.add("drag"); svgEl.setPointerCapture(e.pointerId);
+    pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    svgEl.setPointerCapture(e.pointerId);
+    if (pts.size === 1){
+      dragging = true; dragged = false; lastXY = { x: e.clientX, y: e.clientY };
+      svgEl.classList.add("drag");
+    } else { dragging = false; pinch = null; }
   });
   svgEl.addEventListener("pointermove", e => {
+    if (pts.has(e.pointerId)) pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pts.size >= 2){                          // pinch-zoom + two-finger pan
+      dragged = true;
+      const [a, b] = [...pts.values()];
+      const r = svgEl.getBoundingClientRect();
+      const mx = (a.x + b.x) / 2 - r.left, my = (a.y + b.y) / 2 - r.top;
+      const dist = Math.hypot(a.x - b.x, a.y - b.y);
+      if (pinch){
+        zoomAt(mx, my, dist / pinch.dist);
+        view.tx += mx - pinch.mx; view.ty += my - pinch.my;
+        if (opts.onView) opts.onView();
+      }
+      pinch = { dist, mx, my };
+      return;
+    }
     if (!dragging) return;
     const dx = e.clientX - lastXY.x, dy = e.clientY - lastXY.y;
     lastXY = { x: e.clientX, y: e.clientY };
@@ -1666,7 +1739,16 @@ function wireCanvas(svgEl, view, opts){
     view.tx += dx; view.ty += dy;
     if (opts.onView) opts.onView();
   });
-  const endDrag = () => { dragging = false; svgEl.classList.remove("drag"); };
+  const endDrag = e => {
+    if (e && e.pointerId !== undefined) pts.delete(e.pointerId);
+    if (pts.size < 2) pinch = null;
+    if (pts.size === 1){
+      const rem = [...pts.values()][0];
+      lastXY = { x: rem.x, y: rem.y }; dragging = true; svgEl.classList.add("drag");
+    } else if (pts.size === 0){
+      dragging = false; svgEl.classList.remove("drag");
+    }
+  };
   svgEl.addEventListener("pointerup", endDrag);
   svgEl.addEventListener("pointercancel", endDrag);
 
