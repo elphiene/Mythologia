@@ -1,0 +1,11 @@
+# Claude Code / agent artefacts (per workspace convention — keep out of the public repo)
+CLAUDE.md
+.claude/
+PLAN.md
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
