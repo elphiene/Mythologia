@@ -469,6 +469,8 @@ const NODES = [
     story: "[[athena|Athena]] and [[poseidon|Poseidon]] competed for the city's patronage. Poseidon struck the rock and produced a salt spring (in some versions, the first horse); Athena planted an olive tree. The olive — food, oil, lamplight, trade — won, and the city took her name. Poseidon's resentment lingers in Athenian myth ever after." },
   { id: "athens", name: "Athens", type: "place", x: 130, y: 1075, era: 2,
     story: "Named for [[athena|Athena]] after the [[athenscontest|contest]], and unified into a single state by [[atticaunion|Theseus]]. In the myths it becomes the place where things get resolved rather than avenged — most importantly at the trial that ends the [[orestesrevenge|curse on the House of Atreus]]. That is Athens telling its own story about law replacing vendetta." },
+  { id: "agenor", name: "Agenor", type: "mortal", x: 175, y: 775, era: 2,
+    story: "Phoenician king, father of [[europa|Europa]] and [[cadmus|Cadmus]]. When [[zeus|Zeus]] carries Europa off across the sea, Agenor sends his sons after her with orders not to come home without her — an errand none of them completes, scattering his line across the Mediterranean and ending, for Cadmus, in the [[thebesfounding|founding of Thebes]]." },
   { id: "europa", name: "Europa", type: "mortal", x: 330, y: 805, era: 2,
     story: "A Phoenician princess, sister of [[cadmus|Cadmus]]. [[zeus|Zeus]] took the form of a white bull, carried her across the sea to [[crete|Crete]], and fathered [[minos|Minos]] and [[sarpedon|Sarpedon]] — and Minos's wife later bears the [[minotaur|Minotaur]]. She gives her name to the continent of Europe, and her disappearance is what sends Cadmus westward to [[thebesfounding|found Thebes]]." },
   { id: "minos", name: "Minos", type: "hero", x: 600, y: 900, era: 2,
@@ -784,7 +786,14 @@ const EDGES = [
   e("prometheus", "deucalion", "blood"), e("epimetheus", "pyrrha", "blood"), e("pandora", "pyrrha", "blood"),
   e("deucalion", "hellen", "blood"), e("pyrrha", "hellen", "blood"),
   e("hellen", "dorus", "blood"), e("hellen", "aeolus", "blood"), e("hellen", "xuthus", "blood"),
-  e("cadmus", "europa", "blood"), e("zeus", "europa", "union"),
+  e("agenor", "europa", "blood"), e("agenor", "cadmus", "blood"), e("zeus", "europa", "union"),
+  /* previously-missing kinships */
+  e("minos", "ariadne", "blood"),
+  e("ares", "harmonia", "blood"), e("aphrodite", "harmonia", "blood"),
+  e("nyx", "eris", "blood"),
+  e("pontus", "thetis", "descent"),
+  e("laius", "jocasta", "union"),
+  e("odysseus", "circe", "union"),
   /* demigod parentage: the sons of Zeus & Europa, and Zeus as father of Tantalus
      (roots the cursed Atreid line in the divine tree) */
   e("zeus", "minos", "blood"), e("europa", "minos", "blood"),
@@ -1012,6 +1021,7 @@ const GREEK = {
   xuthus: "ΞΟΥΘΟΣ",
   cecrops: "ΚΕΚΡΟΨ",
   athens: "ΑΘΗΝΑΙ",
+  agenor: "ΑΓΗΝΩΡ",
   europa: "ΕΥΡΩΠΗ",
   minos: "ΜΙΝΩΣ",
   sarpedon: "ΣΑΡΠΗΔΩΝ",
