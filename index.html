@@ -2071,7 +2071,7 @@ familyEdges.forEach(ed => {
     grp.appendChild(el("line", { x1: A.x, y1: y, x2: B.x, y2: y,
       style: "stroke:var(--gold)", "stroke-width": 1.3, "stroke-dasharray": "5 4", opacity: 0.85 }));
     famWorld.appendChild(grp);
-    famEdgeEls.push({ el: grp, cat: "marriage" });
+    famEdgeEls.push({ el: grp, cat: "marriage", a: ed.a, b: ed.b, baseOp: 0.85 });
   } else {
     const midY = A.y + (B.y - A.y) * 0.5;
     const d = "M " + A.x + " " + A.y + " C " + A.x + " " + midY + " " + B.x + " " + midY + " " + B.x + " " + B.y;
@@ -2079,7 +2079,7 @@ familyEdges.forEach(ed => {
       style: "stroke:" + (curse ? "var(--curse)" : "var(--dilute)"),
       "stroke-width": curse ? 2.4 : 1.2, "stroke-dasharray": curse ? "7 4" : "none", opacity: curse ? 0.95 : 0.75 });
     famWorld.appendChild(p);
-    famEdgeEls.push({ el: p, cat: curse ? "curse" : "lineage" });
+    famEdgeEls.push({ el: p, cat: curse ? "curse" : "lineage", a: ed.a, b: ed.b, baseOp: curse ? 0.95 : 0.75 });
   }
 });
 function applyFamFilters(){
@@ -2142,14 +2142,28 @@ function resetFamilyView(){
   fitView(famView, applyFamView, { minX: -60, minY: 0, maxX: FAM_W, maxY: FAM_H }, 0.55);
 }
 
+/* the whole branch a figure belongs to: every ancestor up to the roots and every
+   descendant down — so clicking Orestes lights the line of blood all the way to Zeus. */
+function famBranchOf(id){
+  const set = new Set([id]);
+  const up = x => (famParentsOf[x] || []).forEach(p => { if (!set.has(p)){ set.add(p); up(p); } });
+  const down = x => (famChildrenOf[x] || []).forEach(c => { if (!set.has(c)){ set.add(c); down(c); } });
+  up(id); down(id);
+  return set;
+}
 function applyFamilyFocus(){
   const active = state.hovered || state.selected;
-  const focus = active ? new Set([active, ...(ADJ[active] || [])]) : null;
+  const focus = (active && famPos[active]) ? famBranchOf(active) : null;
   familyNodeEls.forEach(({ g, shape, n }) => {
     const dim = focus && !focus.has(n.id);
     const on = active === n.id;
-    g.setAttribute("opacity", dim ? 0.15 : 1);
+    g.setAttribute("opacity", dim ? 0.12 : 1);
     shape.setAttribute("r", on ? 11 : 9);
+  });
+  famEdgeEls.forEach(({ el: e, a, b, baseOp }) => {
+    if (e.style.display === "none") return;          // respect the line-type filters
+    if (!focus){ e.setAttribute("opacity", baseOp); return; }
+    e.setAttribute("opacity", (focus.has(a) && focus.has(b)) ? Math.min(1, baseOp + 0.05) : 0.06);
   });
 }
 
