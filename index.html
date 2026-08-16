@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
     <head>
-        <!-- Self-hosted GoatCounter analytics, proxied same-origin via the Express /stats route. -->
+        <!-- Self-hosted GoatCounter analytics, proxied same-origin via server.js's /stats route. -->
 
         <meta charset="utf-8" />
         <meta
@@ -873,8 +873,8 @@
             <div id="index" class="hidden"></div>
         </main>
 
+        <script data-goatcounter="/stats/count" async src="/stats/count.js"></script>
         <script>
-            data-goatcounter="/stats/count" async src="/stats/count.js"
             const C = {
               void: "#0a0f1e",
               panel: "#101830",
