@@ -1,7 +1,9 @@
 <!doctype html>
 <html lang="en">
     <head>
-        <!-- Self-hosted GoatCounter analytics, proxied same-origin via server.js's /stats route. -->
+        <!-- Self-hosted GoatCounter analytics. Site is on Cloudflare Pages (static edge),
+             which can't reach the private GoatCounter on the box, so the beacon points at
+             its public endpoint stats.elphiene.com (cloudflared tunnel → localhost:8085). -->
 
         <meta charset="utf-8" />
         <meta
@@ -873,7 +875,7 @@
             <div id="index" class="hidden"></div>
         </main>
 
-        <script data-goatcounter="/stats/count" async src="/stats/count.js"></script>
+        <script data-goatcounter="https://stats.elphiene.com/stats/count" async src="https://stats.elphiene.com/stats/count.js"></script>
         <script>
             const C = {
               void: "#0a0f1e",
